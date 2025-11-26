@@ -1,0 +1,84 @@
+{
+  "app": {
+    "name": "MealCraft",
+    "tagline": "Your Ultimate Meal Planning Platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "planning": "Planning",
+    "mealPlanner": "Meal Planner",
+    "recipes": "Recipes",
+    "shoppingLists": "Shopping Lists",
+    "inventory": "Inventory",
+    "groceries": "Groceries",
+    "pantry": "Pantry & Storage",
+    "kitchenEquipment": "Kitchen Equipment",
+    "tracking": "Tracking",
+    "restaurants": "Restaurants & Takeout",
+    "nutrition": "Nutrition",
+    "lifestyle": "Lifestyle",
+    "seasonality": "Seasonality & Sustainability",
+    "learning": "Learning & Skills",
+    "health": "Health Integrations",
+    "tools": "Tools",
+    "export": "Export",
+    "backups": "Backups",
+    "help": "Help Center",
+    "settings": "Settings",
+    "admin": "Admin Panel"
+  },
+  "auth": {
+    "login": "Log In",
+    "logout": "Log Out",
+    "signInWithGoogle": "Sign in with Google",
+    "welcome": "Welcome back",
+    "welcomeNew": "Welcome to MealCraft"
+  },
+  "tiers": {
+    "homeCook": "Home Cook",
+    "chefsChoice": "Chef's Choice",
+    "masterChef": "Master Chef",
+    "free": "Free",
+    "plus": "Plus",
+    "pro": "Pro"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "duplicate": "Duplicate",
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "success": "Success!",
+    "error": "Error",
+    "selectAll": "Select All",
+    "selected": "selected",
+    "actions": "Actions",
+    "view": "View",
+    "close": "Close",
+    "apply": "Apply",
+    "reset": "Reset",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "en": "English",
+    "uk": "Ukrainian"
+  }
+}

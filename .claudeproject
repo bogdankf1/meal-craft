@@ -1,0 +1,2417 @@
+# MealCraft - Ultimate Meal Planning & Nutrition Platform
+
+## Project Vision
+MealCraft is the **ultimate platform for meal planning, grocery management, and nutrition tracking** - just like Wealth Vault is for personal finance. This application will be a single source of truth for everything food-related: meals, groceries, recipes, nutrition, restaurants, and lifestyle.
+
+---
+
+## Tech Stack
+
+### Frontend
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **State Management**: 
+  - RTK Query (API data fetching)
+  - Zustand (lightweight state)
+- **i18n**: next-intl (Ukrainian + English)
+- **Authentication**: NextAuth.js v5 with Google OAuth
+
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Database**: PostgreSQL 15+
+- **ORM**: SQLAlchemy 2.0 (async)
+- **Migrations**: Alembic
+- **AI Integration**: Claude API (Sonnet 4.5) for recipe generation
+- **Payments**: Stripe (Checkout + Billing Portal)
+- **Image Processing**: Cloudinary or Vercel Blob (for grocery photos/receipts)
+- **OCR**: Vision API for receipt scanning
+
+### Deployment
+- **Frontend**: Vercel
+- **Backend**: Railway
+- **Database**: Railway PostgreSQL
+
+---
+
+## Project Structure
+
+```
+mealcraft/
+├── frontend/                          # Next.js application
+│   ├── app/
+│   │   ├── [locale]/                  # i18n wrapper (uk/en)
+│   │   │   ├── (auth)/
+│   │   │   │   ├── login/
+│   │   │   │   └── register/
+│   │   │   ├── (dashboard)/
+│   │   │   │   ├── layout.tsx         # Main layout with sidebar
+│   │   │   │   ├── dashboard/         # Module 1: Dashboard
+│   │   │   │   ├── meal-planner/      # Module 2: Meal Planner
+│   │   │   │   ├── recipes/           # Module 3: Recipes
+│   │   │   │   ├── shopping-lists/    # Module 4: Shopping Lists
+│   │   │   │   ├── groceries/         # Module 5: Groceries
+│   │   │   │   ├── pantry/            # Module 6: Pantry & Storage
+│   │   │   │   ├── kitchen-equipment/ # Module 7: Kitchen Equipment (placeholder)
+│   │   │   │   ├── restaurants/       # Module 8: Restaurants & Takeout
+│   │   │   │   ├── nutrition/         # Module 9: Nutrition
+│   │   │   │   ├── seasonality/       # Module 10: Seasonality & Sustainability
+│   │   │   │   ├── learning/          # Module 11: Learning & Skills
+│   │   │   │   ├── health/            # Module 12: Health Integrations
+│   │   │   │   ├── export/            # Module 13: Export
+│   │   │   │   ├── backups/           # Module 14: Backups
+│   │   │   │   ├── help/              # Module 15: Help Center
+│   │   │   │   └── settings/          # Module 16: Settings
+│   │   │   └── admin/                 # Admin Panel (admin role only)
+│   │   └── api/                       # Next.js API routes (auth)
+│   ├── components/
+│   │   ├── ui/                        # shadcn/ui base components
+│   │   ├── shared/                    # Shared reusable components
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── CollapsibleSection.tsx
+│   │   │   ├── ModuleTabs.tsx
+│   │   │   ├── DataTable.tsx          # Unified table component
+│   │   │   ├── StatsCard.tsx          # Quick stats cards
+│   │   │   ├── FilterPanel.tsx        # Consistent filters
+│   │   │   ├── EmptyState.tsx         # Unified empty states
+│   │   │   ├── ActionMenu.tsx         # Dropdown actions (•••)
+│   │   │   ├── BulkActions.tsx        # Multi-select actions
+│   │   │   ├── FeatureGate.tsx        # Tier-based feature gating
+│   │   │   └── UpgradePrompt.tsx
+│   │   └── modules/                   # Module-specific components
+│   ├── lib/
+│   │   ├── api/                       # RTK Query slices
+│   │   ├── store/                     # Zustand stores
+│   │   ├── hooks/                     # Custom React hooks
+│   │   ├── utils/                     # Utility functions
+│   │   └── event-bus.ts               # Inter-module communication
+│   ├── locales/                       # i18n translations
+│   │   ├── en/
+│   │   │   ├── common.json
+│   │   │   ├── dashboard.json
+│   │   │   ├── meal-planner.json
+│   │   │   ├── recipes.json
+│   │   │   ├── shopping-lists.json
+│   │   │   ├── groceries.json
+│   │   │   ├── pantry.json
+│   │   │   ├── restaurants.json
+│   │   │   ├── nutrition.json
+│   │   │   ├── seasonality.json
+│   │   │   ├── learning.json
+│   │   │   ├── health.json
+│   │   │   ├── tools.json
+│   │   │   ├── settings.json
+│   │   │   └── admin.json
+│   │   └── uk/                        # Ukrainian translations (same structure)
+│   ├── public/
+│   └── styles/
+├── backend/                           # FastAPI application
+│   ├── app/
+│   │   ├── api/v1/
+│   │   │   └── routes/
+│   │   │       ├── auth.py
+│   │   │       ├── meal_plans.py
+│   │   │       ├── recipes.py
+│   │   │       ├── shopping_lists.py
+│   │   │       ├── groceries.py
+│   │   │       ├── pantry.py
+│   │   │       ├── restaurants.py
+│   │   │       ├── nutrition.py
+│   │   │       ├── seasonality.py
+│   │   │       ├── learning.py
+│   │   │       ├── health.py
+│   │   │       ├── subscription.py
+│   │   │       └── admin.py
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   ├── security.py
+│   │   │   ├── claude.py              # Claude API integration
+│   │   │   └── event_bus.py           # Backend event system
+│   │   ├── models/                    # SQLAlchemy models
+│   │   │   ├── user.py
+│   │   │   ├── subscription.py
+│   │   │   ├── meal_plan.py
+│   │   │   ├── recipe.py
+│   │   │   ├── grocery.py
+│   │   │   ├── pantry.py
+│   │   │   ├── restaurant.py
+│   │   │   ├── nutrition.py
+│   │   │   └── learning.py
+│   │   ├── schemas/                   # Pydantic schemas
+│   │   └── services/                  # Business logic
+│   │       ├── recipe_generator.py    # AI recipe generation
+│   │       ├── image_processor.py     # OCR/image processing
+│   │       ├── nutrition_calculator.py
+│   │       ├── shopping_list_generator.py
+│   │       └── carbon_calculator.py
+│   ├── alembic/                       # Database migrations
+│   ├── tests/
+│   └── requirements.txt
+└── .claudeproject                     # This file
+```
+
+---
+
+## Sidebar Structure
+
+### Collapsible Navigation Groups
+
+```
+🎨 MealCraft Logo
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏠 Dashboard
+
+📋 PLANNING ▼ (collapsible)
+   📅 Meal Planner
+   📖 Recipes
+   🛍️ Shopping Lists
+
+🛒 INVENTORY ▼ (collapsible)
+   🥬 Groceries
+   🏺 Pantry & Storage
+   🔪 Kitchen Equipment
+
+📊 TRACKING ▼ (collapsible)
+   🍕 Restaurants & Takeout
+   💪 Nutrition
+
+🌟 LIFESTYLE ▼ (collapsible)
+   🌱 Seasonality & Sustainability
+   📚 Learning & Skills
+   ❤️ Health Integrations
+
+📤 TOOLS ▼ (collapsible)
+   💾 Export
+   🔄 Backups
+   ❓ Help Center
+
+⚙️ Settings
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+👑 Admin Panel (if admin role)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+[User Avatar]
+Bohdan
+[Home Cook] 🏷️
+🇺🇦 / 🇬🇧
+🌙 / ☀️
+```
+
+**Notes:**
+- Collapsible groups persist user preference (localStorage)
+- Groups expanded by default on first load
+- Active module highlighted
+- Smooth transitions on expand/collapse
+
+---
+
+## Module Definitions
+
+### Total: 16 Modules + Admin Panel
+
+### Module 1: Dashboard
+**Route:** `/dashboard`
+
+**Purpose:** Overview of the entire platform with quick stats and actions
+
+**Content:**
+- Welcome message with user name
+- Quick stats cards:
+  - Meals planned this week: X/21
+  - Recipes saved: X
+  - Shopping lists pending: X
+  - Nutritional summary (weekly avg calories, protein)
+- Recent activity feed (last 10 actions across all modules)
+- Quick actions: "Generate Meal", "Add Groceries", "View Plan"
+- Upcoming meals widget (next 3 days)
+- Alerts: Expiring items, low stock, budget warnings
+
+**No tabs** - single page dashboard
+
+---
+
+### Module 2: 📅 Meal Planner
+**Route:** `/meal-planner`
+
+**Tabs:**
+1. **Overview** (default)
+   - Current week snapshot (7 days, 3 meals each)
+   - Quick stats: meals planned, recipes used, prep time, nutrition summary
+   - This week's shopping list preview
+   - Quick actions: "Plan Next Week", "Copy Last Week", "Generate AI Plan"
+   - Batch cooking reminders
+   
+2. **Calendar**
+   - Week/month view toggle
+   - 3 meal slots per day (breakfast, lunch, dinner)
+   - Drag & drop recipes into slots
+   - Click to: add recipe, generate AI recipe, mark leftovers, add note
+   - Navigation: prev/next week, jump to date
+   
+3. **Batch Cooking** (PLUS/PRO)
+   - Create multi-day meal plans
+   - Select recipe → mark days to repeat
+   - Auto-adjust shopping list quantities
+   - Storage recommendations
+   
+4. **Templates** (PRO)
+   - Save meal plan as template
+   - Load saved templates
+   - Template library (personal + community)
+   - Share templates
+   
+5. **Analysis**
+   - Planning consistency (% of days planned)
+   - Meal distribution (breakfast/lunch/dinner balance)
+   - Variety score (recipe rotation)
+   - Nutritional balance over time
+   - Time management (total cook time per week)
+   - Cost analysis (estimated weekly cost)
+
+**Key Features:**
+- AI meal plan generation from available groceries
+- Multi-day batch cooking support
+- Leftover tracking (link meals across days)
+- Nutritional auto-calculation
+- Shopping list auto-generation
+
+---
+
+### Module 3: 📖 Recipes
+**Route:** `/recipes`
+
+**Tabs:**
+1. **Overview** (default)
+   - Quick stats: total recipes, favorites, most cooked, recently added
+   - Recently used recipes (last 7 days)
+   - Favorite recipes carousel
+   - Quick filters: cuisine, diet, time
+   - Search bar
+   - "Try something new" suggestions
+   
+2. **Generate**
+   - AI recipe generator form:
+     - Select groceries (from inventory or manual)
+     - Cuisine type dropdown
+     - Dietary restrictions checkboxes
+     - Serving size slider
+     - Prep/cook time preferences
+     - Cooking method (stovetop, oven, slow cooker, instant pot)
+     - Complexity level (easy/medium/hard)
+   - Generate button → Claude API creates recipe
+   - Preview with save option
+   
+3. **My Recipes**
+   - Grid/list view toggle
+   - Search & filters
+   - Sort: date, name, cook time, rating
+   - Recipe cards (image, title, time, nutrition, rating)
+   - Multi-select for bulk actions
+   
+4. **Favorites** (PLUS/PRO)
+   - Starred recipes only
+   - Most frequently used
+   - Quick access
+   
+5. **Browse**
+   - Public recipe database (future)
+   - Community recipes
+   - Featured recipes
+   
+6. **Analysis**
+   - Cooking stats (total recipes, cooked this month)
+   - Cuisine breakdown (pie chart)
+   - Recipe complexity distribution
+   - Most used ingredients
+   - Nutritional profile (avg calories, macros)
+   - Success rate (with ratings)
+
+**Recipe Detail Modal:**
+- Full ingredients list
+- Step-by-step instructions
+- Nutritional breakdown (chart)
+- Prep/cook time
+- Serving size adjuster
+- Print button
+- Add to meal plan button
+- Share link (PRO)
+- Rating system
+- Notes section
+
+**Key Features:**
+- AI recipe generation via Claude API
+- Image upload for recipe photos
+- Ingredient parsing from text/images
+- Nutritional auto-calculation
+- Recipe duplication/editing
+- Export to PDF
+
+---
+
+### Module 4: 🛍️ Shopping Lists
+**Route:** `/shopping-lists`
+
+**Tabs:**
+1. **Overview** (default)
+   - Active shopping lists summary
+   - Recently completed lists
+   - Quick stats: lists this month, total items, avg list size, most purchased
+   - Pantry alerts (low stock items)
+   - Upcoming meal ingredients needed
+   
+2. **Active Lists**
+   - Current/pending shopping lists
+   - Check off items as purchased
+   - Add/remove items manually
+   - Multiple lists (e.g., "This Week", "Costco Run")
+   - Share list (PRO)
+   
+3. **Generate from Plan**
+   - Select date range (this week, next 2 weeks)
+   - System aggregates all ingredients from meal plan
+   - Checks against inventory (PRO)
+   - Groups by category (produce, dairy, meat, etc.)
+   - Shows quantity needed
+   - Export: PDF, print, email
+   
+4. **History**
+   - Past completed lists
+   - Date completed
+   - View/reuse old lists
+   - Search & filters
+   
+5. **Analysis**
+   - Shopping efficiency (completion rate)
+   - Category breakdown
+   - Budget tracking (estimated vs actual)
+   - List accuracy metrics
+   - Store optimization (future)
+
+**Key Features:**
+- Smart ingredient consolidation
+- Category grouping
+- Inventory integration (PRO)
+- Price estimation (future)
+- Store routing optimization (future)
+
+---
+
+### Module 5: 🥬 Groceries
+**Route:** `/groceries`
+
+**Tabs:**
+1. **Overview** (default)
+   - Quick stats: items added this week, current inventory, expiring soon, total value
+   - Recent additions (last 10 items)
+   - Expiry alerts (PRO)
+   - Low stock alerts (PRO)
+   - Quick actions: "Add Groceries", "Scan Receipt", "Upload Photo"
+   - Recommended recipes based on current stock
+   
+2. **Add Groceries**
+   - Text input form (comma-separated or line-by-line)
+   - Photo upload (drag & drop or camera)
+   - Receipt scanner (OCR processing)
+   - Quick add from recent items
+   - Barcode scanner (future)
+   
+3. **Inventory** (PRO)
+   - Table of current groceries
+   - Columns: item, category, quantity, unit, added date, expiry date
+   - Search & filters
+   - Sort options
+   - Multi-select for bulk actions
+   - Edit/delete items
+   
+4. **History**
+   - Past grocery entries (log)
+   - Timeline view
+   - Date filters
+   - Spending over time chart
+   
+5. **Analysis**
+   - Spending overview (monthly, weekly)
+   - Shopping patterns (frequency, preferred days)
+   - Waste analysis (expired items - PRO)
+   - Price tracking (future)
+   - Most frequently purchased items
+
+**Key Features:**
+- OCR/image processing for receipts
+- AI ingredient parsing from text
+- Auto-categorization
+- Expiry date tracking (PRO)
+- Auto-add to pantry inventory (PRO)
+- Integration with shopping lists
+
+---
+
+### Module 6: 🏺 Pantry & Storage
+**Route:** `/pantry`
+
+**Tabs:**
+1. **Overview** (default)
+   - Storage summary cards (pantry, fridge, freezer, spice rack item counts)
+   - Critical alerts (expiring soon, out of stock)
+   - Recent additions
+   - Storage tips of the day
+   - Recommended recipes using items near expiry
+   
+2. **Pantry**
+   - Dry goods, canned items, condiments, oils
+   - Categories: Grains, Pasta, Canned, Sauces, Baking, Snacks
+   - Add manually or barcode scan
+   - Quantity & best before tracking
+   
+3. **Fridge**
+   - Perishables (dairy, vegetables, fruits, leftovers)
+   - Temperature zones (door, shelves, crisper)
+   - Expiry date alerts (3 days, 1 day, expired)
+   - "Use soon" smart suggestions
+   
+4. **Freezer**
+   - Frozen items with freeze date
+   - Max storage time recommendations
+   - Batch cooking storage
+   - Defrost reminders
+   
+5. **Spice Rack**
+   - All spices and herbs
+   - Freshness tracking (ground ~6 months, whole ~1 year)
+   - Usage frequency
+   - Recipe suggestions using available spices
+   
+6. **Analysis**
+   - Total inventory value
+   - Items near expiry (action needed)
+   - Storage utilization (e.g., fridge 80% full)
+   - Most used items
+   - Waste tracking (expired items)
+   - Replenishment alerts
+
+**Key Features:**
+- Barcode scanning
+- Photo recognition (AI identifies items)
+- Auto-suggest recipes based on expiring items
+- Storage tips (where to store X)
+- Integration with groceries module
+- Auto-decrement when recipe added to meal plan (PRO)
+
+---
+
+### Module 7: 🔪 Kitchen Equipment
+**Route:** `/kitchen-equipment`
+
+**Status:** PLACEHOLDER for future implementation
+
+**Planned Features:**
+- Inventory of appliances (oven, slow cooker, instant pot, air fryer)
+- Cookware (pots, pans, baking dishes)
+- Tools (knives, spatulas, measuring cups)
+- Wishlist
+- Recipe filtering by available equipment
+- Maintenance reminders
+
+---
+
+### Module 8: 🍕 Restaurants & Takeout
+**Route:** `/restaurants`
+
+**Tabs:**
+1. **Overview** (default)
+   - Quick stats: favorite restaurants, orders this month, spending, most visited
+   - Recent orders (last 5)
+   - Favorite restaurants carousel
+   - This month's spending chart
+   - Quick actions
+   - Recommended restaurants
+   - Spending alerts
+   
+2. **Favorites**
+   - Saved restaurants with ratings, price level, favorite dishes
+   - Search & filters (cuisine, price, rating)
+   - Map view
+   - Photos & notes
+   
+3. **Orders**
+   - Order history log
+   - Fields: date, restaurant, items, cost, delivery/dine-in
+   - Add manually or import (future)
+   - Photos of meals
+   - Rating after eating
+   - Quick reorder button
+   
+4. **Spending**
+   - Monthly spending breakdown
+   - By restaurant
+   - By cuisine type
+   - Delivery fees tracking
+   - Tips tracking
+   - Budget vs actual
+   
+5. **Analysis**
+   - Eating out frequency (times per week/month)
+   - Favorite cuisines (pie chart)
+   - Most visited restaurants
+   - Average cost per meal
+   - Spending trend
+   - "Cook at home" savings potential
+   - Day/time patterns
+   - Health impact (estimated calories)
+
+**Key Features:**
+- AI nutrition estimation for restaurant meals
+- "Should I cook or order?" decision helper
+- Restaurant discovery (Google Maps/Yelp integration - future)
+- Track leftovers from restaurants
+
+---
+
+### Module 9: 💪 Nutrition
+**Route:** `/nutrition`
+
+**Tabs:**
+1. **Overview** (default)
+   - Today's summary cards (calories, protein, carbs, fat with progress bars)
+   - Today's meals from plan
+   - Weekly progress chart
+   - Streak tracker
+   - Quick actions
+   - Tips & insights
+   
+2. **Goals**
+   - Set daily targets (calories, protein, carbs, fat, fiber)
+   - Macros ratio visualization (pie chart)
+   - Goal templates (weight loss, muscle gain, maintenance)
+   - Save/update goals
+   
+3. **Daily Tracking** (PLUS/PRO)
+   - Today's detailed view
+   - Meal-by-meal breakdown
+   - Manual entry form (snacks, drinks)
+   - Real-time calculations
+   
+4. **Progress** (PRO)
+   - Weekly/monthly charts
+   - Average daily intake
+   - Goal adherence percentage
+   - Weight tracking (manual input)
+   - Export data (CSV)
+   
+5. **Analysis**
+   - Goal tracking metrics
+   - Macro trends (30-day chart)
+   - Meal contribution (which meal = most calories)
+   - Nutritional quality (micronutrients if tracked)
+   - Health insights (correlations)
+   - Comparison vs recommended daily allowance
+
+**Key Features:**
+- Auto-calculate from meal plan
+- Ingredient-level nutritional data
+- Custom value overrides
+- Weight tracking
+- Integration with Health module
+
+---
+
+### Module 10: 🌱 Seasonality & Sustainability
+**Route:** `/seasonality`
+
+**Tabs:**
+1. **Overview** (default)
+   - Current month & location (e.g., November 2025, Lviv, Ukraine)
+   - What's in season now (grid with images)
+   - Sustainability score this month
+   - Quick stats (carbon footprint, local sourcing %, food waste)
+   - Seasonal recipe suggestions
+   - Tips for this month
+   
+2. **Seasonal Guide**
+   - Monthly calendar
+   - Location-specific produce (Ukraine regions: Lviv, Kyiv, Odesa)
+   - Peak season alerts
+   - Farmer's market guide
+   
+3. **Carbon Footprint**
+   - Meal carbon impact calculator
+   - Ingredient-level emissions (beef vs chicken vs tofu)
+   - Weekly/monthly totals
+   - Comparison: your footprint vs average
+   - Reduction tips
+   
+4. **Local Sourcing**
+   - Local farmers markets database (by location)
+   - CSA boxes
+   - Local farms directory
+   - Track % of groceries from local sources
+   
+5. **Zero Waste**
+   - Food waste tracker (what got thrown away)
+   - Waste cost calculation
+   - Composting guide
+   - Leftover utilization ideas
+   - Packaging waste tracking
+   - "Use the whole vegetable" tips
+   
+6. **Analysis**
+   - Sustainability score (0-100)
+   - Carbon footprint trend
+   - Local sourcing percentage
+   - Waste reduction progress
+   - Plant-based meal ratio
+   - Seasonal eating score
+   - Improvement recommendations
+
+**Key Features:**
+- Location-aware (Ukraine-specific data)
+- Month-specific guides
+- Recipe filtering by season
+- Carbon impact on every recipe
+- Educational content
+
+---
+
+### Module 11: 📚 Learning & Skills
+**Route:** `/learning`
+
+**Tabs:**
+1. **Overview** (default)
+   - Your progress (skills learned X/48, current level, progress this month)
+   - Skills in progress (3 skills currently practicing)
+   - Recently learned
+   - Suggested next skills
+   - Quick stats
+   - Achievement badges
+   
+2. **Techniques**
+   - Library of cooking techniques:
+     - Knife skills (julienne, brunoise, chiffonade)
+     - Cooking methods (sauté, braise, roast, grill, steam)
+     - Sauces (mother sauces, emulsions)
+     - Baking (folding, creaming, tempering)
+     - Advanced (sous vide, fermentation)
+   - Each technique: step-by-step guide, video tutorial, tips, common mistakes, practice recipes
+   
+3. **My Notes**
+   - Personal cooking journal
+   - Things learned
+   - Recipe modifications that worked
+   - Technique improvements
+   - Flavor pairings discovered
+   - Kitchen hacks
+   - Tags & search
+   
+4. **Progress**
+   - Skills mastered (mark as learned)
+   - Skill tree visualization
+   - Techniques practicing
+   - Recipes completed using each technique
+   - Level system (beginner → intermediate → advanced)
+   - Certificates/badges (gamification)
+   
+5. **Analysis**
+   - Skills mastered count
+   - Learning velocity (skills per month)
+   - Most practiced techniques
+   - Skill gaps
+   - Recommended next skills
+   - Recipe difficulty progression
+
+**Key Features:**
+- Video tutorials (YouTube embeds or custom)
+- Interactive step-by-step guides
+- Technique-based recipe recommendations
+- Save personal tips
+- Skill-based achievements
+
+---
+
+### Module 12: ❤️ Health Integrations
+**Route:** `/health`
+
+**Tabs:**
+1. **Overview** (default)
+   - Connection status cards (Apple Health, Google Fit, etc.)
+   - Today's metrics snapshot (weight, steps, calories, sleep)
+   - This week's summary
+   - Key insights & correlations
+   - Quick actions
+   - Goals progress
+   
+2. **Integrations**
+   - Available integrations:
+     - Apple Health (via PWA/Capacitor - Phase 2)
+     - Google Fit (Android - future)
+     - MyFitnessPal (future)
+     - Fitbit (future)
+     - Withings (smart scale)
+   - Connection status
+   - Data sync settings (what to import/export)
+   - Sync frequency
+   - Last sync timestamp
+   - Disconnect option
+   
+3. **Metrics**
+   - Weight tracking (manual entry for MVP, Apple Health later)
+   - Line chart with trend & goal weight
+   - BMI calculation
+   - Body composition (if available)
+   - Activity level (steps, active calories, exercise minutes)
+   - Sleep quality (hours, stages if available)
+   - Heart rate
+   - Manual entry forms for all metrics
+   
+4. **Correlations**
+   - Food → Weight correlation
+   - Meal timing → Sleep quality
+   - Protein intake → Workout recovery
+   - Carb intake → Energy levels
+   - Scatter plots and correlation charts
+   - AI insights
+   
+5. **Analysis**
+   - Health score (0-100 based on multiple factors)
+   - Weight trend analysis
+   - Activity vs nutrition balance
+   - Recovery metrics
+   - Personalized recommendations
+   - Goal progress
+
+**Key Features:**
+- Manual metrics input (MVP)
+- Apple Health integration (Phase 2 via PWA + Capacitor)
+- Auto-adjust calorie goals based on activity
+- Smart recommendations
+- Weight predictions
+- Privacy controls
+
+**Apple Health Integration Notes:**
+- **Option 1 (Recommended)**: PWA + Capacitor.js for iOS wrapper → access HealthKit API
+- **Read**: weight, activity, sleep, heart rate
+- **Write**: nutrition data (calories, macros, water)
+- **MVP**: Start with manual input, add Apple Health in Phase 2
+
+---
+
+### Module 13: 💾 Export
+**Route:** `/export`
+
+**Single Page (no tabs)**
+
+**What Can Be Exported:**
+- Recipes (PDF, JSON, CSV)
+- Meal plans (PDF with calendar, JSON)
+- Shopping lists (PDF, CSV, Markdown)
+- Nutrition data (CSV with daily logs)
+- Grocery history (CSV, Excel)
+- Restaurant orders (CSV)
+- Complete data export (ZIP with all data - GDPR compliance)
+
+**Export Options:**
+- Format selection
+- Date range filter
+- Select specific items (multi-select)
+- Schedule exports (PRO - weekly email with meal plan)
+- One-click exports (pre-configured templates)
+
+**UI:**
+- Grid of export cards
+- Each card: icon, title, description, formats available, [Export] button
+- Export history (last 10 exports with download links)
+
+---
+
+### Module 14: 🔄 Backups
+**Route:** `/backups`
+
+**Single Page (no tabs)**
+
+**Features:**
+- Manual backup (download all data as ZIP)
+- Scheduled backups (PRO):
+  - Daily/Weekly/Monthly
+  - Email backup or cloud storage (Google Drive integration - future)
+- Restore from backup (upload ZIP)
+- Backup history (last 10 backups - PRO)
+- Backup size indication
+- Encryption option (PRO)
+
+**What's Backed Up:**
+- All recipes
+- All meal plans
+- Grocery/pantry inventory
+- Shopping lists
+- Nutrition goals and logs
+- Settings and preferences
+- User notes and favorites
+
+**UI:**
+- Prominent [Create Backup Now] button
+- Backup schedule settings (if PRO)
+- Backup history table with restore buttons
+- Drag & drop area for restore file
+
+---
+
+### Module 15: ❓ Help Center
+**Route:** `/help`
+
+**Tabs:**
+1. **Getting Started**
+   - Welcome guide
+   - Quick tour
+   - First steps (create account, add groceries, generate recipe)
+   - Video tutorials
+   
+2. **FAQs**
+   - Searchable FAQ database
+   - Categories: Account, Subscriptions, Features, Troubleshooting
+   - Most common questions highlighted
+   
+3. **Tutorials**
+   - Step-by-step guides for each module
+   - Screenshots/GIFs
+   - "How to" articles
+   - Tips & tricks
+   
+4. **Contact Support**
+   - Contact form
+   - Email support
+   - Response time estimate
+   - Ticket tracking (PRO)
+   
+5. **Documentation**
+   - Full feature documentation
+   - API docs (future - for integrations)
+   - Changelog (what's new)
+   - Known issues
+   
+6. **Feedback**
+   - Feature requests
+   - Bug reports
+   - Upvote popular requests (roadmap transparency)
+
+---
+
+### Module 16: ⚙️ Settings
+**Route:** `/settings`
+
+**Tabs:**
+1. **Profile**
+   - Name, avatar, bio
+   - Dietary info (default preferences)
+   
+2. **Account**
+   - Email (read-only from Google)
+   - Password (if applicable)
+   - 2FA (future)
+   - Delete account
+   
+3. **Subscription**
+   - Current tier display
+   - Usage stats (meal plans generated this month, recipes saved)
+   - Upgrade/downgrade buttons
+   - Manage billing (Stripe portal)
+   - Cancel subscription
+   
+4. **Preferences**
+   - Language: 🇺🇦 Ukrainian / 🇬🇧 English
+   - Theme: Light/Dark/System
+   - Units: Metric/Imperial
+   - Default serving size: 1-10 people
+   - First day of week: Monday/Sunday
+   - Date format: DD/MM/YYYY vs MM/DD/YYYY
+   
+5. **Defaults**
+   - Default cuisine preference
+   - Default dietary restrictions
+   - Default meal plan start day
+   - Recipe difficulty preference
+   
+6. **Notifications**
+   - Email notifications (on/off)
+   - Push notifications (future - PWA)
+   - Notification types: expiry alerts, budget alerts, goal reminders, weekly summary
+   
+7. **Privacy**
+   - Recipe visibility (public/private default)
+   - Profile visibility
+   - Data sharing preferences
+   - Export all data (GDPR)
+   
+8. **Integrations**
+   - Connected apps (Apple Health, Google Fit, etc.)
+   - API access (future)
+   
+9. **About**
+   - Version info
+   - Changelog
+   - Terms of service
+   - Privacy policy
+   - Contact support
+   - Logout button
+
+---
+
+### Admin Panel
+**Route:** `/admin`
+
+**Access:** ADMIN role only
+
+**Tabs:**
+1. **Users**
+   - Table: email, name, tier, status, created date
+   - Search & filters
+   - Actions: view details, change tier, suspend, delete
+   - User details modal: subscription info, usage stats
+   
+2. **Analytics**
+   - Dashboard cards: total users by tier, MRR, churn rate, AI API usage & costs
+   - Charts: user growth, revenue trends, most popular recipes/cuisines, feature usage heatmap
+   
+3. **Tier Management**
+   - Edit tier features & limits
+   - Enable/disable features per tier
+   - Update pricing (warning: affects existing users)
+   - Create promotional codes (future)
+   
+4. **Content**
+   - All recipes (public & private)
+   - Feature/unfeature recipes
+   - Moderate user-generated content
+   - Recipe of the week picker
+   
+5. **System**
+   - API health status (Claude, Stripe, DB)
+   - Error logs (last 100 errors)
+   - Background jobs status
+   - Webhook logs (Stripe events)
+
+---
+
+## Subscription Tiers
+
+### Tier 1: Home Cook (FREE)
+**Price:** $0/month
+
+**Features:**
+- 5 AI meal plans per month
+- Basic recipe database access
+- Manual grocery entry only
+- 2-person default portions
+- Basic nutritional info (calories, macros)
+- Limited recipe saves (20 recipes max)
+
+### Tier 2: Chef's Choice (PLUS)
+**Price:** $9.99/month
+
+**Features:**
+- 30 AI meal plans per month
+- AI recipe generation from grocery photos/lists
+- Shopping list generation
+- Saved favorite recipes (up to 100)
+- Cuisine & dietary filters
+- Weekly meal planning calendar
+- Nutritional goal tracking
+- Grocery inventory (basic)
+- Batch cooking planner
+- Export meal plans & shopping lists (PDF)
+
+### Tier 3: Master Chef (PRO)
+**Price:** $19.99/month
+
+**Features:**
+- **Unlimited AI meal plans**
+- Advanced AI features (multi-day batch cooking suggestions)
+- Unlimited saved recipes
+- Full grocery & pantry inventory management
+- Expiry tracking & alerts
+- Custom nutritional targets with progress tracking
+- Export all data (PDF, CSV, JSON)
+- Recipe sharing with other users
+- Priority support
+- Scheduled backups
+- Health integrations (Apple Health, etc.)
+- Templates & meal plan reuse
+- Advanced analytics
+- Zero waste tracking
+- Carbon footprint tracking
+
+---
+
+## Database Schema
+
+### Core Tables
+
+```sql
+-- Users
+users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255),
+    google_id VARCHAR(255) UNIQUE,
+    role VARCHAR(20) DEFAULT 'USER', -- USER, ADMIN
+    subscription_tier VARCHAR(20) DEFAULT 'HOME_COOK', -- HOME_COOK, CHEFS_CHOICE, MASTER_CHEF
+    avatar_url TEXT,
+    locale VARCHAR(5) DEFAULT 'en', -- en, uk
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Subscriptions
+subscriptions (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    stripe_customer_id VARCHAR(255),
+    stripe_subscription_id VARCHAR(255),
+    tier VARCHAR(20) NOT NULL, -- HOME_COOK, CHEFS_CHOICE, MASTER_CHEF
+    status VARCHAR(20) DEFAULT 'active', -- active, canceled, past_due, trialing
+    current_period_start TIMESTAMP,
+    current_period_end TIMESTAMP,
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Tiers (configuration)
+tiers (
+    id UUID PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL, -- HOME_COOK, CHEFS_CHOICE, MASTER_CHEF
+    display_name VARCHAR(100) NOT NULL,
+    price_monthly DECIMAL(10,2),
+    features JSONB, -- {"meal_plans_per_month": 5, "max_saved_recipes": 20, ...}
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Features (for tier configuration)
+features (
+    id UUID PRIMARY KEY,
+    key VARCHAR(100) UNIQUE NOT NULL, -- e.g., "ai_meal_generation", "grocery_inventory"
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Tier Features (mapping)
+tier_features (
+    id UUID PRIMARY KEY,
+    tier_id UUID REFERENCES tiers(id) ON DELETE CASCADE,
+    feature_id UUID REFERENCES features(id) ON DELETE CASCADE,
+    enabled BOOLEAN DEFAULT TRUE,
+    limit_value INTEGER, -- NULL = unlimited, or specific number
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(tier_id, feature_id)
+);
+
+-- Meal Plans
+meal_plans (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    date_start DATE NOT NULL,
+    date_end DATE NOT NULL,
+    servings INTEGER DEFAULT 2,
+    is_template BOOLEAN DEFAULT FALSE,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Meals (individual meal entries in a plan)
+meals (
+    id UUID PRIMARY KEY,
+    meal_plan_id UUID REFERENCES meal_plans(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    meal_type VARCHAR(20) NOT NULL, -- breakfast, lunch, dinner
+    recipe_id UUID REFERENCES recipes(id) ON DELETE SET NULL,
+    servings INTEGER,
+    notes TEXT,
+    is_leftover BOOLEAN DEFAULT FALSE,
+    leftover_from_meal_id UUID REFERENCES meals(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Recipes
+recipes (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    cuisine_type VARCHAR(100), -- Italian, Mexican, Japanese, etc.
+    dietary_restrictions TEXT[], -- ["vegetarian", "gluten-free", ...]
+    prep_time INTEGER, -- minutes
+    cook_time INTEGER, -- minutes
+    servings INTEGER DEFAULT 2,
+    difficulty VARCHAR(20), -- easy, medium, hard
+    instructions TEXT NOT NULL,
+    image_url TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
+    is_ai_generated BOOLEAN DEFAULT FALSE,
+    rating INTEGER, -- 1-5 stars
+    times_cooked INTEGER DEFAULT 0,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Recipe Ingredients
+recipe_ingredients (
+    id UUID PRIMARY KEY,
+    recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE,
+    ingredient_name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2),
+    unit VARCHAR(50), -- g, kg, ml, l, cup, tbsp, tsp, piece, etc.
+    category VARCHAR(100), -- produce, meat, dairy, etc.
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Nutrition Info (per recipe)
+recipe_nutrition (
+    id UUID PRIMARY KEY,
+    recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE,
+    calories INTEGER,
+    protein_g DECIMAL(10,1),
+    carbs_g DECIMAL(10,1),
+    fat_g DECIMAL(10,1),
+    fiber_g DECIMAL(10,1),
+    sugar_g DECIMAL(10,1),
+    sodium_mg DECIMAL(10,1),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Saved Recipes (favorites)
+saved_recipes (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, recipe_id)
+);
+
+-- Shopping Lists
+shopping_lists (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    meal_plan_id UUID REFERENCES meal_plans(id) ON DELETE SET NULL, -- if generated from plan
+    status VARCHAR(20) DEFAULT 'active', -- active, completed, archived
+    estimated_cost DECIMAL(10,2),
+    completed_at TIMESTAMP,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Shopping List Items
+shopping_list_items (
+    id UUID PRIMARY KEY,
+    shopping_list_id UUID REFERENCES shopping_lists(id) ON DELETE CASCADE,
+    ingredient_name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2),
+    unit VARCHAR(50),
+    category VARCHAR(100),
+    is_purchased BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Groceries (purchase history)
+groceries (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    item_name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2),
+    unit VARCHAR(50),
+    category VARCHAR(100),
+    purchase_date DATE NOT NULL,
+    expiry_date DATE,
+    cost DECIMAL(10,2),
+    store VARCHAR(255),
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Pantry Inventory
+pantry_inventory (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    item_name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2),
+    unit VARCHAR(50),
+    category VARCHAR(100), -- produce, meat, dairy, etc.
+    storage_location VARCHAR(50), -- pantry, fridge, freezer, spice_rack
+    purchase_date DATE,
+    expiry_date DATE,
+    freeze_date DATE, -- for frozen items
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Restaurants
+restaurants (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    cuisine_type VARCHAR(100),
+    price_level INTEGER, -- 1-4 ($, $$, $$$, $$$$)
+    location TEXT,
+    rating INTEGER, -- 1-5 stars (user's personal rating)
+    notes TEXT,
+    favorite_dishes TEXT[],
+    image_url TEXT,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Restaurant Orders
+restaurant_orders (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    restaurant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL,
+    restaurant_name VARCHAR(255) NOT NULL, -- denormalized for if restaurant deleted
+    order_date DATE NOT NULL,
+    items_ordered TEXT[],
+    cost DECIMAL(10,2),
+    order_type VARCHAR(20), -- dine_in, delivery, takeout
+    rating INTEGER, -- 1-5 stars
+    notes TEXT,
+    image_url TEXT,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Nutrition Goals
+nutrition_goals (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    daily_calories INTEGER,
+    daily_protein_g INTEGER,
+    daily_carbs_g INTEGER,
+    daily_fat_g INTEGER,
+    daily_fiber_g INTEGER,
+    goal_type VARCHAR(50), -- weight_loss, muscle_gain, maintenance, custom
+    start_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Nutrition Tracking (daily logs)
+nutrition_logs (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    meal_type VARCHAR(20), -- breakfast, lunch, dinner, snack
+    meal_id UUID REFERENCES meals(id) ON DELETE SET NULL,
+    manual_entry BOOLEAN DEFAULT FALSE,
+    calories INTEGER,
+    protein_g DECIMAL(10,1),
+    carbs_g DECIMAL(10,1),
+    fat_g DECIMAL(10,1),
+    fiber_g DECIMAL(10,1),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Health Metrics
+health_metrics (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    weight_kg DECIMAL(5,2),
+    body_fat_percent DECIMAL(4,1),
+    steps INTEGER,
+    active_calories INTEGER,
+    sleep_hours DECIMAL(3,1),
+    heart_rate_avg INTEGER,
+    source VARCHAR(50), -- manual, apple_health, google_fit
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Learning Techniques
+techniques (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100), -- knife_skills, cooking_methods, sauces, baking, advanced
+    description TEXT,
+    difficulty VARCHAR(20), -- beginner, intermediate, advanced
+    video_url TEXT,
+    instructions TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- User Technique Progress
+user_technique_progress (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    technique_id UUID REFERENCES techniques(id) ON DELETE CASCADE,
+    status VARCHAR(20), -- learning, practicing, mastered
+    progress_percent INTEGER DEFAULT 0,
+    times_practiced INTEGER DEFAULT 0,
+    mastered_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, technique_id)
+);
+
+-- User Notes (learning journal)
+user_notes (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    content TEXT NOT NULL,
+    tags TEXT[],
+    category VARCHAR(100), -- technique, recipe_modification, tip, discovery
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Usage Tracking (for tier limits)
+usage_tracking (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    month INTEGER NOT NULL, -- 1-12
+    year INTEGER NOT NULL,
+    meal_plans_generated INTEGER DEFAULT 0,
+    recipes_saved INTEGER DEFAULT 0,
+    ai_generations_used INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, month, year)
+);
+```
+
+---
+
+## UI/UX Design System
+
+### Consistent Component Patterns
+
+**CRITICAL:** All modules must use the same UI components and patterns. Only the data fields differ per module.
+
+### 1. Page Layout (Standard)
+
+```
+┌─────────────────────────────────────────────────┐
+│  MODULE TITLE                           [Actions]│
+│  Breadcrumb > Navigation                         │
+├─────────────────────────────────────────────────┤
+│  📑 Tabs: Overview | Tab2 | Tab3 | Analysis     │
+├─────────────────────────────────────────────────┤
+│                                                  │
+│  Tab Content Area                                │
+│                                                  │
+└─────────────────────────────────────────────────┘
+```
+
+### 2. Data Table (Standard across all modules)
+
+```
+┌─────────────────────────────────────────────────┐
+│  [🔍 Search]  [🔽 Filter]  [📊 Sort]  [+ Add]   │
+│  ☐ Select All  | 3 selected [Archive][Delete]   │
+├─────────────────────────────────────────────────┤
+│  ☐ Item 1  |  Details  |  Date  |  [•••]        │
+│  ☐ Item 2  |  Details  |  Date  |  [•••]        │
+│  ☑ Item 3  |  Details  |  Date  |  [•••]        │
+├─────────────────────────────────────────────────┤
+│  Showing 1-50 of 156    [< 1 2 3 4 >]           │
+└─────────────────────────────────────────────────┘
+```
+
+**Features:**
+- Multi-select checkboxes
+- Bulk actions (Archive, Delete, Export) appear when items selected
+- Sortable columns (click header to sort)
+- Filterable (filter panel slides in from right)
+- Searchable (real-time search)
+- Pagination
+- Action menu (•••) on each row: Edit, Duplicate, Export, Archive, Delete
+
+### 3. Card Grid View (Alternative to table)
+
+```
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│ Image  │ │ Image  │ │ Image  │ │ Image  │
+│ Title  │ │ Title  │ │ Title  │ │ Title  │
+│ Meta   │ │ Meta   │ │ Meta   │ │ Meta   │
+│ [⭐📊] │ │ [⭐📊] │ │ [⭐📊] │ │ [⭐📊] │
+└────────┘ └────────┘ └────────┘ └────────┘
+```
+
+**Features:**
+- Responsive grid (4 cols desktop, 2 cols tablet, 1 col mobile)
+- Hover effects
+- Quick actions on hover
+- Multi-select mode toggle
+
+### 4. Filter Panel (Consistent design)
+
+```
+┌─────────────────┐
+│ FILTERS      [✕]│
+├─────────────────┤
+│ 🔍 Search       │
+│ [_____________] │
+│                 │
+│ 📅 Date Range   │
+│ [From] - [To]   │
+│                 │
+│ 🏷️ Category     │
+│ ☐ Category 1    │
+│ ☐ Category 2    │
+│ ☑ Category 3    │
+│                 │
+│ 🎯 Other Filter │
+│ [Dropdown ▼]    │
+│                 │
+│ [Reset] [Apply] │
+└─────────────────┘
+```
+
+**Features:**
+- Slides in from right
+- Closes on backdrop click or [✕]
+- Real-time filter as you type (for search)
+- Apply button for other filters
+- Reset clears all filters
+
+### 5. Modal (Standardized)
+
+```
+┌─────────────────────────────────────┐
+│  ✕                                   │
+│  Modal Title                         │
+│  ─────────────────────────────────  │
+│                                      │
+│  Modal Content                       │
+│  (Form fields, text, etc.)           │
+│                                      │
+│  ─────────────────────────────────  │
+│           [Cancel]  [Save]           │
+└─────────────────────────────────────┘
+```
+
+**Sizes:**
+- Small (400px): Confirmations, simple forms
+- Medium (600px): Standard forms
+- Large (800px): Complex forms, image uploads
+- Full (90vw): Recipe detail, meal plan editor
+
+### 6. Stats Cards (Overview tabs)
+
+```
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ 📊 Icon     │ │ 📊 Icon     │ │ 📊 Icon     │
+│ 156         │ │ 23          │ │ 87%         │
+│ Total Items │ │ This Week   │ │ On Track    │
+│ ↑12% vs avg │ │ ↓5 vs last  │ │ Great! 🔥   │
+└─────────────┘ └─────────────┘ └─────────────┘
+```
+
+**Variants:**
+- Default (blue)
+- Success (green)
+- Warning (yellow)
+- Danger (red)
+- Info (purple)
+
+### 7. Empty State (Unified but customized per module)
+
+```
+┌─────────────────────────────────────┐
+│                                      │
+│           [Icon/Illustration]        │
+│                                      │
+│     No [items] yet                   │
+│                                      │
+│     [Context-specific message        │
+│     tailored to the module]          │
+│                                      │
+│         [+ Primary Action]           │
+│                                      │
+│     [Secondary suggestion/link]      │
+│                                      │
+└─────────────────────────────────────┘
+```
+
+**Examples by Module:**
+
+**Recipes - Empty State:**
+```
+     📖
+  No recipes yet
+  
+  Try adding some groceries first,
+  then generate your first AI recipe!
+  
+  [+ Generate Recipe]
+  
+  or browse recipe templates
+```
+
+**Meal Planner - Empty State:**
+```
+     📅
+  No meal plans yet
+  
+  Start by adding some recipes to your library,
+  then create your first weekly meal plan!
+  
+  [+ Create Meal Plan]
+  
+  or view meal planning guide
+```
+
+**Groceries - Empty State:**
+```
+     🥬
+  No groceries added yet
+  
+  Add your first grocery items by typing them in,
+  uploading a photo, or scanning a receipt!
+  
+  [+ Add Groceries]
+  
+  or see how it works
+```
+
+**Shopping Lists - Empty State:**
+```
+     🛍️
+  No shopping lists yet
+  
+  Generate a shopping list from your meal plan
+  or create a new list manually!
+  
+  [+ Generate from Plan]
+  
+  or create blank list
+```
+
+**Pantry - Empty State:**
+```
+     🏺
+  Your pantry is empty
+  
+  Add items from your groceries or manually
+  track what's in your pantry, fridge, and freezer!
+  
+  [+ Add Items]
+  
+  or import from groceries
+```
+
+**Restaurants - Empty State:**
+```
+     🍕
+  No restaurants saved yet
+  
+  Start tracking your favorite restaurants
+  and takeout orders!
+  
+  [+ Add Restaurant]
+  
+  or log a recent order
+```
+
+**Nutrition - Empty State:**
+```
+     💪
+  No nutrition goals set
+  
+  Set your daily calorie and macro goals
+  to start tracking your nutrition!
+  
+  [+ Set Goals]
+  
+  or use a goal template
+```
+
+### 8. Action Dropdown (•••)
+
+```
+[•••] → ┌──────────────┐
+        │ ✏️ Edit       │
+        │ 📋 Duplicate  │
+        │ 📤 Export     │
+        │ 🗄️ Archive    │
+        │ ───────────  │
+        │ 🗑️ Delete     │
+        └──────────────┘
+```
+
+**Standard actions (adapt per module):**
+- Edit (always available)
+- Duplicate/Copy (if applicable)
+- Export (if applicable)
+- Archive/Unarchive (always available)
+- Delete (always available, shows confirmation modal)
+
+**Destructive actions:**
+- Red color
+- Always show confirmation modal
+- Clear warning about consequences
+
+### 9. Form Layout (Standardized)
+
+```
+┌─────────────────────────────────────┐
+│  Field Label *                       │
+│  [___________________________]       │
+│  Helper text or error message        │
+│                                      │
+│  Dropdown Label                      │
+│  [Select option ▼]                   │
+│                                      │
+│  Checkbox Section                    │
+│  ☐ Option 1                          │
+│  ☑ Option 2                          │
+│  ☐ Option 3                          │
+│                                      │
+│  File Upload                         │
+│  [Drag & drop or click to upload]    │
+│  [Preview of uploaded file]          │
+└─────────────────────────────────────┘
+```
+
+**Validation:**
+- Real-time validation on blur
+- Error messages below field (red)
+- Success indicators (green checkmark)
+- Disabled submit until valid
+
+### 10. Toast Notifications (Consistent feedback)
+
+```
+Top-right corner:
+
+┌────────────────────────────────┐
+│ ✅ Success! Item saved          │
+└────────────────────────────────┘
+
+┌────────────────────────────────┐
+│ ⚠️ Warning: Item near expiry    │
+└────────────────────────────────┘
+
+┌────────────────────────────────┐
+│ ❌ Error: Could not save        │
+└────────────────────────────────┘
+
+┌────────────────────────────────┐
+│ ℹ️ Info: Export in progress...  │
+└────────────────────────────────┘
+```
+
+**Behavior:**
+- Auto-dismiss after 3s (success, info)
+- Auto-dismiss after 5s (warning)
+- Manual dismiss only (error)
+- Stack multiple toasts
+- Slide in from top-right
+
+### 11. Loading States
+
+**Skeleton Loaders:**
+- Use for table rows while loading
+- Use for card grids while loading
+- Animate with shimmer effect
+
+**Spinners:**
+- Button loading state (spinner replaces text)
+- Page loading (centered spinner)
+- Inline loading (small spinner next to text)
+
+**Progress Bars:**
+- File uploads
+- Long-running operations (AI generation, export)
+
+### 12. Tabs (Module-level)
+
+```
+┌─────────────────────────────────────────────────┐
+│ [Overview] | Tab2 | Tab3 | Tab4 | Analysis       │
+└─────────────────────────────────────────────────┘
+```
+
+**Styling:**
+- Active tab: underline + bold + primary color
+- Hover: background color change
+- Responsive: scroll horizontally on mobile
+- Badge on tab (e.g., "Analysis (5)" for 5 insights)
+
+---
+
+## Reusable Component Library (shadcn/ui)
+
+### Core Components (Build Once, Use Everywhere)
+
+**From shadcn/ui:**
+- `Button` - all button variants
+- `Input` - text inputs
+- `Textarea` - multi-line text
+- `Select` - dropdowns
+- `Checkbox` - checkboxes
+- `Radio` - radio buttons
+- `Switch` - toggle switches
+- `Slider` - range inputs
+- `DatePicker` - date selection
+- `Dialog` - modals
+- `DropdownMenu` - action menus
+- `Table` - base table component
+- `Card` - card wrapper
+- `Badge` - status badges
+- `Avatar` - user avatars
+- `Toast` - notifications
+- `Tabs` - tab navigation
+- `Accordion` - collapsible sections
+- `Tooltip` - hover tooltips
+
+**Custom Components (Build for MealCraft):**
+- `<DataTable>` - enhanced table with sorting, filtering, pagination, multi-select
+- `<StatsCard>` - quick stats display
+- `<FilterPanel>` - consistent filter UI
+- `<EmptyState>` - when no data (customizable per module)
+- `<ActionMenu>` - dropdown actions (•••)
+- `<BulkActions>` - archive/delete/export bar
+- `<SearchBar>` - unified search
+- `<DateRangePicker>` - date range filters
+- `<ModuleTabs>` - module-level tabs
+- `<Sidebar>` - app navigation sidebar
+- `<CollapsibleSection>` - collapsible sidebar groups
+- `<FeatureGate>` - tier-based feature gating
+- `<UpgradePrompt>` - prompt to upgrade tier
+- `<PageHeader>` - module page header (title + actions)
+- `<LoadingSkeleton>` - skeleton loaders
+- `<ConfirmDialog>` - confirmation modals
+- `<ImageUpload>` - drag & drop image upload
+- `<NutritionChart>` - macro visualization (pie/bar chart)
+- `<RecipeCard>` - recipe display card
+- `<MealCard>` - meal display card
+- `<RestaurantCard>` - restaurant display card
+
+---
+
+## Inter-Module Communication (Event Bus)
+
+### Event Bus Pattern
+
+Modules should be loosely coupled but able to communicate via an event bus.
+
+**Example Flow:**
+```typescript
+// Groceries module emits event when items added
+eventBus.emit('groceries:added', { items: [...] });
+
+// Recipes module listens and updates available ingredients
+eventBus.on('groceries:added', (data) => {
+  updateAvailableIngredients(data.items);
+});
+
+// Pantry module listens and updates inventory
+eventBus.on('groceries:added', (data) => {
+  addToPantryInventory(data.items);
+});
+```
+
+**Key Events:**
+- `groceries:added` → Recipes, Pantry, Shopping Lists
+- `recipe:saved` → Meal Planner, Shopping Lists
+- `meal_plan:updated` → Shopping Lists, Nutrition
+- `shopping_list:completed` → Groceries, Pantry
+- `nutrition:goal_set` → Dashboard, Meal Planner
+- `pantry:item_expiring` → Dashboard, Recipes
+- `restaurant:order_added` → Nutrition, Dashboard
+
+---
+
+## Development Roadmap
+
+### Phase 0: Foundation (Week 1) - FIRST PRIORITY
+**Goal:** Set up project structure, auth, database, i18n, and core UI
+
+**Tasks:**
+- [ ] Initialize Next.js + FastAPI projects
+- [ ] Set up PostgreSQL database
+- [ ] Database schema creation (all tables)
+- [ ] Alembic migrations setup
+- [ ] Google OAuth authentication (NextAuth.js)
+- [ ] User roles (USER, ADMIN) + tier system
+- [ ] i18n setup (next-intl, en + uk locales)
+- [ ] Base UI components from shadcn/ui
+- [ ] Sidebar with collapsible groups
+- [ ] Dashboard layout (header + sidebar + content area)
+- [ ] Module tabs component
+- [ ] Theme system (light/dark/system)
+- [ ] Module registry & event bus architecture
+- [ ] Seed data (tiers, features)
+
+**Deliverables:**
+- Working authentication flow
+- Empty dashboard with sidebar navigation
+- All modules accessible (but empty)
+- Database fully set up
+- i18n working (can toggle UK/EN)
+
+---
+
+### Phase 1: First Module - GROCERIES (Week 2) - ITERATIVE & PERFECT
+**Goal:** Build ONE complete module with ALL features and polish it to perfection
+
+**Why Groceries First?**
+- Foundational (other modules depend on it)
+- Demonstrates all UI patterns (table, cards, filters, forms, empty states)
+- Tests image upload, OCR, AI parsing
+- Tests tier gating (Inventory is PRO-only)
+
+**Tasks:**
+- [ ] **Overview Tab:**
+  - [ ] Quick stats cards (items added, inventory count, expiring soon, total value)
+  - [ ] Recent additions list (last 10)
+  - [ ] Expiry alerts section (PRO)
+  - [ ] Low stock alerts (PRO)
+  - [ ] Quick action buttons
+  - [ ] Recommended recipes widget
+  
+- [ ] **Add Groceries Tab:**
+  - [ ] Text input form (comma-separated or line-by-line)
+  - [ ] Image upload (drag & drop)
+  - [ ] Receipt scanner (OCR integration)
+  - [ ] Quick add from recent items
+  - [ ] Form validation
+  - [ ] Success feedback (toast)
+  
+- [ ] **Inventory Tab (PRO):**
+  - [ ] Data table with all standard features:
+    - [ ] Multi-select checkboxes
+    - [ ] Bulk actions (archive, delete)
+    - [ ] Sort by all columns
+    - [ ] Filter panel (category, date, expiry)
+    - [ ] Search bar
+    - [ ] Pagination
+  - [ ] Action menu (•••) per row: edit, archive, delete
+  - [ ] Edit modal (inline editing)
+  - [ ] Delete confirmation modal
+  - [ ] Expiry date highlighting (red if expired, yellow if soon)
+  - [ ] Low stock indicators
+  
+- [ ] **History Tab:**
+  - [ ] Timeline view (grouped by date)
+  - [ ] Date range filter
+  - [ ] Search
+  - [ ] Spending chart
+  
+- [ ] **Analysis Tab:**
+  - [ ] Spending overview (charts)
+  - [ ] Shopping patterns (heatmap)
+  - [ ] Waste analysis (PRO)
+  - [ ] Most purchased items (bar chart)
+  - [ ] Category breakdown (pie chart)
+  
+- [ ] **Empty States:**
+  - [ ] Custom empty state for each tab
+  - [ ] Context-specific messages
+  - [ ] Primary action button
+  - [ ] Secondary suggestion link
+  
+- [ ] **Backend API:**
+  - [ ] POST /api/groceries (add items)
+  - [ ] GET /api/groceries (list with filters)
+  - [ ] PUT /api/groceries/:id (update)
+  - [ ] DELETE /api/groceries/:id
+  - [ ] POST /api/groceries/parse-image (OCR)
+  - [ ] POST /api/groceries/parse-text (AI parsing)
+  - [ ] GET /api/groceries/analytics
+  
+- [ ] **Tier Gating:**
+  - [ ] Inventory tab shows upgrade prompt for FREE users
+  - [ ] Usage limits enforced (if we add limits for groceries)
+  
+- [ ] **Testing:**
+  - [ ] Test all CRUD operations
+  - [ ] Test image upload + OCR
+  - [ ] Test text parsing
+  - [ ] Test filters, sorting, search
+  - [ ] Test bulk actions
+  - [ ] Test tier gating
+  - [ ] Test responsive design (mobile, tablet, desktop)
+  - [ ] Test i18n (both languages)
+
+**Deliverables:**
+- Groceries module 100% complete and polished
+- All UI patterns implemented and working
+- All edge cases handled
+- Mobile responsive
+- Both languages working
+- Ready to be used as template for other modules
+
+**Review & Approval:**
+- User reviews Groceries module
+- User approves before proceeding to next module
+- Any changes/improvements made before moving on
+
+---
+
+### Phase 2: Replicate Pattern - RECIPES & MEAL PLANNER (Week 3-4)
+**Goal:** Use Groceries as template, build Recipes and Meal Planner modules
+
+**Recipes Module:**
+- [ ] All 6 tabs (Overview, Generate, My Recipes, Favorites, Browse, Analysis)
+- [ ] AI recipe generation (Claude API integration)
+- [ ] Recipe detail modal
+- [ ] Same UI patterns as Groceries
+- [ ] Backend API endpoints
+- [ ] Testing
+
+**Meal Planner Module:**
+- [ ] All 5 tabs (Overview, Calendar, Batch Cooking, Templates, Analysis)
+- [ ] Calendar UI (week/month view)
+- [ ] Drag & drop functionality
+- [ ] Leftover linking
+- [ ] Backend API endpoints
+- [ ] Testing
+
+---
+
+### Phase 3: Complete Core Modules (Week 5-6)
+**Goal:** Shopping Lists, Pantry, Nutrition, Restaurants
+
+- [ ] Shopping Lists (5 tabs)
+- [ ] Pantry & Storage (6 tabs)
+- [ ] Nutrition (5 tabs)
+- [ ] Restaurants & Takeout (5 tabs)
+
+---
+
+### Phase 4: Lifestyle & Tools (Week 7)
+**Goal:** Seasonality, Learning, Health, Export, Backups, Help
+
+- [ ] Seasonality & Sustainability (6 tabs)
+- [ ] Learning & Skills (5 tabs)
+- [ ] Health Integrations (5 tabs) - manual input for MVP
+- [ ] Export (single page)
+- [ ] Backups (single page)
+- [ ] Help Center (6 tabs)
+
+---
+
+### Phase 5: Subscriptions (Week 8)
+**Goal:** Stripe integration and tier gating
+
+- [ ] Stripe Checkout integration
+- [ ] Subscription management UI (in Settings)
+- [ ] Tier-based feature gating across all modules
+- [ ] Usage tracking & limits enforcement
+- [ ] Billing portal (Stripe Customer Portal)
+- [ ] Webhook handling (subscription events)
+
+---
+
+### Phase 6: Admin Panel (Week 9)
+**Goal:** Admin-only features
+
+- [ ] Users tab (user management)
+- [ ] Analytics tab (revenue, usage, charts)
+- [ ] Tier Management tab (feature configuration)
+- [ ] Content tab (recipe moderation)
+- [ ] System tab (health, logs, webhooks)
+
+---
+
+### Phase 7: Polish & Launch (Week 10)
+**Goal:** Final refinements and deployment
+
+- [ ] Complete Ukrainian translations for all modules
+- [ ] Mobile responsiveness review (all modules)
+- [ ] Performance optimization (lazy loading, code splitting)
+- [ ] SEO optimization
+- [ ] Testing (unit + e2e)
+- [ ] Bug fixes
+- [ ] Documentation (user guide, developer docs)
+- [ ] Deployment to Vercel + Railway
+- [ ] Production database setup
+- [ ] Domain setup
+- [ ] SSL certificates
+- [ ] Monitoring & error tracking (Sentry)
+
+---
+
+### Phase 8: Post-MVP Enhancements (Future)
+- [ ] Apple Health integration (PWA + Capacitor)
+- [ ] Kitchen Equipment module (fill in placeholder)
+- [ ] Community features (public recipes, sharing)
+- [ ] Mobile app (React Native)
+- [ ] Additional languages (RU, ES, PL)
+- [ ] Advanced analytics & AI insights
+- [ ] Integrations (MyFitnessPal, delivery apps)
+- [ ] Price tracking & store comparisons
+
+---
+
+## API Endpoints
+
+### Authentication
+```
+POST   /api/auth/google           # Google OAuth callback
+POST   /api/auth/verify           # Verify JWT token
+POST   /api/auth/logout           # Logout
+GET    /api/auth/me               # Get current user
+```
+
+### Groceries
+```
+GET    /api/groceries             # List groceries (with filters)
+POST   /api/groceries             # Add grocery items
+GET    /api/groceries/:id         # Get single item
+PUT    /api/groceries/:id         # Update item
+DELETE /api/groceries/:id         # Delete item
+POST   /api/groceries/parse-image # Parse image/receipt (OCR)
+POST   /api/groceries/parse-text  # Parse text list (AI)
+GET    /api/groceries/analytics   # Analytics data
+POST   /api/groceries/bulk-archive # Bulk archive
+POST   /api/groceries/bulk-delete  # Bulk delete
+```
+
+### Recipes
+```
+GET    /api/recipes               # List recipes (with filters)
+POST   /api/recipes               # Save custom recipe
+POST   /api/recipes/generate      # AI generation
+GET    /api/recipes/:id           # Get single recipe
+PUT    /api/recipes/:id           # Update recipe
+DELETE /api/recipes/:id           # Delete recipe
+POST   /api/recipes/:id/save      # Add to favorites
+DELETE /api/recipes/:id/save      # Remove from favorites
+POST   /api/recipes/:id/duplicate # Duplicate recipe
+GET    /api/recipes/analytics     # Analytics data
+```
+
+### Meal Plans
+```
+GET    /api/meal-plans            # List meal plans
+POST   /api/meal-plans            # Create new plan
+GET    /api/meal-plans/:id        # Get single plan
+PUT    /api/meal-plans/:id        # Update plan
+DELETE /api/meal-plans/:id        # Delete plan
+POST   /api/meal-plans/:id/meals  # Add meal to plan
+PUT    /api/meal-plans/:id/meals/:mealId # Update meal
+DELETE /api/meal-plans/:id/meals/:mealId # Remove meal
+POST   /api/meal-plans/:id/duplicate # Duplicate plan
+GET    /api/meal-plans/analytics  # Analytics data
+```
+
+### Shopping Lists
+```
+GET    /api/shopping-lists        # List shopping lists
+POST   /api/shopping-lists        # Create new list
+POST   /api/shopping-lists/generate # Generate from meal plan
+GET    /api/shopping-lists/:id    # Get single list
+PUT    /api/shopping-lists/:id    # Update list
+DELETE /api/shopping-lists/:id    # Delete list
+POST   /api/shopping-lists/:id/items # Add item
+PUT    /api/shopping-lists/:id/items/:itemId # Update item
+DELETE /api/shopping-lists/:id/items/:itemId # Remove item
+POST   /api/shopping-lists/:id/complete # Mark as completed
+GET    /api/shopping-lists/analytics # Analytics data
+```
+
+### Pantry
+```
+GET    /api/pantry                # List pantry items
+POST   /api/pantry                # Add items
+GET    /api/pantry/:id            # Get single item
+PUT    /api/pantry/:id            # Update item
+DELETE /api/pantry/:id            # Delete item
+GET    /api/pantry/expiring       # Get items expiring soon
+GET    /api/pantry/analytics      # Analytics data
+```
+
+### Restaurants
+```
+GET    /api/restaurants           # List restaurants
+POST   /api/restaurants           # Add restaurant
+GET    /api/restaurants/:id       # Get single restaurant
+PUT    /api/restaurants/:id       # Update restaurant
+DELETE /api/restaurants/:id       # Delete restaurant
+GET    /api/restaurants/:id/orders # Orders for restaurant
+POST   /api/restaurant-orders     # Add order
+GET    /api/restaurant-orders/:id # Get single order
+PUT    /api/restaurant-orders/:id # Update order
+DELETE /api/restaurant-orders/:id # Delete order
+GET    /api/restaurants/analytics # Analytics data
+```
+
+### Nutrition
+```
+GET    /api/nutrition/goals       # Get user's goals
+PUT    /api/nutrition/goals       # Update goals
+GET    /api/nutrition/logs        # Daily logs (with date range)
+POST   /api/nutrition/logs        # Add manual entry
+GET    /api/nutrition/progress    # Progress data
+GET    /api/nutrition/analytics   # Analytics data
+```
+
+### Health
+```
+GET    /api/health/integrations   # List integrations
+POST   /api/health/integrations/:provider # Connect integration
+DELETE /api/health/integrations/:provider # Disconnect
+GET    /api/health/metrics        # Get metrics (with date range)
+POST   /api/health/metrics        # Add manual metric
+GET    /api/health/correlations   # Correlation data
+GET    /api/health/analytics      # Analytics data
+```
+
+### Seasonality
+```
+GET    /api/seasonality/current   # Current month's seasonal items
+GET    /api/seasonality/:month    # Specific month
+GET    /api/seasonality/carbon    # Carbon footprint data
+GET    /api/seasonality/local     # Local sources (by location)
+GET    /api/seasonality/analytics # Analytics data
+```
+
+### Learning
+```
+GET    /api/techniques            # All techniques
+GET    /api/techniques/:id        # Single technique
+GET    /api/user-techniques       # User's progress
+POST   /api/user-techniques       # Start learning technique
+PUT    /api/user-techniques/:id   # Update progress
+GET    /api/user-notes            # User's notes
+POST   /api/user-notes            # Add note
+PUT    /api/user-notes/:id        # Update note
+DELETE /api/user-notes/:id        # Delete note
+GET    /api/learning/analytics    # Analytics data
+```
+
+### Export
+```
+POST   /api/export/recipes        # Export recipes
+POST   /api/export/meal-plans     # Export meal plans
+POST   /api/export/shopping-lists # Export shopping lists
+POST   /api/export/nutrition      # Export nutrition data
+POST   /api/export/all            # Export all data (GDPR)
+GET    /api/export/history        # Export history
+```
+
+### Backups
+```
+POST   /api/backups               # Create backup
+GET    /api/backups               # List backups
+GET    /api/backups/:id           # Download backup
+POST   /api/backups/restore       # Restore from backup
+DELETE /api/backups/:id           # Delete backup
+```
+
+### Subscriptions
+```
+GET    /api/subscription/status   # Current subscription
+POST   /api/subscription/checkout # Create Stripe Checkout session
+POST   /api/subscription/portal   # Create Stripe Billing Portal link
+POST   /api/subscription/upgrade  # Upgrade tier
+POST   /api/subscription/downgrade # Downgrade tier
+POST   /api/subscription/cancel   # Cancel subscription
+POST   /api/webhooks/stripe       # Stripe webhooks (subscription events)
+```
+
+### Admin
+```
+GET    /api/admin/users           # List all users
+GET    /api/admin/users/:id       # User details
+PUT    /api/admin/users/:id/tier  # Change user tier
+PUT    /api/admin/users/:id/suspend # Suspend user
+DELETE /api/admin/users/:id       # Delete user
+GET    /api/admin/analytics       # Platform analytics
+GET    /api/admin/tiers           # Tier configuration
+PUT    /api/admin/tiers/:id       # Update tier
+GET    /api/admin/features        # Feature list
+PUT    /api/admin/features/:id    # Update feature
+GET    /api/admin/recipes         # All recipes (moderation)
+PUT    /api/admin/recipes/:id/feature # Feature recipe
+GET    /api/admin/system          # System health
+GET    /api/admin/logs            # Error logs
+```
+
+---
+
+## Environment Variables
+
+### Frontend (.env.local)
+```
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Stripe (public key)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+```
+
+### Backend (.env)
+```
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/mealcraft_dev
+
+# Security
+SECRET_KEY=your-secret-key-min-32-chars
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Claude API
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# Image Storage
+CLOUDINARY_URL=cloudinary://xxx
+# OR
+VERCEL_BLOB_READ_WRITE_TOKEN=xxx
+
+# OCR/Vision API
+VISION_API_KEY=your-vision-api-key
+
+# Email (for notifications - future)
+SENDGRID_API_KEY=xxx
+FROM_EMAIL=noreply@mealcraft.app
+```
+
+---
+
+## Critical Development Notes
+
+### 1. ITERATIVE APPROACH IS MANDATORY
+- **DO NOT** start multiple modules at once
+- Build Groceries module COMPLETELY (all tabs, all features, all polish)
+- Get user approval before moving to next module
+- Each module should be production-ready when marked "complete"
+
+### 2. UI/UX CONSISTENCY IS CRITICAL
+- Use the same components everywhere
+- Tables look the same in all modules (only columns differ)
+- Modals look the same in all modules
+- Empty states follow the same pattern (but customized text)
+- Forms follow the same layout
+- Same animations, transitions, hover effects
+
+### 3. EMPTY STATES ARE IMPORTANT
+- Every tab needs a proper empty state
+- Empty states should be contextual and helpful
+- Always provide primary action (how to add data)
+- Always provide secondary help (link to guide/tutorial)
+
+### 4. MULTI-SELECT & BULK ACTIONS
+- All list views should support multi-select
+- Bulk actions appear when items selected
+- Always show count: "3 items selected"
+- Always show confirmation for destructive bulk actions
+
+### 5. TIER GATING
+- PRO features should show upgrade prompt for FREE/PLUS users
+- Never hide features completely (users should know they exist)
+- Upgrade prompts should be clear and non-intrusive
+
+### 6. i18n FROM DAY ONE
+- All UI strings must be in translation files
+- No hardcoded English text in components
+- Test both languages regularly
+
+### 7. RESPONSIVE DESIGN
+- Mobile-first approach
+- Test on mobile, tablet, desktop
+- Sidebar collapses to hamburger on mobile
+- Tables convert to cards on mobile (if needed)
+
+### 8. LOADING & ERROR STATES
+- Every async operation needs loading state
+- Every API call needs error handling
+- Show meaningful error messages to users
+- Use toast notifications for feedback
+
+### 9. PERFORMANCE
+- Lazy load modules (code splitting)
+- Paginate large lists
+- Optimize images
+- Use React Query for caching
+
+### 10. ACCESSIBILITY
+- Semantic HTML
+- ARIA labels
+- Keyboard navigation
+- Screen reader support
+
+---
+
+## Next Steps for Claude Code
+
+**When starting with Claude Code:**
+
+1. **Read this file thoroughly** - understand the entire architecture
+2. **Start with Phase 0** - set up foundation first
+3. **Then focus ONLY on Groceries module** (Phase 1)
+4. **Build it completely and perfectly**
+5. **Get user approval before moving on**
+6. **Use Groceries as template for all other modules**
+
+**Do NOT:**
+- Start multiple modules at once
+- Skip Phase 0 (foundation is critical)
+- Move to next module without approval
+- Deviate from the UI/UX patterns defined here
+
+**Remember:**
+- This is Wealth Vault for food/meals
+- Quality > Speed
+- Consistency is key
+- User experience matters most
+
+---
+
+## References
+
+- **Wealth Vault (reference project)**: https://github.com/bogdankf1/wealth-vault
+- **Wealth Vault Live**: https://wealth-vault-inky.vercel.app/
+- **Claude API Docs**: https://docs.anthropic.com/
+- **shadcn/ui**: https://ui.shadcn.com/
+- **Next.js 14**: https://nextjs.org/docs
+- **FastAPI**: https://fastapi.tiangolo.com/
+
+---
+
+## Success Criteria
+
+**MVP is successful when:**
+- All 16 modules are implemented and working
+- All features from each module are functional
+- UI/UX is consistent across all modules
+- i18n works for Ukrainian and English
+- Subscription tiers work correctly with Stripe
+- Tier gating enforced properly
+- Admin panel fully functional
+- Mobile responsive
+- Fast and performant
+- Zero critical bugs
+
+**MealCraft will be the ultimate platform for meal planning and nutrition tracking - just like Wealth Vault is for personal finance.**
+
+---
+
+END OF .CLAUDEPROJECT FILE

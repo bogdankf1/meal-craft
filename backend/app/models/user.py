@@ -1,0 +1,57 @@
+import uuid
+from datetime import datetime
+from enum import Enum as PyEnum
+
+from sqlalchemy import Column, String, DateTime, Enum, Boolean
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from app.core.database import Base
+
+
+class UserRole(str, PyEnum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
+class SubscriptionTier(str, PyEnum):
+    HOME_COOK = "HOME_COOK"
+    CHEFS_CHOICE = "CHEFS_CHOICE"
+    MASTER_CHEF = "MASTER_CHEF"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    name = Column(String(255))
+    google_id = Column(String(255), unique=True, nullable=True)
+    role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    subscription_tier = Column(
+        Enum(SubscriptionTier),
+        default=SubscriptionTier.HOME_COOK,
+        nullable=False
+    )
+    avatar_url = Column(String, nullable=True)
+    locale = Column(String(5), default="en")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    subscription = relationship("Subscription", back_populates="user", uselist=False)
+    recipes = relationship("Recipe", back_populates="user")
+    meal_plans = relationship("MealPlan", back_populates="user")
+    shopping_lists = relationship("ShoppingList", back_populates="user")
+    groceries = relationship("Grocery", back_populates="user")
+    pantry_items = relationship("PantryInventory", back_populates="user")
+    restaurants = relationship("Restaurant", back_populates="user")
+    restaurant_orders = relationship("RestaurantOrder", back_populates="user")
+    nutrition_goals = relationship("NutritionGoal", back_populates="user")
+    nutrition_logs = relationship("NutritionLog", back_populates="user")
+    health_metrics = relationship("HealthMetric", back_populates="user")
+    technique_progress = relationship("UserTechniqueProgress", back_populates="user")
+    notes = relationship("UserNote", back_populates="user")
+    usage_tracking = relationship("UsageTracking", back_populates="user")
+    saved_recipes = relationship("SavedRecipe", back_populates="user")

@@ -1,0 +1,48 @@
+# FastAPI and ASGI
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.19
+
+# Database
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Validation
+pydantic==2.10.3
+pydantic-settings==2.6.1
+email-validator==2.2.0
+
+# HTTP Client (for OAuth)
+httpx==0.28.1
+
+# AI Integration
+anthropic==0.42.0
+
+# Payments
+stripe==11.3.0
+
+# Image Processing
+cloudinary==1.42.0
+python-magic==0.4.27
+
+# OCR (Google Vision)
+google-cloud-vision==3.9.0
+
+# Utilities
+python-dotenv==1.0.1
+pytz==2024.2
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+
+# Development
+black==24.10.0
+isort==5.13.2
+flake8==7.1.1

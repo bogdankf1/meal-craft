@@ -1,0 +1,48 @@
+import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SessionProvider } from "@/components/providers/session-provider";
+import { ReduxProvider } from "@/components/providers/redux-provider";
+import { Toaster } from "@/components/ui/sonner";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin", "cyrillic"] });
+
+export const metadata: Metadata = {
+  title: "MealCraft - Your Ultimate Meal Planning Platform",
+  description:
+    "Plan meals, manage groceries, track nutrition, and more with MealCraft.",
+};
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <body className={inter.className}>
+        <SessionProvider>
+          <ReduxProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <NextIntlClientProvider messages={messages}>
+                {children}
+                <Toaster />
+              </NextIntlClientProvider>
+            </ThemeProvider>
+          </ReduxProvider>
+        </SessionProvider>
+      </body>
+    </html>
+  );
+}
