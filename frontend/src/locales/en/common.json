@@ -25,7 +25,8 @@
     "backups": "Backups",
     "help": "Help Center",
     "settings": "Settings",
-    "admin": "Admin Panel"
+    "admin": "Admin Panel",
+    "pricing": "Pricing"
   },
   "auth": {
     "login": "Log In",
@@ -80,5 +81,78 @@
   "language": {
     "en": "English",
     "uk": "Ukrainian"
+  },
+  "pricing": {
+    "page": {
+      "title": "Choose Your Plan",
+      "subtitle": "Start free and upgrade as you grow. All plans include a 14-day money-back guarantee.",
+      "recommended": "RECOMMENDED",
+      "perMonth": "/month",
+      "footer": "All prices in USD. Cancel anytime."
+    },
+    "buttons": {
+      "currentPlan": "Current Plan",
+      "getStarted": "Get Started",
+      "subscribe": "Subscribe"
+    },
+    "descriptions": {
+      "free": "Perfect for getting started with basic meal planning",
+      "plus": "Great for home cooks who want more features",
+      "pro": "For serious meal planners who want it all"
+    },
+    "features": {
+      "free": {
+        "mealPlanning": "Basic meal planning",
+        "basicRecipes": "Access to 100 recipes",
+        "shoppingList": "Shopping list",
+        "pantryTracking": "Pantry tracking",
+        "nutritionTracking": "Nutrition tracking",
+        "aiSuggestions": "AI-powered suggestions",
+        "prioritySupport": "Priority support"
+      },
+      "plus": {
+        "mealPlanning": "Advanced meal planning",
+        "unlimitedRecipes": "Unlimited recipes",
+        "shoppingList": "Smart shopping lists",
+        "pantryTracking": "Pantry tracking",
+        "nutritionTracking": "Nutrition tracking",
+        "aiSuggestions": "AI-powered suggestions",
+        "prioritySupport": "Priority support"
+      },
+      "pro": {
+        "mealPlanning": "Advanced meal planning",
+        "unlimitedRecipes": "Unlimited recipes",
+        "shoppingList": "Smart shopping lists",
+        "pantryTracking": "Pantry tracking",
+        "nutritionTracking": "Advanced nutrition tracking",
+        "aiSuggestions": "AI-powered suggestions",
+        "prioritySupport": "Priority support"
+      }
+    },
+    "paymentModal": {
+      "title": "Choose Payment Method",
+      "description": "Complete your subscription to {tier} for ${price} {currency}/month",
+      "selectMethod": "Select payment method",
+      "comingSoon": "Coming Soon",
+      "cancel": "Cancel",
+      "continue": "Continue to Payment",
+      "processing": "Processing...",
+      "stripe": {
+        "description": "Pay securely with credit or debit card"
+      },
+      "paypal": {
+        "description": "Pay with your PayPal account"
+      },
+      "mono": {
+        "description": "Pay with Monobank (Ukraine)"
+      },
+      "payoneer": {
+        "description": "Pay with your Payoneer account"
+      },
+      "bankTransfer": {
+        "name": "Bank Transfer",
+        "description": "Direct bank transfer payment"
+      }
+    }
   }
 }

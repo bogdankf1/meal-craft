@@ -25,7 +25,8 @@
     "backups": "Резервні копії",
     "help": "Центр допомоги",
     "settings": "Налаштування",
-    "admin": "Панель адміністратора"
+    "admin": "Панель адміністратора",
+    "pricing": "Тарифи"
   },
   "auth": {
     "login": "Увійти",
@@ -80,5 +81,78 @@
   "language": {
     "en": "Англійська",
     "uk": "Українська"
+  },
+  "pricing": {
+    "page": {
+      "title": "Оберіть свій план",
+      "subtitle": "Почніть безкоштовно та оновлюйтесь по мірі зростання. Усі плани включають 14-денну гарантію повернення коштів.",
+      "recommended": "РЕКОМЕНДОВАНО",
+      "perMonth": "/місяць",
+      "footer": "Всі ціни в USD. Скасуйте будь-коли."
+    },
+    "buttons": {
+      "currentPlan": "Поточний план",
+      "getStarted": "Почати",
+      "subscribe": "Підписатися"
+    },
+    "descriptions": {
+      "free": "Ідеально для початку з базовим плануванням їжі",
+      "plus": "Чудово для домашніх кухарів, які хочуть більше функцій",
+      "pro": "Для серйозних планувальників їжі, які хочуть все"
+    },
+    "features": {
+      "free": {
+        "mealPlanning": "Базове планування їжі",
+        "basicRecipes": "Доступ до 100 рецептів",
+        "shoppingList": "Список покупок",
+        "pantryTracking": "Відстеження комори",
+        "nutritionTracking": "Відстеження харчування",
+        "aiSuggestions": "AI-пропозиції",
+        "prioritySupport": "Пріоритетна підтримка"
+      },
+      "plus": {
+        "mealPlanning": "Розширене планування їжі",
+        "unlimitedRecipes": "Необмежені рецепти",
+        "shoppingList": "Розумні списки покупок",
+        "pantryTracking": "Відстеження комори",
+        "nutritionTracking": "Відстеження харчування",
+        "aiSuggestions": "AI-пропозиції",
+        "prioritySupport": "Пріоритетна підтримка"
+      },
+      "pro": {
+        "mealPlanning": "Розширене планування їжі",
+        "unlimitedRecipes": "Необмежені рецепти",
+        "shoppingList": "Розумні списки покупок",
+        "pantryTracking": "Відстеження комори",
+        "nutritionTracking": "Розширене відстеження харчування",
+        "aiSuggestions": "AI-пропозиції",
+        "prioritySupport": "Пріоритетна підтримка"
+      }
+    },
+    "paymentModal": {
+      "title": "Оберіть спосіб оплати",
+      "description": "Завершіть підписку на {tier} за ${price} {currency}/місяць",
+      "selectMethod": "Оберіть спосіб оплати",
+      "comingSoon": "Скоро",
+      "cancel": "Скасувати",
+      "continue": "Продовжити оплату",
+      "processing": "Обробка...",
+      "stripe": {
+        "description": "Безпечна оплата кредитною або дебетовою карткою"
+      },
+      "paypal": {
+        "description": "Оплата через PayPal"
+      },
+      "mono": {
+        "description": "Оплата через Монобанк (Україна)"
+      },
+      "payoneer": {
+        "description": "Оплата через Payoneer"
+      },
+      "bankTransfer": {
+        "name": "Банківський переказ",
+        "description": "Пряма оплата банківським переказом"
+      }
+    }
   }
 }

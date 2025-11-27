@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { ReduxProvider } from "@/components/providers/redux-provider";
+import { AuthSyncProvider } from "@/components/providers/auth-sync-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -28,19 +29,21 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className={inter.className}>
         <SessionProvider>
-          <ReduxProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <NextIntlClientProvider messages={messages}>
-                {children}
-                <Toaster />
-              </NextIntlClientProvider>
-            </ThemeProvider>
-          </ReduxProvider>
+          <AuthSyncProvider>
+            <ReduxProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <NextIntlClientProvider messages={messages}>
+                  {children}
+                  <Toaster />
+                </NextIntlClientProvider>
+              </ThemeProvider>
+            </ReduxProvider>
+          </AuthSyncProvider>
         </SessionProvider>
       </body>
     </html>

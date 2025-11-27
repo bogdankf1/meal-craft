@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
@@ -42,9 +42,26 @@ import {
   LogOut,
   LogIn,
   X,
+  CreditCard,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
+import type { Session } from "next-auth";
+import { useGetMeQuery } from "@/lib/api/auth-api";
+
+// Extended session type that includes backend fields (matches auth.ts module augmentation)
+interface ExtendedSession extends Session {
+  subscriptionTier?: string;
+}
+
+// Custom hook to safely detect client-side mounting without triggering ESLint warnings
+const emptySubscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+function useIsMounted() {
+  return useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
+}
 
 interface NavItem {
   href: string;
@@ -104,37 +121,35 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ onClose }: SidebarProps) {
   const t = useTranslations("nav");
   const tTiers = useTranslations("tiers");
   const pathname = usePathname();
   const router = useRouter();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    "planning",
-    "inventory",
-    "tracking",
-    "lifestyle",
-    "tools",
-  ]);
+  const { data: session, status: sessionStatus } = useSession();
 
-  useEffect(() => {
-    setMounted(true);
-    // Load saved state from localStorage
-    const saved = localStorage.getItem("sidebar-collapsed");
-    if (saved !== null) {
-      setIsCollapsed(saved === "true");
+  // Fetch user data from backend (includes current subscription tier)
+  const { data: userData } = useGetMeQuery(undefined, {
+    skip: sessionStatus !== "authenticated",
+  });
+
+  const mounted = useIsMounted();
+
+  // Initialize state with values from localStorage (SSR-safe with lazy init)
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
+  const [isPending, startTransition] = useTransition();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
+    if (typeof window === "undefined") {
+      return ["planning", "inventory", "tracking", "lifestyle", "tools"];
     }
-    const savedGroups = localStorage.getItem("sidebar-expanded-groups");
-    if (savedGroups) {
-      setExpandedGroups(JSON.parse(savedGroups));
-    }
-  }, []);
+    const saved = localStorage.getItem("sidebar-expanded-groups");
+    return saved ? JSON.parse(saved) : ["planning", "inventory", "tracking", "lifestyle", "tools"];
+  });
 
   const toggleCollapse = () => {
     const newValue = !isCollapsed;
@@ -174,12 +189,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       .join("")
       .toUpperCase() || "U";
 
-  // Handle navigation click on mobile - close sidebar
-  const handleNavClick = () => {
-    if (onClose) {
-      onClose();
-    }
-  };
+  // Get subscription tier - prefer backend data, fallback to session
+  const extendedSession = session as ExtendedSession | null;
+  const subscriptionTier = userData?.subscription_tier || extendedSession?.subscriptionTier || "FREE";
+  const tierKey = subscriptionTier.toLowerCase() as "free" | "plus" | "pro";
+
+  // Suppress unused variable warning - onClose is part of the shared interface
+  void onClose;
 
   return (
     <aside
@@ -290,7 +306,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <Separator className="my-2" />
 
         {/* Settings */}
-        <div className="px-3">
+        <div className="px-3 space-y-1">
+          <Link href="/pricing">
+            <Button
+              variant={isActive("/pricing") ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start gap-3",
+                isCollapsed && "justify-center px-2"
+              )}
+            >
+              <CreditCard className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span>{t("pricing")}</span>}
+            </Button>
+          </Link>
           <Link href="/settings">
             <Button
               variant={isActive("/settings") ? "secondary" : "ghost"}
@@ -345,7 +373,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {session?.user?.name || "Guest"}
               </p>
               <Badge variant="secondary" className="text-xs">
-                {tTiers("homeCook")}
+                {tTiers(tierKey)}
               </Badge>
             </div>
           )}
@@ -419,24 +447,22 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession();
-  const [mounted, setMounted] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    "planning",
-    "inventory",
-    "tracking",
-    "lifestyle",
-    "tools",
-  ]);
+  const { data: session, status: sessionStatus } = useSession();
 
-  useEffect(() => {
-    setMounted(true);
-    const savedGroups = localStorage.getItem("sidebar-expanded-groups");
-    if (savedGroups) {
-      setExpandedGroups(JSON.parse(savedGroups));
+  // Fetch user data from backend (includes current subscription tier)
+  const { data: userData } = useGetMeQuery(undefined, {
+    skip: sessionStatus !== "authenticated",
+  });
+
+  const mounted = useIsMounted();
+  const [isPending, startTransition] = useTransition();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
+    if (typeof window === "undefined") {
+      return ["planning", "inventory", "tracking", "lifestyle", "tools"];
     }
-  }, []);
+    const saved = localStorage.getItem("sidebar-expanded-groups");
+    return saved ? JSON.parse(saved) : ["planning", "inventory", "tracking", "lifestyle", "tools"];
+  });
 
   const handleGroupChange = (value: string[]) => {
     setExpandedGroups(value);
@@ -468,6 +494,11 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
       .map((n) => n[0])
       .join("")
       .toUpperCase() || "U";
+
+  // Get subscription tier - prefer backend data, fallback to session
+  const extendedSession = session as ExtendedSession | null;
+  const subscriptionTier = userData?.subscription_tier || extendedSession?.subscriptionTier || "FREE";
+  const tierKey = subscriptionTier.toLowerCase() as "free" | "plus" | "pro";
 
   // Handle navigation click - close sidebar
   const handleNavClick = () => {
@@ -569,8 +600,17 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
 
             <Separator className="my-2" />
 
-            {/* Settings */}
-            <div className="px-3">
+            {/* Pricing & Settings */}
+            <div className="px-3 space-y-1">
+              <Link href="/pricing" onClick={handleNavClick}>
+                <Button
+                  variant={isActive("/pricing") ? "secondary" : "ghost"}
+                  className="w-full justify-start gap-3"
+                >
+                  <CreditCard className="h-5 w-5 shrink-0" />
+                  <span>{t("pricing")}</span>
+                </Button>
+              </Link>
               <Link href="/settings" onClick={handleNavClick}>
                 <Button
                   variant={isActive("/settings") ? "secondary" : "ghost"}
@@ -613,7 +653,7 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
                   {session?.user?.name || "Guest"}
                 </p>
                 <Badge variant="secondary" className="text-xs">
-                  {tTiers("homeCook")}
+                  {tTiers(tierKey)}
                 </Badge>
               </div>
             </div>
