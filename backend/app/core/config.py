@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     # Claude API
     ANTHROPIC_API_KEY: str = ""
 
+    # OpenAI API
+    OPENAI_API_KEY: str = ""
+
     # Stripe
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""

@@ -15,9 +15,9 @@ class UserRole(str, PyEnum):
 
 
 class SubscriptionTier(str, PyEnum):
-    HOME_COOK = "HOME_COOK"
-    CHEFS_CHOICE = "CHEFS_CHOICE"
-    MASTER_CHEF = "MASTER_CHEF"
+    FREE = "FREE"
+    PLUS = "PLUS"
+    PRO = "PRO"
 
 
 class User(Base):
@@ -30,12 +30,17 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
     subscription_tier = Column(
         Enum(SubscriptionTier),
-        default=SubscriptionTier.HOME_COOK,
+        default=SubscriptionTier.FREE,
         nullable=False
     )
     avatar_url = Column(String, nullable=True)
     locale = Column(String(5), default="en")
     is_active = Column(Boolean, default=True)
+
+    # Stripe fields
+    stripe_customer_id = Column(String(255), unique=True, nullable=True, index=True)
+    stripe_subscription_id = Column(String(255), unique=True, nullable=True, index=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

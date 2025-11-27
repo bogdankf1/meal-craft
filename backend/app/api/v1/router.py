@@ -1,11 +1,14 @@
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth, groceries
+from app.api.v1.routes import auth, groceries, billing
 
 api_router = APIRouter()
 
 # Authentication
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+
+# Billing (Stripe subscriptions)
+api_router.include_router(billing.router, prefix="/billing", tags=["Billing"])
 
 # Groceries (Phase 1 module)
 api_router.include_router(groceries.router, prefix="/groceries", tags=["Groceries"])

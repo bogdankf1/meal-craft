@@ -11,6 +11,14 @@ from app.models.subscription import (
     UsageTracking,
 )
 
+# Billing (Stripe)
+from app.models.billing import (
+    UserSubscription,
+    PaymentHistory,
+    SubscriptionStatus as BillingSubscriptionStatus,
+    PaymentStatus,
+)
+
 # Recipes
 from app.models.recipe import (
     Recipe,
@@ -73,6 +81,11 @@ __all__ = [
     "Feature",
     "TierFeature",
     "UsageTracking",
+    # Billing
+    "UserSubscription",
+    "PaymentHistory",
+    "BillingSubscriptionStatus",
+    "PaymentStatus",
     # Recipe
     "Recipe",
     "RecipeIngredient",
