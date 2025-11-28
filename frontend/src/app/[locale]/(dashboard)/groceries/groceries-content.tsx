@@ -2,13 +2,41 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Carrot, AlertTriangle, DollarSign, Archive, LayoutGrid, BarChart3, ChevronDown, List, FolderArchive, Tag, TrendingUp, ShoppingBag, Clock, CalendarDays, Store, History, Package, Repeat } from "lucide-react";
+import {
+  Plus,
+  Carrot,
+  AlertTriangle,
+  DollarSign,
+  Archive,
+  LayoutGrid,
+  BarChart3,
+  ChevronDown,
+  List,
+  FolderArchive,
+  Tag,
+  TrendingUp,
+  ShoppingBag,
+  Clock,
+  CalendarDays,
+  Store,
+  History,
+  Package,
+  Repeat,
+} from "lucide-react";
 
-import { ModuleTabs, TabsContent } from "@/components/shared/ModuleTabs";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { StatsCard } from "@/components/shared/StatsCard";
+import {
+  ModuleTabs,
+  TabsContent,
+  StatsCard,
+  EmptyState,
+  AnalyticsCard,
+  BarChart,
+  DistributionList,
+  TopItemsList,
+  StatusCard,
+  StatusCardGrid,
+} from "@/components/shared";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +44,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   GroceryForm,
   GroceryBulkForm,
@@ -29,14 +64,6 @@ import {
   type Grocery,
   type GroceryFilters,
 } from "@/lib/api/groceries-api";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { format, parseISO } from "date-fns";
 
 export function GroceriesContent() {
   const t = useTranslations("groceries");
@@ -64,16 +91,14 @@ export function GroceriesContent() {
   const [editingGrocery, setEditingGrocery] = useState<Grocery | null>(null);
   const [historyMonths, setHistoryMonths] = useState(3);
 
-  // API queries - active items
+  // API queries
   const { data: groceriesData, isLoading: isLoadingGroceries } =
     useGetGroceriesQuery(filters);
-
-  // API queries - archived items
   const { data: archivedData, isLoading: isLoadingArchived } =
     useGetGroceriesQuery(archiveFilters);
-
   const { data: analytics } = useGetGroceryAnalyticsQuery();
-  const { data: historyData, isLoading: isLoadingHistory } = useGetGroceryHistoryQuery(historyMonths);
+  const { data: historyData, isLoading: isLoadingHistory } =
+    useGetGroceryHistoryQuery(historyMonths);
 
   const tabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
@@ -114,13 +139,79 @@ export function GroceriesContent() {
   const hasGroceries = (groceriesData?.total || 0) > 0;
   const hasArchivedGroceries = (archivedData?.total || 0) > 0;
 
+  // Helper to translate category names
+  const translateCategory = (category: string) => {
+    try {
+      return t(`categories.${category}`);
+    } catch {
+      return category;
+    }
+  };
+
+  // Convert analytics data to DistributionList format
+  const categoryDistributionItems = Object.entries(analytics?.category_breakdown || {}).map(
+    ([key, value]) => ({
+      key,
+      label: translateCategory(key),
+      value: value as number,
+    })
+  );
+
+  const storeDistributionItems = Object.entries(analytics?.store_breakdown || {}).map(
+    ([key, value]) => ({
+      key,
+      label: key,
+      value: value as number,
+    })
+  );
+
+  const spendingByCategoryItems = Object.entries(analytics?.spending_by_category || {}).map(
+    ([key, value]) => ({
+      key,
+      label: translateCategory(key),
+      value: value as number,
+      formattedValue: formatCurrency(value as number),
+    })
+  );
+
+  // Convert history data to component formats
+  const itemsTrendData = historyData?.monthly_data.map((month) => ({
+    key: month.month,
+    value: month.total_items,
+    label: month.month_label.split(" ")[0],
+  })) || [];
+
+  const spendingTrendData = historyData?.monthly_data.map((month) => ({
+    key: month.month,
+    value: month.total_spent,
+    label: month.month_label.split(" ")[0],
+  })) || [];
+
+  const topItemsData = historyData?.top_items.map((item) => ({
+    key: item.item_name,
+    name: item.item_name,
+    primaryValue: item.purchase_count,
+    primaryLabel: t("history.purchaseCount"),
+    secondaryInfo: [
+      { label: t("history.totalSpent"), value: formatCurrency(item.total_spent) },
+      { label: t("history.avgPrice"), value: formatCurrency(item.avg_price) },
+    ],
+  })) || [];
+
+  const categoryTrendsItems = Object.entries(historyData?.category_trends || {}).map(
+    ([category, monthData]) => ({
+      key: category,
+      label: translateCategory(category),
+      value: Object.values(monthData).reduce((a, b) => a + b, 0),
+    })
+  );
+
   return (
     <>
       <ModuleTabs tabs={tabs} defaultTab="overview">
-        {/* Overview Tab - Stats + Full Inventory */}
+        {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-3">
               <StatsCard
                 title={t("stats.totalItems")}
@@ -143,7 +234,6 @@ export function GroceriesContent() {
               />
             </div>
 
-            {/* Filters + Add Button Row */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <GroceryFiltersBar filters={filters} onFiltersChange={setFilters} />
@@ -169,7 +259,6 @@ export function GroceriesContent() {
               </DropdownMenu>
             </div>
 
-            {/* Table or Empty State */}
             {hasGroceries ? (
               <GroceryTable
                 data={groceriesData}
@@ -183,10 +272,7 @@ export function GroceriesContent() {
                 icon={<Carrot />}
                 title={t("empty.title")}
                 description={t("empty.description")}
-                action={{
-                  label: t("addGroceries"),
-                  onClick: handleAddClick,
-                }}
+                action={{ label: t("addGroceries"), onClick: handleAddClick }}
               />
             )}
           </div>
@@ -195,7 +281,6 @@ export function GroceriesContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-3">
               <StatsCard
                 title={t("stats.archivedItems")}
@@ -211,18 +296,16 @@ export function GroceriesContent() {
               />
               <StatsCard
                 title={t("stats.categories")}
-                value={new Set(archivedData?.items?.map(item => item.category).filter(Boolean)).size.toString()}
+                value={new Set(archivedData?.items?.map((item) => item.category).filter(Boolean)).size.toString()}
                 icon={<Tag className="h-5 w-5 text-muted-foreground" />}
               />
             </div>
 
-            {/* Filters for archived items */}
             <GroceryFiltersBar
               filters={archiveFilters}
               onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
             />
 
-            {/* Table or Empty State */}
             {hasArchivedGroceries ? (
               <GroceryTable
                 data={archivedData}
@@ -247,7 +330,6 @@ export function GroceriesContent() {
           <div className="space-y-6">
             {hasGroceries && analytics ? (
               <>
-                {/* Overview Stats */}
                 <div className="grid gap-4 md:grid-cols-4">
                   <StatsCard
                     title={t("analysis.thisWeek")}
@@ -262,8 +344,8 @@ export function GroceriesContent() {
                   <StatsCard
                     title={t("analysis.avgPerItem")}
                     value={formatCurrency(
-                      analytics.total_items > 0
-                        ? analytics.total_spent_this_month / analytics.items_this_month || 0
+                      analytics.items_this_month > 0
+                        ? analytics.total_spent_this_month / analytics.items_this_month
                         : 0
                     )}
                     icon={<TrendingUp className="h-5 w-5 text-green-500" />}
@@ -277,182 +359,89 @@ export function GroceriesContent() {
                 </div>
 
                 {/* Week vs Month Comparison */}
-                <Card className="py-0 gap-0">
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <CardTitle className="text-base font-medium">{t("analysis.weekVsMonth")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">{t("analysis.thisWeek")}</span>
-                          <span className="font-medium">{formatCurrency(analytics.total_spent_this_week || 0)}</span>
-                        </div>
-                        <Progress
-                          value={analytics.total_spent_this_month > 0
+                <AnalyticsCard title={t("analysis.weekVsMonth")}>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">{t("analysis.thisWeek")}</span>
+                        <span className="font-medium">{formatCurrency(analytics.total_spent_this_week || 0)}</span>
+                      </div>
+                      <Progress
+                        value={
+                          analytics.total_spent_this_month > 0
                             ? (analytics.total_spent_this_week / analytics.total_spent_this_month) * 100
                             : 0
-                          }
-                          className="h-2"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {analytics.total_spent_this_month > 0
-                            ? Math.round((analytics.total_spent_this_week / analytics.total_spent_this_month) * 100)
-                            : 0
-                          }% {t("analysis.ofMonthlySpending")}
-                        </p>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">{t("analysis.thisMonth")}</span>
-                          <span className="font-medium">{formatCurrency(analytics.total_spent_this_month || 0)}</span>
-                        </div>
-                        <Progress value={100} className="h-2" />
-                      </div>
+                        }
+                        className="h-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {analytics.total_spent_this_month > 0
+                          ? Math.round((analytics.total_spent_this_week / analytics.total_spent_this_month) * 100)
+                          : 0}
+                        % {t("analysis.ofMonthlySpending")}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">{t("analysis.thisMonth")}</span>
+                        <span className="font-medium">{formatCurrency(analytics.total_spent_this_month || 0)}</span>
+                      </div>
+                      <Progress value={100} className="h-2" />
+                    </div>
+                  </div>
+                </AnalyticsCard>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  {/* Category Distribution with Progress Bars */}
-                  <Card className="py-0 gap-0">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium">{t("analysis.categoryDistribution")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {Object.entries(analytics.category_breakdown || {})
-                          .sort(([, a], [, b]) => b - a)
-                          .slice(0, 6)
-                          .map(([category, count]) => {
-                            const maxCount = Math.max(...Object.values(analytics.category_breakdown || {}));
-                            const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                            return (
-                              <div key={category}>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span className="capitalize">{t(`categories.${category}`) || category}</span>
-                                  <span className="text-muted-foreground">{count} {t("analysis.items")}</span>
-                                </div>
-                                <Progress value={percentage} className="h-2" />
-                              </div>
-                            );
-                          })}
-                        {Object.keys(analytics.category_breakdown || {}).length === 0 && (
-                          <p className="text-sm text-muted-foreground py-4 text-center">
-                            {t("analysis.empty.description")}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard title={t("analysis.categoryDistribution")}>
+                    <DistributionList
+                      items={categoryDistributionItems}
+                      valueLabel={t("analysis.items")}
+                      emptyMessage={t("analysis.empty.description")}
+                    />
+                  </AnalyticsCard>
 
-                  {/* Store Distribution */}
-                  <Card className="py-0 gap-0">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <Store className="h-4 w-4" />
-                        {t("analysis.topStores")}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {Object.entries(analytics.store_breakdown || {})
-                          .sort(([, a], [, b]) => b - a)
-                          .slice(0, 5)
-                          .map(([store, count]) => {
-                            const maxCount = Math.max(...Object.values(analytics.store_breakdown || {}));
-                            const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                            return (
-                              <div key={store}>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span>{store}</span>
-                                  <span className="text-muted-foreground">{count} {t("analysis.items")}</span>
-                                </div>
-                                <Progress value={percentage} className="h-2" />
-                              </div>
-                            );
-                          })}
-                        {Object.keys(analytics.store_breakdown || {}).length === 0 && (
-                          <p className="text-sm text-muted-foreground py-4 text-center">
-                            {t("analysis.noStoreData")}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard
+                    title={t("analysis.topStores")}
+                    icon={<Store className="h-4 w-4" />}
+                  >
+                    <DistributionList
+                      items={storeDistributionItems}
+                      maxItems={5}
+                      valueLabel={t("analysis.items")}
+                      emptyMessage={t("analysis.noStoreData")}
+                    />
+                  </AnalyticsCard>
 
-                  {/* Spending by Category */}
-                  <Card className="py-0 gap-0 md:col-span-2">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium">{t("analysis.spendingByCategory")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {Object.entries(analytics.spending_by_category || {})
-                          .sort(([, a], [, b]) => b - a)
-                          .map(([category, amount]) => {
-                            const maxAmount = Math.max(...Object.values(analytics.spending_by_category || {}));
-                            const percentage = maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
-                            const totalSpending = Object.values(analytics.spending_by_category || {}).reduce((a, b) => a + b, 0);
-                            const sharePercentage = totalSpending > 0 ? Math.round((amount / totalSpending) * 100) : 0;
-                            return (
-                              <div key={category}>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span className="capitalize">{t(`categories.${category}`) || category}</span>
-                                  <span className="font-medium">{formatCurrency(amount)} <span className="text-muted-foreground font-normal">({sharePercentage}%)</span></span>
-                                </div>
-                                <Progress value={percentage} className="h-2" />
-                              </div>
-                            );
-                          })}
-                        {Object.keys(analytics.spending_by_category || {}).length === 0 && (
-                          <p className="text-sm text-muted-foreground py-4 text-center">
-                            {t("analysis.empty.description")}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard title={t("analysis.spendingByCategory")} fullWidth>
+                    <DistributionList
+                      items={spendingByCategoryItems}
+                      showPercentage
+                      emptyMessage={t("analysis.empty.description")}
+                    />
+                  </AnalyticsCard>
 
-                  {/* Expiry Status */}
-                  <Card className="py-0 gap-0 md:col-span-2">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium">{t("analysis.expiryStatus")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900">
-                          <div className="p-2 rounded-full bg-red-100 dark:bg-red-900">
-                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{analytics.expired || 0}</p>
-                            <p className="text-sm text-muted-foreground">{t("analysis.expired")}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900">
-                          <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900">
-                            <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{analytics.expiring_soon || 0}</p>
-                            <p className="text-sm text-muted-foreground">{t("analysis.expiringSoon")}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
-                          <div className="p-2 rounded-full bg-green-100 dark:bg-green-900">
-                            <Carrot className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                              {Math.max(0, analytics.total_items - (analytics.expired || 0) - (analytics.expiring_soon || 0))}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{t("analysis.fresh")}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard title={t("analysis.expiryStatus")} fullWidth>
+                    <StatusCardGrid columns={3}>
+                      <StatusCard
+                        icon={<AlertTriangle className="h-4 w-4" />}
+                        value={analytics.expired || 0}
+                        label={t("analysis.expired")}
+                        variant="danger"
+                      />
+                      <StatusCard
+                        icon={<Clock className="h-4 w-4" />}
+                        value={analytics.expiring_soon || 0}
+                        label={t("analysis.expiringSoon")}
+                        variant="warning"
+                      />
+                      <StatusCard
+                        icon={<Carrot className="h-4 w-4" />}
+                        value={Math.max(0, analytics.total_items - (analytics.expired || 0) - (analytics.expiring_soon || 0))}
+                        label={t("analysis.fresh")}
+                        variant="success"
+                      />
+                    </StatusCardGrid>
+                  </AnalyticsCard>
                 </div>
               </>
             ) : (
@@ -460,10 +449,7 @@ export function GroceriesContent() {
                 icon={<Carrot />}
                 title={t("analysis.empty.title")}
                 description={t("analysis.empty.description")}
-                action={{
-                  label: t("addGroceries"),
-                  onClick: handleAddClick,
-                }}
+                action={{ label: t("addGroceries"), onClick: handleAddClick }}
               />
             )}
           </div>
@@ -472,7 +458,6 @@ export function GroceriesContent() {
         {/* History Tab */}
         <TabsContent value="history">
           <div className="space-y-6">
-            {/* Period Selector */}
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">{t("history.title")}</h2>
@@ -497,7 +482,6 @@ export function GroceriesContent() {
               </div>
             ) : historyData && historyData.total_items > 0 ? (
               <>
-                {/* Overview Stats */}
                 <div className="grid gap-4 md:grid-cols-4">
                   <StatsCard
                     title={t("history.totalInPeriod")}
@@ -521,184 +505,79 @@ export function GroceriesContent() {
                   />
                 </div>
 
-                {/* Monthly Trends Charts */}
                 <div className="grid gap-6">
-                  {/* Items Trend */}
-                  <Card className="py-0 gap-0">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <Package className="h-4 w-4" />
-                        {t("history.itemsTrend")}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="flex gap-3">
-                        {historyData.monthly_data.map((month) => {
-                          const maxItems = Math.max(...historyData.monthly_data.map(m => m.total_items));
-                          const heightPx = maxItems > 0 ? Math.round((month.total_items / maxItems) * 80) : 0;
-                          return (
-                            <div key={month.month} className="flex-1 flex flex-col items-center gap-2">
-                              <span className="text-sm font-semibold">{month.total_items}</span>
-                              <div className="h-20 w-full flex items-end px-1">
-                                <div
-                                  className="w-full bg-blue-500 rounded-t transition-all"
-                                  style={{ height: `${heightPx}px`, minHeight: month.total_items > 0 ? '4px' : '0' }}
-                                />
-                              </div>
-                              <span className="text-xs text-muted-foreground">{month.month_label.split(' ')[0]}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard
+                    title={t("history.itemsTrend")}
+                    icon={<Package className="h-4 w-4" />}
+                  >
+                    <BarChart
+                      data={itemsTrendData}
+                      color="bg-blue-500"
+                      emptyMessage={t("history.noData")}
+                    />
+                  </AnalyticsCard>
 
-                  {/* Spending Trend */}
-                  <Card className="py-0 gap-0">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        {t("history.spendingTrend")}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="flex gap-3">
-                        {historyData.monthly_data.map((month) => {
-                          const maxSpent = Math.max(...historyData.monthly_data.map(m => m.total_spent));
-                          const heightPx = maxSpent > 0 ? Math.round((month.total_spent / maxSpent) * 80) : 0;
-                          return (
-                            <div key={month.month} className="flex-1 flex flex-col items-center gap-2">
-                              <span className="text-sm font-semibold">{formatCurrency(month.total_spent)}</span>
-                              <div className="h-20 w-full flex items-end px-1">
-                                <div
-                                  className="w-full bg-green-500 rounded-t transition-all"
-                                  style={{ height: `${heightPx}px`, minHeight: month.total_spent > 0 ? '4px' : '0' }}
-                                />
-                              </div>
-                              <span className="text-xs text-muted-foreground">{month.month_label.split(' ')[0]}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard
+                    title={t("history.spendingTrend")}
+                    icon={<DollarSign className="h-4 w-4" />}
+                  >
+                    <BarChart
+                      data={spendingTrendData}
+                      formatValue={formatCurrency}
+                      color="bg-green-500"
+                      emptyMessage={t("history.noData")}
+                    />
+                  </AnalyticsCard>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  {/* Top Purchased Items */}
-                  <Card className="py-0 gap-0">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium">{t("history.topItems")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {historyData.top_items.slice(0, 8).map((item, index) => {
-                          const maxCount = historyData.top_items[0]?.purchase_count || 1;
-                          const percentage = (item.purchase_count / maxCount) * 100;
-                          return (
-                            <div key={item.item_name}>
-                              <div className="flex justify-between items-start mb-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-muted-foreground w-5">{index + 1}.</span>
-                                  <span className="text-sm font-medium">{item.item_name}</span>
-                                </div>
-                                <span className="text-sm text-muted-foreground">
-                                  {item.purchase_count} {t("history.purchaseCount")}
-                                </span>
-                              </div>
-                              <Progress value={percentage} className="h-1.5" />
-                              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                                <span>{formatCurrency(item.total_spent)} {t("history.totalSpent")}</span>
-                                <span>{t("history.avgPrice")}: {formatCurrency(item.avg_price)}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {historyData.top_items.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            {t("history.noData")}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard title={t("history.topItems")}>
+                    <TopItemsList
+                      items={topItemsData}
+                      emptyMessage={t("history.noData")}
+                    />
+                  </AnalyticsCard>
 
-                  {/* Category Trends */}
-                  <Card className="py-0 gap-0">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium">{t("history.categoryTrends")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {Object.entries(historyData.category_trends)
-                          .map(([category, monthData]) => ({
-                            category,
-                            total: Object.values(monthData).reduce((a, b) => a + b, 0),
-                          }))
-                          .sort((a, b) => b.total - a.total)
-                          .slice(0, 6)
-                          .map(({ category, total }) => {
-                            const maxTotal = Math.max(
-                              ...Object.entries(historyData.category_trends)
-                                .map(([, monthData]) => Object.values(monthData).reduce((a, b) => a + b, 0))
-                            );
-                            const percentage = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
-                            return (
-                              <div key={category}>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span className="capitalize">{t(`categories.${category}`) || category}</span>
-                                  <span className="text-muted-foreground">{total} {t("analysis.items")}</span>
-                                </div>
-                                <Progress value={percentage} className="h-2" />
-                              </div>
-                            );
-                          })}
-                        {Object.keys(historyData.category_trends).length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            {t("history.noData")}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnalyticsCard title={t("history.categoryTrends")}>
+                    <DistributionList
+                      items={categoryTrendsItems}
+                      valueLabel={t("analysis.items")}
+                      emptyMessage={t("history.noData")}
+                    />
+                  </AnalyticsCard>
 
-                  {/* Store Trends */}
-                  <Card className="py-0 gap-0 md:col-span-2">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <Store className="h-4 w-4" />
-                        {t("history.storeTrends")}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {Object.entries(historyData.store_trends)
-                          .map(([store, monthData]) => ({
-                            store,
-                            total: Object.values(monthData).reduce((a, b) => a + b, 0),
-                            months: Object.keys(monthData).length,
-                          }))
-                          .sort((a, b) => b.total - a.total)
-                          .slice(0, 6)
-                          .map(({ store, total, months }) => (
-                            <div key={store} className="p-3 rounded-lg bg-muted/50">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Store className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{store}</span>
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {total} {t("analysis.items")} • {months} {t("history.purchaseCount").replace('purchases', 'months')}
-                              </div>
+                  <AnalyticsCard
+                    title={t("history.storeTrends")}
+                    icon={<Store className="h-4 w-4" />}
+                    fullWidth
+                  >
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {Object.entries(historyData.store_trends)
+                        .map(([store, monthData]) => ({
+                          store,
+                          total: Object.values(monthData).reduce((a, b) => a + b, 0),
+                          months: Object.keys(monthData).length,
+                        }))
+                        .sort((a, b) => b.total - a.total)
+                        .slice(0, 6)
+                        .map(({ store, total, months }) => (
+                          <div key={store} className="p-3 rounded-lg bg-muted/50">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Store className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{store}</span>
                             </div>
-                          ))}
-                        {Object.keys(historyData.store_trends).length === 0 && (
-                          <p className="text-sm text-muted-foreground col-span-full text-center py-4">
-                            {t("analysis.noStoreData")}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                            <div className="text-sm text-muted-foreground">
+                              {total} {t("analysis.items")} • {months} months
+                            </div>
+                          </div>
+                        ))}
+                      {Object.keys(historyData.store_trends).length === 0 && (
+                        <p className="text-sm text-muted-foreground col-span-full text-center py-4">
+                          {t("analysis.noStoreData")}
+                        </p>
+                      )}
+                    </div>
+                  </AnalyticsCard>
                 </div>
               </>
             ) : (
@@ -706,24 +585,19 @@ export function GroceriesContent() {
                 icon={<History />}
                 title={t("history.empty.title")}
                 description={t("history.empty.description")}
-                action={{
-                  label: t("addGroceries"),
-                  onClick: handleAddClick,
-                }}
+                action={{ label: t("addGroceries"), onClick: handleAddClick }}
               />
             )}
           </div>
         </TabsContent>
       </ModuleTabs>
 
-      {/* Add/Edit Form Dialog */}
       <GroceryForm
         open={formOpen}
         onOpenChange={setFormOpen}
         editingGrocery={editingGrocery}
       />
 
-      {/* Bulk Add Form Dialog */}
       <GroceryBulkForm
         open={bulkFormOpen}
         onOpenChange={setBulkFormOpen}
