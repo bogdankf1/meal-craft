@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "your-secret-key-min-32-chars-change-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30 days
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
