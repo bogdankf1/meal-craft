@@ -154,5 +154,185 @@
         "description": "Direct bank transfer payment"
       }
     }
+  },
+  "groceries": {
+    "title": "Groceries",
+    "description": "Track your grocery purchases and manage your inventory.",
+    "tabs": {
+      "overview": "Overview",
+      "inventory": "Inventory",
+      "archive": "Archive",
+      "analysis": "Analysis",
+      "history": "History"
+    },
+    "stats": {
+      "totalItems": "Total Items",
+      "expiringSoon": "Expiring Soon",
+      "totalSpent": "Total Spent",
+      "archivedItems": "Archived Items",
+      "archivedValue": "Archived Value",
+      "categories": "Categories"
+    },
+    "recentItems": "Recent Items",
+    "addItem": "Add Item",
+    "addGroceries": "Add Groceries",
+    "empty": {
+      "title": "No groceries added yet",
+      "description": "Start tracking your grocery purchases by adding items manually or importing from a receipt."
+    },
+    "inventory": {
+      "title": "Grocery Inventory",
+      "description": "Manage all your grocery items in one place."
+    },
+    "archive": {
+      "title": "Archived Items",
+      "description": "View and manage your archived grocery items.",
+      "empty": {
+        "title": "No archived items",
+        "description": "Archived grocery items will appear here. Use the archive action on items you want to store for reference."
+      }
+    },
+    "analysis": {
+      "title": "Spending Analysis",
+      "description": "Understand your grocery spending patterns and habits.",
+      "byCategory": "Items by Category",
+      "byStore": "Items by Store",
+      "spendingByCategory": "Spending by Category",
+      "noStoreData": "No store data available. Add stores when recording groceries.",
+      "empty": {
+        "title": "No data for analysis",
+        "description": "Start adding groceries to see spending patterns, shopping habits, and more."
+      },
+      "overview": "Overview",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "items": "items",
+      "spent": "spent",
+      "expiryStatus": "Expiry Status",
+      "expired": "Expired",
+      "expiringSoon": "Expiring Soon",
+      "fresh": "Fresh",
+      "noExpiry": "No Expiry Set",
+      "topCategories": "Top Categories",
+      "topStores": "Top Stores",
+      "spendingTrend": "Spending Trend",
+      "weekVsMonth": "Week vs Month",
+      "ofMonthlySpending": "of monthly spending",
+      "avgPerItem": "Avg per Item",
+      "mostExpensive": "Most Expensive",
+      "categoryDistribution": "Category Distribution"
+    },
+    "history": {
+      "title": "Purchase History",
+      "description": "Analyze your grocery shopping patterns over time.",
+      "periodSelector": "Time Period",
+      "months3": "3 Months",
+      "months6": "6 Months",
+      "months9": "9 Months",
+      "months12": "12 Months",
+      "totalInPeriod": "Total in Period",
+      "avgMonthlyItems": "Avg Monthly Items",
+      "avgMonthlySpending": "Avg Monthly Spending",
+      "topItems": "Most Purchased Items",
+      "purchaseCount": "purchases",
+      "totalSpent": "total spent",
+      "avgPrice": "avg price",
+      "lastPurchased": "Last purchased",
+      "monthlyTrend": "Monthly Trend",
+      "itemsTrend": "Items Purchased",
+      "spendingTrend": "Spending Trend",
+      "categoryTrends": "Category Trends",
+      "storeTrends": "Store Trends",
+      "noData": "No historical data available for this period.",
+      "empty": {
+        "title": "No history data",
+        "description": "Start adding groceries to build your purchase history and see trends over time."
+      }
+    },
+    "form": {
+      "addTitle": "Add Grocery Item",
+      "editTitle": "Edit Grocery Item",
+      "itemName": "Item Name",
+      "itemNamePlaceholder": "e.g., Apples, Milk, Bread",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "category": "Category",
+      "purchaseDate": "Purchase Date",
+      "expiryDate": "Expiry Date",
+      "cost": "Cost ($)",
+      "store": "Store",
+      "storePlaceholder": "e.g., Walmart, Costco",
+      "cancel": "Cancel",
+      "saving": "Saving..."
+    },
+    "bulkForm": {
+      "title": "Add Multiple Items",
+      "description": "Add multiple grocery items at once. Fill in the details for each item.",
+      "addRow": "Add Row",
+      "addAll": "Add All Items"
+    },
+    "categories": {
+      "produce": "Produce",
+      "meat": "Meat",
+      "seafood": "Seafood",
+      "dairy": "Dairy",
+      "bakery": "Bakery",
+      "frozen": "Frozen",
+      "pantry": "Pantry",
+      "beverages": "Beverages",
+      "snacks": "Snacks",
+      "condiments": "Condiments",
+      "spices": "Spices",
+      "other": "Other",
+      "uncategorized": "Uncategorized"
+    },
+    "units": {
+      "pcs": "Pieces",
+      "kg": "Kilograms",
+      "g": "Grams",
+      "l": "Liters",
+      "ml": "Milliliters",
+      "pack": "Packs",
+      "box": "Boxes",
+      "bag": "Bags",
+      "bottle": "Bottles",
+      "can": "Cans"
+    },
+    "filters": {
+      "search": "Search groceries...",
+      "allCategories": "All Categories",
+      "allItems": "All Items",
+      "expiringIn3Days": "Expiring in 3 days",
+      "expiringIn7Days": "Expiring in 7 days",
+      "expiringIn14Days": "Expiring in 14 days",
+      "expiringIn30Days": "Expiring in 30 days",
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "nameAZ": "Name (A-Z)",
+      "nameZA": "Name (Z-A)"
+    },
+    "table": {
+      "item": "Item",
+      "category": "Category",
+      "quantity": "Quantity",
+      "purchaseDate": "Purchase Date",
+      "expiry": "Expiry",
+      "cost": "Cost",
+      "store": "Store"
+    },
+    "messages": {
+      "itemAdded": "Grocery item added successfully",
+      "itemUpdated": "Grocery item updated successfully",
+      "itemDeleted": "Grocery item deleted successfully",
+      "itemsArchived": "Items archived successfully",
+      "itemsDeleted": "Items deleted successfully",
+      "errorAdding": "Failed to add grocery item",
+      "errorUpdating": "Failed to update grocery item",
+      "errorDeleting": "Failed to delete grocery item"
+    },
+    "confirmDelete": {
+      "title": "Delete Grocery Item",
+      "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    }
   }
 }

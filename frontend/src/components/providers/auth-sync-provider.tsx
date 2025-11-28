@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 
@@ -18,14 +18,21 @@ interface ExtendedSession extends Session {
  */
 export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
+  const lastSyncedToken = useRef<string | null>(null);
 
+  // Sync token to localStorage when session changes
   useEffect(() => {
+    if (status === "loading") {
+      return;
+    }
+
     if (status === "authenticated" && session) {
       const extendedSession = session as ExtendedSession;
 
-      // Store backend access token in localStorage
-      if (extendedSession.backendAccessToken) {
+      // Only update if token changed to avoid unnecessary writes
+      if (extendedSession.backendAccessToken && extendedSession.backendAccessToken !== lastSyncedToken.current) {
         localStorage.setItem("auth_token", extendedSession.backendAccessToken);
+        lastSyncedToken.current = extendedSession.backendAccessToken;
       }
 
       // Also store refresh token for potential token refresh
@@ -36,8 +43,14 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
       // Clear tokens on logout
       localStorage.removeItem("auth_token");
       localStorage.removeItem("refresh_token");
+      lastSyncedToken.current = null;
     }
   }, [session, status]);
+
+  // Show nothing while loading session
+  if (status === "loading") {
+    return null;
+  }
 
   return <>{children}</>;
 }

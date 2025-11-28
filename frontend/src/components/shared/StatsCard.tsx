@@ -34,15 +34,15 @@ export function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <Card className={cn(variantStyles[variant], className)}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
+    <Card className={cn("py-0 gap-0", variantStyles[variant], className)}>
+      <CardContent className="py-3 px-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-xl font-bold">{value}</p>
           </div>
           {icon && (
-            <div className="p-2 rounded-lg bg-background/50">{icon}</div>
+            <div className="p-1.5 rounded-lg bg-background/50">{icon}</div>
           )}
         </div>
         {trend && (

@@ -1,26 +1,34 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { GroceriesContent } from "./groceries-content";
 
+function GroceriesLoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Stats skeleton */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-lg" />
+        ))}
+      </div>
+      {/* Table skeleton */}
+      <Skeleton className="h-96 rounded-lg" />
+    </div>
+  );
+}
+
 export default async function GroceriesPage() {
-  const t = await getTranslations("nav");
+  const t = await getTranslations("groceries");
 
   return (
     <div>
       <PageHeader
-        title={t("groceries")}
-        description="Track your grocery purchases and manage your inventory."
-        actions={
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Groceries
-          </Button>
-        }
+        title={t("title")}
+        description={t("description")}
       />
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<GroceriesLoadingSkeleton />}>
         <GroceriesContent />
       </Suspense>
     </div>
