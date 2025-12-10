@@ -24,6 +24,8 @@ import {
   Package,
   Repeat,
   Import,
+  TableIcon,
+  Calendar,
 } from "lucide-react";
 
 import {
@@ -37,6 +39,8 @@ import {
   TopItemsList,
   StatusCard,
   StatusCardGrid,
+  ViewSelector,
+  type ViewOption,
 } from "@/components/shared";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -59,6 +63,7 @@ import {
   GroceryTable,
   GroceryFiltersBar,
   GroceryImport,
+  GroceryCalendarView,
 } from "@/components/modules/groceries";
 import {
   useGetGroceriesQuery,
@@ -94,6 +99,22 @@ export function GroceriesContent() {
   const [bulkFormOpen, setBulkFormOpen] = useState(false);
   const [editingGrocery, setEditingGrocery] = useState<Grocery | null>(null);
   const [historyMonths, setHistoryMonths] = useState(3);
+  const [currentView, setCurrentView] = useState<string>("table");
+  const [archiveView, setArchiveView] = useState<string>("table");
+
+  // View options for the overview tab
+  const viewOptions: ViewOption[] = [
+    {
+      value: "table",
+      label: t("views.table"),
+      icon: <TableIcon className="h-4 w-4" />,
+    },
+    {
+      value: "calendar",
+      label: t("views.calendar"),
+      icon: <Calendar className="h-4 w-4" />,
+    },
+  ];
 
   // API queries
   const { data: groceriesData, isLoading: isLoadingGroceries } =
@@ -253,35 +274,50 @@ export function GroceriesContent() {
               <div className="flex-1 w-full">
                 <GroceryFiltersBar filters={filters} onFiltersChange={setFilters} />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="shrink-0">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("addItem")}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleAddClick}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("addItem")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleBulkAddClick}>
-                    <List className="h-4 w-4 mr-2" />
-                    {t("bulkForm.title")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2 shrink-0">
+                <ViewSelector
+                  currentView={currentView}
+                  onViewChange={setCurrentView}
+                  views={viewOptions}
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t("addItem")}
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleAddClick}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t("addItem")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBulkAddClick}>
+                      <List className="h-4 w-4 mr-2" />
+                      {t("bulkForm.title")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
             {hasGroceries ? (
-              <GroceryTable
-                data={groceriesData}
-                isLoading={isLoadingGroceries}
-                page={filters.page || 1}
-                onPageChange={handlePageChange}
-                onEdit={handleEditClick}
-              />
+              currentView === "table" ? (
+                <GroceryTable
+                  data={groceriesData}
+                  isLoading={isLoadingGroceries}
+                  page={filters.page || 1}
+                  onPageChange={handlePageChange}
+                  onEdit={handleEditClick}
+                />
+              ) : (
+                <GroceryCalendarView
+                  items={groceriesData?.items || []}
+                  isLoading={isLoadingGroceries}
+                  onItemClick={handleEditClick}
+                />
+              )
             ) : (
               <EmptyState
                 icon={<Carrot />}
@@ -323,20 +359,39 @@ export function GroceriesContent() {
               />
             </div>
 
-            <GroceryFiltersBar
-              filters={archiveFilters}
-              onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
-            />
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex-1 w-full">
+                <GroceryFiltersBar
+                  filters={archiveFilters}
+                  onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
+                />
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <ViewSelector
+                  currentView={archiveView}
+                  onViewChange={setArchiveView}
+                  views={viewOptions}
+                />
+              </div>
+            </div>
 
             {hasArchivedGroceries ? (
-              <GroceryTable
-                data={archivedData}
-                isLoading={isLoadingArchived}
-                page={archiveFilters.page || 1}
-                onPageChange={handleArchivePageChange}
-                onEdit={handleEditClick}
-                isArchiveView
-              />
+              archiveView === "table" ? (
+                <GroceryTable
+                  data={archivedData}
+                  isLoading={isLoadingArchived}
+                  page={archiveFilters.page || 1}
+                  onPageChange={handleArchivePageChange}
+                  onEdit={handleEditClick}
+                  isArchiveView
+                />
+              ) : (
+                <GroceryCalendarView
+                  items={archivedData?.items || []}
+                  isLoading={isLoadingArchived}
+                  onItemClick={handleEditClick}
+                />
+              )
             ) : (
               <EmptyState
                 icon={<Archive />}

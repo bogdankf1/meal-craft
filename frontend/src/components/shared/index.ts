@@ -32,6 +32,10 @@ export type {
   FilterBarProps,
 } from "./FilterBar";
 
+// View Selector
+export { ViewSelector, TABLE_VIEW, CALENDAR_VIEW, GRID_VIEW, LIST_VIEW } from "./ViewSelector";
+export type { ViewOption, ViewSelectorProps } from "./ViewSelector";
+
 // Charts & Analytics
 export { BarChart } from "./BarChart";
 export type { BarChartDataPoint, BarChartProps } from "./BarChart";

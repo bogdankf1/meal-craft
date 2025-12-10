@@ -372,6 +372,15 @@
     "confirmDelete": {
       "title": "Delete Grocery Item",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    },
+    "views": {
+      "table": "Table",
+      "calendar": "Calendar"
+    },
+    "calendar": {
+      "today": "Today",
+      "items": "items",
+      "itemsCount": "Items purchased on this day"
     }
   },
   "import": {
