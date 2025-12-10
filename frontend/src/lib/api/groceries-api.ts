@@ -146,6 +146,11 @@ export interface ParseTextRequest {
   default_purchase_date?: string;
 }
 
+export interface ParseReceiptUrlRequest {
+  url: string;
+  default_purchase_date?: string;
+}
+
 export interface ParseTextResponse {
   parsed_items: CreateGroceryInput[];
   raw_text: string;
@@ -278,12 +283,30 @@ export const groceriesApi = baseApi.injectEndpoints({
       }),
     }),
 
+    // Parse voice recording
+    parseGroceryVoice: builder.mutation<ParseTextResponse, FormData>({
+      query: (formData) => ({
+        url: "/groceries/parse-voice",
+        method: "POST",
+        body: formData,
+      }),
+    }),
+
     // Parse image (OCR) - not yet implemented on backend
     parseGroceryImage: builder.mutation<ParseTextResponse, FormData>({
       query: (formData) => ({
         url: "/groceries/parse-image",
         method: "POST",
         body: formData,
+      }),
+    }),
+
+    // Parse receipt from URL
+    parseReceiptUrl: builder.mutation<ParseTextResponse, ParseReceiptUrlRequest>({
+      query: (body) => ({
+        url: "/groceries/parse-receipt-url",
+        method: "POST",
+        body,
       }),
     }),
 
@@ -311,7 +334,9 @@ export const {
   useBulkUnarchiveGroceriesMutation,
   useBulkDeleteGroceriesMutation,
   useParseGroceryTextMutation,
+  useParseGroceryVoiceMutation,
   useParseGroceryImageMutation,
+  useParseReceiptUrlMutation,
   useGetGroceryAnalyticsQuery,
   useGetGroceryHistoryQuery,
 } = groceriesApi;

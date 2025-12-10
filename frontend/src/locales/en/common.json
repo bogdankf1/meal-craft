@@ -131,7 +131,7 @@
     },
     "paymentModal": {
       "title": "Choose Payment Method",
-      "description": "Complete your subscription to {tier} for ${price} {currency}/month",
+      "description": "Complete your subscription to {tier} for {price} ₴/month",
       "selectMethod": "Select payment method",
       "comingSoon": "Coming Soon",
       "cancel": "Cancel",
@@ -160,10 +160,19 @@
     "description": "Track your grocery purchases and manage your inventory.",
     "tabs": {
       "overview": "Overview",
+      "import": "Import",
       "inventory": "Inventory",
       "archive": "Archive",
       "analysis": "Analysis",
       "history": "History"
+    },
+    "fields": {
+      "itemName": "Item Name",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "category": "Category",
+      "cost": "Cost",
+      "store": "Store"
     },
     "stats": {
       "totalItems": "Total Items",
@@ -230,6 +239,7 @@
       "months6": "6 Months",
       "months9": "9 Months",
       "months12": "12 Months",
+      "monthsCount": "{count, plural, one {# month} other {# months}}",
       "totalInPeriod": "Total in Period",
       "avgMonthlyItems": "Avg Monthly Items",
       "avgMonthlySpending": "Avg Monthly Spending",
@@ -252,11 +262,15 @@
     "form": {
       "addTitle": "Add Grocery Item",
       "editTitle": "Edit Grocery Item",
+      "addDescription": "Add a new item to your grocery inventory.",
+      "editDescription": "Update the details of your grocery item.",
       "itemName": "Item Name",
       "itemNamePlaceholder": "e.g., Apples, Milk, Bread",
       "quantity": "Quantity",
       "unit": "Unit",
+      "selectUnit": "Select unit",
       "category": "Category",
+      "selectCategory": "Select category",
       "purchaseDate": "Purchase Date",
       "expiryDate": "Expiry Date",
       "cost": "Cost ($)",
@@ -269,7 +283,8 @@
       "title": "Add Multiple Items",
       "description": "Add multiple grocery items at once. Fill in the details for each item.",
       "addRow": "Add Row",
-      "addAll": "Add All Items"
+      "addAll": "Add All Items",
+      "itemCount": "{count, plural, one {# item} other {# items}}"
     },
     "categories": {
       "produce": "Produce",
@@ -309,7 +324,21 @@
       "newestFirst": "Newest First",
       "oldestFirst": "Oldest First",
       "nameAZ": "Name (A-Z)",
-      "nameZA": "Name (Z-A)"
+      "nameZA": "Name (Z-A)",
+      "purchaseNewest": "Purchase (Newest)",
+      "purchaseOldest": "Purchase (Oldest)",
+      "expirySoonest": "Expiry (Soonest)",
+      "costHighToLow": "Cost (High to Low)",
+      "costLowToHigh": "Cost (Low to High)",
+      "dateRange": "Date Range",
+      "from": "From",
+      "to": "To",
+      "clearDates": "Clear dates",
+      "expiry": "Expiry",
+      "category": "Category",
+      "loading": "Loading groceries...",
+      "daysAgo": "{days}d ago",
+      "daysLeft": "{days}d"
     },
     "table": {
       "item": "Item",
@@ -318,21 +347,201 @@
       "purchaseDate": "Purchase Date",
       "expiry": "Expiry",
       "cost": "Cost",
-      "store": "Store"
+      "store": "Store",
+      "selectedCount": "{count, plural, one {# item selected} other {# items selected}}",
+      "itemsOnPage": "{count, plural, one {# item on this page} other {# items on this page}}",
+      "selectToAction": "Select items to archive or delete",
+      "pageInfo": "Page {page} of {totalPages} ({total} items)",
+      "deleting": "Deleting..."
     },
     "messages": {
       "itemAdded": "Grocery item added successfully",
       "itemUpdated": "Grocery item updated successfully",
       "itemDeleted": "Grocery item deleted successfully",
       "itemsArchived": "Items archived successfully",
+      "itemsUnarchived": "Items unarchived successfully",
       "itemsDeleted": "Items deleted successfully",
+      "bulkItemsAdded": "{count, plural, one {# item} other {# items}} added successfully",
       "errorAdding": "Failed to add grocery item",
       "errorUpdating": "Failed to update grocery item",
-      "errorDeleting": "Failed to delete grocery item"
+      "errorDeleting": "Failed to delete grocery item",
+      "errorArchiving": "Failed to archive selected items",
+      "errorUnarchiving": "Failed to unarchive selected items",
+      "errorBulkDeleting": "Failed to delete selected items"
     },
     "confirmDelete": {
       "title": "Delete Grocery Item",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
     }
-  }
+  },
+  "import": {
+    "back": "Back",
+    "selectMethod": {
+      "title": "Choose Import Method",
+      "description": "Select how you want to add items"
+    },
+    "steps": {
+      "method": "Method",
+      "input": "Input",
+      "review": "Review",
+      "complete": "Done"
+    },
+    "methods": {
+      "text": {
+        "title": "Text Input",
+        "description": "Type or paste your grocery list"
+      },
+      "voice": {
+        "title": "Voice Input",
+        "description": "Dictate your grocery list"
+      },
+      "photoGroceries": {
+        "title": "Photo of Groceries",
+        "description": "Take a photo of groceries on the table"
+      },
+      "paperReceipt": {
+        "title": "Paper Receipt",
+        "description": "Scan a paper receipt"
+      },
+      "digitalReceipt": {
+        "title": "Digital Receipt",
+        "description": "Upload a screenshot of digital receipt"
+      },
+      "deliveryApp": {
+        "title": "Delivery App",
+        "description": "Upload a screenshot from delivery app"
+      }
+    },
+    "text": {
+      "title": "Text Import",
+      "description": "Type or paste your grocery list in any format. AI will parse and structure it for you.",
+      "placeholder": "Enter your groceries here...\nExample:\n2 kg apples 89.50₴\n1l milk from Silpo\nbread, eggs, cheese",
+      "groceryExample": "2 kg apples 89.50₴\n1l milk from Silpo\nbread, eggs, cheese\n500g ground beef 189.99₴\norganic bananas x4\n1 loaf sourdough bread\nyogurt - strawberry flavor\n2L orange juice",
+      "useExample": "Use example",
+      "parsing": "Parsing...",
+      "parseWithAI": "Parse with AI",
+      "hints": {
+        "title": "Tips for best results",
+        "hint1": "Include quantities and units when possible",
+        "hint2": "Mention prices if you want to track spending",
+        "hint3": "Add store names if you shop at multiple places"
+      }
+    },
+    "voice": {
+      "title": "Voice Import",
+      "description": "Record your grocery list by speaking. AI will transcribe and parse it.",
+      "tapToRecord": "Tap to start recording",
+      "recording": "Recording... Tap to stop",
+      "recorded": "Recording complete",
+      "processing": "Processing...",
+      "transcribeAndParse": "Transcribe & Parse",
+      "hints": {
+        "title": "Tips for best results",
+        "hint1": "Speak clearly and at a moderate pace",
+        "hint2": "Mention quantities, prices, and stores",
+        "hint3": "Works with English, Russian, and Ukrainian"
+      }
+    },
+    "photo": {
+      "dropHere": "Drop image here",
+      "dragOrClick": "Drag & drop or click to upload",
+      "dragOrClickMultiple": "Drag & drop or click to upload multiple photos",
+      "acceptedFormats": "Accepted formats: {formats}",
+      "maxSize": "Max file size: {size} MB",
+      "maxSizeMultiple": "Max {size} MB per file, up to {maxFiles} files",
+      "autoCompress": "Large photos (HEIC, etc.) will be automatically compressed",
+      "compressing": "Compressing photos...",
+      "compressingDescription": "Optimizing image size for faster upload",
+      "processing": "Processing...",
+      "processingMultiple": "Processing {count} images...",
+      "analyzeWithAI": "Analyze with AI",
+      "analyzeWithAIMultiple": "Analyze {count} images with AI",
+      "filesSelected": "{count, plural, one {# file selected} other {# files selected}}",
+      "addMore": "Add more",
+      "clearAll": "Clear all",
+      "errors": {
+        "tooLarge": "File is too large. Maximum size is {maxSize} MB",
+        "invalidType": "Invalid file type. Please upload an image",
+        "tooManyFiles": "Too many files. Maximum is {maxFiles}",
+        "generic": "Failed to upload file",
+        "processingFailed": "Failed to process image. Please try again."
+      },
+      "hints": {
+        "title": "Tips for best results"
+      },
+      "groceries": {
+        "title": "Photo of Groceries",
+        "description": "Take a photo of your groceries laid out on a table or counter",
+        "descriptionMultiple": "Take multiple photos of your groceries from different angles",
+        "hint1": "Lay items flat with labels visible",
+        "hint2": "Ensure good lighting",
+        "hint3": "Take multiple photos if items don't fit in one frame"
+      },
+      "paperReceipt": {
+        "title": "Paper Receipt",
+        "description": "Take a clear photo of your paper receipt",
+        "descriptionMultiple": "Take multiple photos if the receipt is long or hard to capture in one shot",
+        "hint1": "Flatten the receipt before taking photo",
+        "hint2": "Ensure all text is readable",
+        "hint3": "Take multiple photos for long receipts"
+      },
+      "digitalReceipt": {
+        "title": "Digital Receipt",
+        "description": "Upload a screenshot of your digital receipt or email",
+        "hint1": "Include the full list of items",
+        "hint2": "Prices should be visible",
+        "hint3": "Crop out unnecessary parts"
+      },
+      "deliveryApp": {
+        "title": "Delivery App Screenshot",
+        "description": "Upload a screenshot from your grocery delivery app",
+        "descriptionMultiple": "Upload multiple screenshots from your grocery delivery app",
+        "hint1": "Screenshot the order summary",
+        "hint2": "Include item names and quantities",
+        "hint3": "Upload multiple screenshots if your order spans multiple pages"
+      }
+    },
+    "digitalReceipt": {
+      "title": "Digital Receipt Link",
+      "description": "Paste a link to your digital receipt and AI will extract the items",
+      "urlLabel": "Receipt URL",
+      "urlPlaceholder": "https://receipt.silpo.elkasa.com.ua/...",
+      "processing": "Fetching receipt...",
+      "parseReceipt": "Parse Receipt",
+      "supportedServices": "Supported services",
+      "otherServices": "Other receipt services may also work",
+      "errors": {
+        "emptyUrl": "Please enter a receipt URL",
+        "invalidUrl": "Please enter a valid URL",
+        "processingFailed": "Failed to parse receipt. Please check the URL and try again."
+      },
+      "hints": {
+        "title": "Tips for best results",
+        "hint1": "Copy the full receipt URL from your email or SMS",
+        "hint2": "Make sure the link is still valid (not expired)",
+        "hint3": "Works with most Ukrainian supermarket digital receipts"
+      }
+    },
+    "review": {
+      "title": "Review Items",
+      "description": "Review and edit parsed items before adding them to your inventory",
+      "itemCount": "{count, plural, one {# item} other {# items}} found",
+      "selectedCount": "{count, plural, one {# item} other {# items}} selected",
+      "selectAll": "Select all",
+      "selectItem": "Select item",
+      "deleteSelected": "Delete selected",
+      "noItems": "No items were parsed. Please try again with different input.",
+      "goBack": "Go back",
+      "saving": "Saving...",
+      "saveError": "Failed to save items. Please try again.",
+      "addToGroceries": "Add {count, plural, one {# item} other {# items}} to Groceries"
+    },
+    "complete": {
+      "title": "Import Complete!",
+      "description": "{count, plural, one {# item has} other {# items have}} been added to your groceries",
+      "addMore": "Import More",
+      "viewItems": "View Items"
+    }
+  },
+  "comingSoon": "Coming Soon"
 }

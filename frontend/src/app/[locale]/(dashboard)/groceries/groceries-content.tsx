@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Plus,
   Carrot,
@@ -22,6 +23,7 @@ import {
   History,
   Package,
   Repeat,
+  Import,
 } from "lucide-react";
 
 import {
@@ -56,6 +58,7 @@ import {
   GroceryBulkForm,
   GroceryTable,
   GroceryFiltersBar,
+  GroceryImport,
 } from "@/components/modules/groceries";
 import {
   useGetGroceriesQuery,
@@ -67,6 +70,7 @@ import {
 
 export function GroceriesContent() {
   const t = useTranslations("groceries");
+  const tCommon = useTranslations("common");
 
   // State for active items
   const [filters, setFilters] = useState<GroceryFilters>({
@@ -100,8 +104,19 @@ export function GroceriesContent() {
   const { data: historyData, isLoading: isLoadingHistory } =
     useGetGroceryHistoryQuery(historyMonths);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const navigateToTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const tabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
+    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
     { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
     { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
     { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
@@ -130,10 +145,10 @@ export function GroceriesContent() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    return `${new Intl.NumberFormat("uk-UA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)} ₴`;
   };
 
   const hasGroceries = (groceriesData?.total || 0) > 0;
@@ -276,6 +291,13 @@ export function GroceriesContent() {
               />
             )}
           </div>
+        </TabsContent>
+
+        {/* Import Tab */}
+        <TabsContent value="import">
+          <GroceryImport
+            onViewItems={() => navigateToTab("overview")}
+          />
         </TabsContent>
 
         {/* Archive Tab */}
@@ -478,7 +500,7 @@ export function GroceriesContent() {
 
             {isLoadingHistory ? (
               <div className="flex items-center justify-center py-12">
-                <div className="text-muted-foreground">Loading...</div>
+                <div className="text-muted-foreground">{tCommon("loading")}</div>
               </div>
             ) : historyData && historyData.total_items > 0 ? (
               <>
@@ -567,7 +589,7 @@ export function GroceriesContent() {
                               <span className="font-medium">{store}</span>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {total} {t("analysis.items")} • {months} months
+                              {total} {t("analysis.items")} • {t("history.monthsCount", { count: months })}
                             </div>
                           </div>
                         ))}

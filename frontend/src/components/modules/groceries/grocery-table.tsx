@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -77,6 +78,9 @@ export function GroceryTable({
   onEdit,
   isArchiveView = false,
 }: GroceryTableProps) {
+  const t = useTranslations("groceries");
+  const tCommon = useTranslations("common");
+
   const [deleteGrocery, { isLoading: isDeleting }] = useDeleteGroceryMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteGroceriesMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveGroceriesMutation();
@@ -88,27 +92,27 @@ export function GroceryTable({
   const columns: DataTableColumn<Grocery>[] = [
     {
       key: "item_name",
-      header: "Item",
+      header: t("table.item"),
       render: (grocery) => (
         <span className="font-medium">{grocery.item_name}</span>
       ),
     },
     {
       key: "category",
-      header: "Category",
+      header: t("table.category"),
       render: (grocery) =>
         grocery.category ? (
           <Badge
             variant="secondary"
             className={getCategoryBadgeColor(grocery.category)}
           >
-            {grocery.category}
+            {t(`categories.${grocery.category}`)}
           </Badge>
         ) : null,
     },
     {
       key: "quantity",
-      header: "Quantity",
+      header: t("table.quantity"),
       render: (grocery) =>
         grocery.quantity !== null ? (
           <span>
@@ -119,13 +123,13 @@ export function GroceryTable({
     },
     {
       key: "purchase_date",
-      header: "Purchase Date",
+      header: t("table.purchaseDate"),
       render: (grocery) =>
         format(parseISO(grocery.purchase_date), "MMM d, yyyy"),
     },
     {
       key: "expiry_date",
-      header: "Expiry",
+      header: t("table.expiry"),
       render: (grocery) => {
         if (!grocery.expiry_date) {
           return <span className="text-muted-foreground">-</span>;
@@ -154,7 +158,9 @@ export function GroceryTable({
             </span>
             {daysUntil !== null && expiryStatus !== "ok" && (
               <span className="text-xs text-muted-foreground">
-                ({daysUntil < 0 ? `${Math.abs(daysUntil)}d ago` : `${daysUntil}d`})
+                ({daysUntil < 0
+                  ? t("filters.daysAgo", { days: Math.abs(daysUntil) })
+                  : t("filters.daysLeft", { days: daysUntil })})
               </span>
             )}
           </div>
@@ -163,13 +169,13 @@ export function GroceryTable({
     },
     {
       key: "cost",
-      header: "Cost",
+      header: t("table.cost"),
       render: (grocery) =>
-        grocery.cost !== null ? `$${grocery.cost.toFixed(2)}` : "-",
+        grocery.cost !== null ? `${grocery.cost.toFixed(2)} ₴` : "-",
     },
     {
       key: "store",
-      header: "Store",
+      header: t("table.store"),
       render: (grocery) => grocery.store || "-",
     },
   ];
@@ -179,47 +185,47 @@ export function GroceryTable({
     ...(isArchiveView
       ? [
           {
-            label: "Unarchive",
+            label: tCommon("unarchive"),
             icon: <ArchiveRestore className="h-4 w-4 mr-1" />,
             variant: "outline" as const,
             isLoading: isBulkUnarchiving,
             onClick: async (ids: string[]) => {
               try {
                 const result = await bulkUnarchive(ids).unwrap();
-                toast.success(result.message);
+                toast.success(t("messages.itemsUnarchived"));
               } catch {
-                toast.error("Failed to unarchive selected items");
+                toast.error(t("messages.errorUnarchiving"));
               }
             },
           },
         ]
       : [
           {
-            label: "Archive",
+            label: tCommon("archive"),
             icon: <Archive className="h-4 w-4 mr-1" />,
             variant: "outline" as const,
             isLoading: isBulkArchiving,
             onClick: async (ids: string[]) => {
               try {
                 const result = await bulkArchive(ids).unwrap();
-                toast.success(result.message);
+                toast.success(t("messages.itemsArchived"));
               } catch {
-                toast.error("Failed to archive selected items");
+                toast.error(t("messages.errorArchiving"));
               }
             },
           },
         ]),
     {
-      label: "Delete",
+      label: tCommon("delete"),
       icon: <Trash2 className="h-4 w-4 mr-1" />,
       variant: "destructive",
       isLoading: isBulkDeleting,
       onClick: async (ids: string[]) => {
         try {
           const result = await bulkDelete(ids).unwrap();
-          toast.success(result.message);
+          toast.success(t("messages.itemsDeleted"));
         } catch {
-          toast.error("Failed to delete selected items");
+          toast.error(t("messages.errorBulkDeleting"));
         }
       },
     },
@@ -228,12 +234,12 @@ export function GroceryTable({
   // Define row actions
   const rowActions: RowAction<Grocery>[] = [
     {
-      label: "Edit",
+      label: tCommon("edit"),
       icon: <Pencil className="h-4 w-4 mr-2" />,
       onClick: onEdit,
     },
     {
-      label: "Delete",
+      label: tCommon("delete"),
       icon: <Trash2 className="h-4 w-4 mr-2" />,
       variant: "destructive",
       separator: true,
@@ -264,16 +270,28 @@ export function GroceryTable({
         onDelete: async (grocery) => {
           try {
             await deleteGrocery(grocery.id).unwrap();
-            toast.success("Grocery item deleted");
+            toast.success(t("messages.itemDeleted"));
           } catch {
-            toast.error("Failed to delete grocery item");
+            toast.error(t("messages.errorDeleting"));
           }
         },
         isDeleting,
-        title: "Delete Grocery Item",
+        title: t("confirmDelete.title"),
       }}
       texts={{
-        loading: "Loading groceries...",
+        loading: t("filters.loading"),
+        selectedCount: (count: number) => t("table.selectedCount", { count }),
+        itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
+        selectToAction: t("table.selectToAction"),
+        pageInfo: (page: number, totalPages: number, total: number) =>
+          t("table.pageInfo", { page, totalPages, total }),
+        previous: tCommon("previous"),
+        next: tCommon("next"),
+        deleteTitle: t("confirmDelete.title"),
+        deleteDescription: (name: string) => t("confirmDelete.description", { name }),
+        cancel: tCommon("cancel"),
+        delete: tCommon("delete"),
+        deleting: t("table.deleting"),
       }}
     />
   );

@@ -40,18 +40,7 @@ import {
   type GroceryCategory,
 } from "@/lib/api/groceries-api";
 
-const COMMON_UNITS = [
-  { value: "pcs", label: "Pieces" },
-  { value: "kg", label: "Kilograms" },
-  { value: "g", label: "Grams" },
-  { value: "l", label: "Liters" },
-  { value: "ml", label: "Milliliters" },
-  { value: "pack", label: "Packs" },
-  { value: "box", label: "Boxes" },
-  { value: "bag", label: "Bags" },
-  { value: "bottle", label: "Bottles" },
-  { value: "can", label: "Cans" },
-];
+const UNIT_KEYS = ["pcs", "kg", "g", "l", "ml", "pack", "box", "bag", "bottle", "can"] as const;
 
 const groceryItemSchema = z.object({
   item_name: z.string().min(1, "Required").max(255),
@@ -93,6 +82,7 @@ export function GroceryBulkForm({
   onSuccess,
 }: GroceryBulkFormProps) {
   const t = useTranslations("groceries");
+  const tCommon = useTranslations("common");
   const [createGroceries, { isLoading }] = useCreateGroceriesMutation();
 
   const {
@@ -131,7 +121,7 @@ export function GroceryBulkForm({
       }));
 
       await createGroceries(items).unwrap();
-      toast.success(t("messages.itemAdded").replace("item", `${items.length} items`));
+      toast.success(t("messages.bulkItemsAdded", { count: items.length }));
       handleClose();
       onSuccess?.();
     } catch (error) {
@@ -214,9 +204,9 @@ export function GroceryBulkForm({
                           <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent>
-                          {COMMON_UNITS.map((u) => (
-                            <SelectItem key={u.value} value={u.value}>
-                              {u.label}
+                          {UNIT_KEYS.map((unitKey) => (
+                            <SelectItem key={unitKey} value={unitKey}>
+                              {t(`units.${unitKey}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -235,7 +225,7 @@ export function GroceryBulkForm({
                         <SelectContent>
                           {GROCERY_CATEGORIES.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>
-                              {cat.label}
+                              {t(`categories.${cat.value}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -277,7 +267,7 @@ export function GroceryBulkForm({
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => handleDuplicateRow(index)}
-                          title="Duplicate row"
+                          title={tCommon("duplicate")}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -288,7 +278,7 @@ export function GroceryBulkForm({
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => handleRemoveRow(index)}
                           disabled={fields.length === 1}
-                          title="Remove row"
+                          title={tCommon("delete")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -312,13 +302,13 @@ export function GroceryBulkForm({
 
             <DialogFooter className="sm:justify-end gap-2">
               <span className="text-sm text-muted-foreground mr-4">
-                {fields.length} {fields.length === 1 ? "item" : "items"}
+                {t("bulkForm.itemCount", { count: fields.length })}
               </span>
               <Button type="button" variant="outline" onClick={handleClose}>
-                {t("form.cancel") || "Cancel"}
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? t("form.saving") || "Saving..." : t("bulkForm.addAll")}
+                {isLoading ? t("form.saving") : t("bulkForm.addAll")}
               </Button>
             </DialogFooter>
           </div>

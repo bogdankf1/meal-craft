@@ -236,7 +236,7 @@ export default function PricingPage() {
                   </CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold tracking-tight text-foreground">
-                      ${tier.price_monthly}
+                      {tier.price_monthly} ₴
                     </span>
                     <span className="text-muted-foreground">
                       {t("page.perMonth")}

@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,18 +55,7 @@ interface GroceryFormProps {
   onSuccess?: () => void;
 }
 
-const COMMON_UNITS = [
-  { value: "pcs", label: "Pieces" },
-  { value: "kg", label: "Kilograms" },
-  { value: "g", label: "Grams" },
-  { value: "l", label: "Liters" },
-  { value: "ml", label: "Milliliters" },
-  { value: "pack", label: "Packs" },
-  { value: "box", label: "Boxes" },
-  { value: "bag", label: "Bags" },
-  { value: "bottle", label: "Bottles" },
-  { value: "can", label: "Cans" },
-];
+const UNIT_KEYS = ["pcs", "kg", "g", "l", "ml", "pack", "box", "bag", "bottle", "can"] as const;
 
 export function GroceryForm({
   open,
@@ -74,6 +63,9 @@ export function GroceryForm({
   editingGrocery,
   onSuccess,
 }: GroceryFormProps) {
+  const t = useTranslations("groceries");
+  const tCommon = useTranslations("common");
+
   const [createGroceries, { isLoading: isCreating }] =
     useCreateGroceriesMutation();
   const [updateGrocery, { isLoading: isUpdating }] = useUpdateGroceryMutation();
@@ -150,7 +142,7 @@ export function GroceryForm({
             store: data.store,
           },
         }).unwrap();
-        toast.success("Grocery item updated successfully");
+        toast.success(t("messages.itemUpdated"));
       } else {
         const groceryInput: CreateGroceryInput = {
           item_name: data.item_name,
@@ -163,14 +155,14 @@ export function GroceryForm({
           store: data.store,
         };
         await createGroceries([groceryInput]).unwrap();
-        toast.success("Grocery item added successfully");
+        toast.success(t("messages.itemAdded"));
       }
 
       reset();
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(isEditing ? "Failed to update grocery" : "Failed to add grocery");
+      toast.error(isEditing ? t("messages.errorUpdating") : t("messages.errorAdding"));
       console.error("Error saving grocery:", error);
     }
   };
@@ -185,22 +177,22 @@ export function GroceryForm({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Grocery Item" : "Add Grocery Item"}
+            {isEditing ? t("form.editTitle") : t("form.addTitle")}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Update the details of your grocery item."
-              : "Add a new item to your grocery inventory."}
+              ? t("form.editDescription")
+              : t("form.addDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Item Name */}
           <div className="space-y-2">
-            <Label htmlFor="item_name">Item Name *</Label>
+            <Label htmlFor="item_name">{t("form.itemName")} *</Label>
             <Input
               id="item_name"
-              placeholder="e.g., Apples, Milk, Bread"
+              placeholder={t("form.itemNamePlaceholder")}
               {...register("item_name")}
             />
             {errors.item_name && (
@@ -211,7 +203,7 @@ export function GroceryForm({
           {/* Quantity and Unit */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">{t("form.quantity")}</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -222,18 +214,18 @@ export function GroceryForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
+              <Label htmlFor="unit">{t("form.unit")}</Label>
               <Select
                 value={unit || ""}
                 onValueChange={(value) => setValue("unit", value || null)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
+                  <SelectValue placeholder={t("form.selectUnit")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {COMMON_UNITS.map((u) => (
-                    <SelectItem key={u.value} value={u.value}>
-                      {u.label}
+                  {UNIT_KEYS.map((unitKey) => (
+                    <SelectItem key={unitKey} value={unitKey}>
+                      {t(`units.${unitKey}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -243,18 +235,18 @@ export function GroceryForm({
 
           {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">{t("form.category")}</Label>
             <Select
               value={category || ""}
               onValueChange={(value) => setValue("category", value || null)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t("form.selectCategory")} />
               </SelectTrigger>
               <SelectContent>
                 {GROCERY_CATEGORIES.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
+                    {t(`categories.${cat.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -264,7 +256,7 @@ export function GroceryForm({
           {/* Purchase Date and Expiry Date */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="purchase_date">Purchase Date *</Label>
+              <Label htmlFor="purchase_date">{t("form.purchaseDate")} *</Label>
               <Input
                 id="purchase_date"
                 type="date"
@@ -277,7 +269,7 @@ export function GroceryForm({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="expiry_date">Expiry Date</Label>
+              <Label htmlFor="expiry_date">{t("form.expiryDate")}</Label>
               <Input
                 id="expiry_date"
                 type="date"
@@ -289,7 +281,7 @@ export function GroceryForm({
           {/* Cost and Store */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cost">Cost ($)</Label>
+              <Label htmlFor="cost">{t("form.cost")}</Label>
               <Input
                 id="cost"
                 type="number"
@@ -300,10 +292,10 @@ export function GroceryForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="store">Store</Label>
+              <Label htmlFor="store">{t("form.store")}</Label>
               <Input
                 id="store"
-                placeholder="e.g., Walmart, Costco"
+                placeholder={t("form.storePlaceholder")}
                 {...register("store")}
               />
             </div>
@@ -311,10 +303,10 @@ export function GroceryForm({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : isEditing ? "Update" : "Add Item"}
+              {isLoading ? t("form.saving") : isEditing ? tCommon("save") : t("addItem")}
             </Button>
           </DialogFooter>
         </form>
