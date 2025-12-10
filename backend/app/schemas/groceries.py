@@ -181,3 +181,16 @@ class GroceryHistory(BaseModel):
     top_items: List[TopItem] = Field(..., description="Most frequently purchased items")
     category_trends: dict = Field(..., description="Category breakdown over time")
     store_trends: dict = Field(..., description="Store breakdown over time")
+
+
+class BarcodeLookupResponse(BaseModel):
+    """Response from barcode lookup."""
+    success: bool = Field(..., description="Whether the lookup was successful")
+    barcode: str = Field(..., description="The barcode that was looked up")
+    product_name: Optional[str] = Field(None, description="Name of the product")
+    brand: Optional[str] = Field(None, description="Brand of the product")
+    category: Optional[str] = Field(None, description="Category of the product")
+    quantity: Optional[float] = Field(None, description="Quantity/weight of the product")
+    unit: Optional[str] = Field(None, description="Unit of measurement")
+    image_url: Optional[str] = Field(None, description="URL to product image")
+    message: Optional[str] = Field(None, description="Additional message")

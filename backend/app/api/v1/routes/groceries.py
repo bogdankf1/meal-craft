@@ -31,7 +31,9 @@ from app.schemas.groceries import (
     GroceryHistory,
     MonthlyData,
     TopItem,
+    BarcodeLookupResponse,
 )
+import httpx
 from app.services.ai_service import ai_service
 
 router = APIRouter()
@@ -968,4 +970,188 @@ async def parse_grocery_image(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to parse image(s): {str(e)}"
+        )
+
+
+# Category mapping from Open Food Facts to our categories
+OFF_CATEGORY_MAPPING = {
+    "fruits": "produce",
+    "vegetables": "produce",
+    "fresh-foods": "produce",
+    "plant-based-foods": "produce",
+    "meats": "meat",
+    "beef": "meat",
+    "pork": "meat",
+    "poultry": "meat",
+    "chicken": "meat",
+    "fish": "seafood",
+    "seafood": "seafood",
+    "dairies": "dairy",
+    "milk": "dairy",
+    "cheese": "dairy",
+    "yogurt": "dairy",
+    "eggs": "dairy",
+    "breads": "bakery",
+    "pastries": "bakery",
+    "frozen-foods": "frozen",
+    "beverages": "beverages",
+    "drinks": "beverages",
+    "waters": "beverages",
+    "juices": "beverages",
+    "sodas": "beverages",
+    "snacks": "snacks",
+    "chips": "snacks",
+    "cookies": "snacks",
+    "chocolates": "snacks",
+    "candies": "snacks",
+    "sauces": "condiments",
+    "condiments": "condiments",
+    "spices": "spices",
+    "herbs": "spices",
+    "cereals": "pantry",
+    "pasta": "pantry",
+    "rice": "pantry",
+    "canned-foods": "pantry",
+}
+
+
+def map_off_category(categories_tags: list) -> Optional[str]:
+    """Map Open Food Facts categories to our grocery categories."""
+    if not categories_tags:
+        return None
+
+    for tag in categories_tags:
+        # Remove language prefix (e.g., "en:fruits" -> "fruits")
+        clean_tag = tag.split(":")[-1].lower()
+        for off_key, our_category in OFF_CATEGORY_MAPPING.items():
+            if off_key in clean_tag:
+                return our_category
+
+    return "other"
+
+
+def parse_quantity_from_off(product: dict) -> tuple:
+    """Parse quantity and unit from Open Food Facts product data."""
+    quantity = None
+    unit = None
+
+    # Try to get quantity from product_quantity field (in grams or ml)
+    if product.get("product_quantity"):
+        try:
+            quantity = float(product["product_quantity"])
+            # Determine unit based on product categories
+            categories = " ".join(product.get("categories_tags", [])).lower()
+            if "beverage" in categories or "drink" in categories or "juice" in categories:
+                unit = "ml"
+            else:
+                unit = "g"
+        except (ValueError, TypeError):
+            pass
+
+    # Try to parse from quantity string (e.g., "500 g", "1 L")
+    if not quantity and product.get("quantity"):
+        import re
+        qty_str = product["quantity"]
+        match = re.match(r"([\d.]+)\s*(\w+)", qty_str)
+        if match:
+            try:
+                quantity = float(match.group(1))
+                unit = match.group(2).lower()
+                # Normalize units
+                if unit in ["g", "gr", "gram", "grams"]:
+                    unit = "g"
+                elif unit in ["kg", "kilo", "kilogram"]:
+                    unit = "kg"
+                elif unit in ["ml", "milliliter", "milliliters"]:
+                    unit = "ml"
+                elif unit in ["l", "liter", "liters", "litre"]:
+                    unit = "l"
+                elif unit in ["pcs", "pc", "piece", "pieces", "шт"]:
+                    unit = "pcs"
+            except (ValueError, TypeError):
+                pass
+
+    return quantity, unit
+
+
+@router.get("/lookup-barcode/{barcode}", response_model=BarcodeLookupResponse)
+async def lookup_barcode(
+    barcode: str,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Look up product information by barcode using Open Food Facts API.
+    Returns product name, brand, category, and other details if found.
+    """
+    try:
+        # Query Open Food Facts API
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://world.openfoodfacts.org/api/v2/product/{barcode}.json",
+                timeout=10.0,
+                headers={"User-Agent": "MealCraft/1.0"}
+            )
+
+        if response.status_code != 200:
+            return BarcodeLookupResponse(
+                success=False,
+                barcode=barcode,
+                message="Failed to lookup barcode"
+            )
+
+        data = response.json()
+
+        if data.get("status") != 1 or not data.get("product"):
+            return BarcodeLookupResponse(
+                success=False,
+                barcode=barcode,
+                message="Product not found in database"
+            )
+
+        product = data["product"]
+
+        # Extract product information
+        product_name = (
+            product.get("product_name") or
+            product.get("product_name_en") or
+            product.get("product_name_uk") or
+            product.get("generic_name") or
+            "Unknown Product"
+        )
+
+        brand = product.get("brands", "").split(",")[0].strip() if product.get("brands") else None
+
+        # Map category
+        category = map_off_category(product.get("categories_tags", []))
+
+        # Parse quantity
+        quantity, unit = parse_quantity_from_off(product)
+
+        # Get image URL
+        image_url = product.get("image_front_url") or product.get("image_url")
+
+        return BarcodeLookupResponse(
+            success=True,
+            barcode=barcode,
+            product_name=product_name,
+            brand=brand,
+            category=category,
+            quantity=quantity,
+            unit=unit,
+            image_url=image_url,
+            message="Product found"
+        )
+
+    except httpx.TimeoutException:
+        return BarcodeLookupResponse(
+            success=False,
+            barcode=barcode,
+            message="Request timed out"
+        )
+    except Exception as e:
+        print(f"Barcode lookup failed: {e}")
+        return BarcodeLookupResponse(
+            success=False,
+            barcode=barcode,
+            message=f"Lookup failed: {str(e)}"
         )
