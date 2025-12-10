@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth, groceries, billing
+from app.api.v1.routes import auth, groceries, billing, ai
 
 api_router = APIRouter()
 
@@ -12,6 +12,9 @@ api_router.include_router(billing.router, prefix="/billing", tags=["Billing"])
 
 # Groceries (Phase 1 module)
 api_router.include_router(groceries.router, prefix="/groceries", tags=["Groceries"])
+
+# AI Features (text parsing, categorization)
+api_router.include_router(ai.router, tags=["AI"])
 
 # TODO: Add more routes as modules are implemented
 # api_router.include_router(recipes.router, prefix="/recipes", tags=["Recipes"])

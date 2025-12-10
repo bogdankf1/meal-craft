@@ -69,6 +69,13 @@ from app.models.learning import (
     UserNote,
 )
 
+# AI
+from app.models.ai import (
+    TextParsingHistory,
+    CategoryCorrection,
+    AIInsight,
+)
+
 __all__ = [
     # User
     "User",
@@ -115,4 +122,8 @@ __all__ = [
     "Technique",
     "UserTechniqueProgress",
     "UserNote",
+    # AI
+    "TextParsingHistory",
+    "CategoryCorrection",
+    "AIInsight",
 ]

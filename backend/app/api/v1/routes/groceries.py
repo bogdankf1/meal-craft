@@ -1,7 +1,7 @@
 """
 Groceries API routes - Full CRUD implementation.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.orm import selectinload
@@ -27,10 +27,12 @@ from app.schemas.groceries import (
     GroceryAnalytics,
     ParseTextRequest,
     ParseTextResponse,
+    ParseReceiptUrlRequest,
     GroceryHistory,
     MonthlyData,
     TopItem,
 )
+from app.services.ai_service import ai_service
 
 router = APIRouter()
 
@@ -625,11 +627,54 @@ async def parse_grocery_text(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Parse grocery items from text. Simple parsing without AI for now."""
-    # Simple line-by-line parsing
-    lines = request.text.strip().split("\n")
-    parsed_items = []
+    """Parse grocery items from text using AI."""
     default_date = request.default_purchase_date or date.today()
+
+    try:
+        # Use AI service to parse the text
+        ai_parsed_items = await ai_service.parse_grocery_text(
+            text=request.text,
+            db=db,
+            user_id=current_user.id,
+        )
+
+        if not ai_parsed_items:
+            # Fall back to simple line-by-line parsing if AI fails
+            return _simple_parse_text(request.text, default_date)
+
+        # Convert AI response to GroceryCreate objects
+        parsed_items = []
+        for item in ai_parsed_items:
+            parsed_items.append(GroceryCreate(
+                item_name=item.get("item_name", "").strip(),
+                quantity=item.get("quantity"),
+                unit=item.get("unit"),
+                category=item.get("category"),
+                purchase_date=default_date,
+                expiry_date=date.fromisoformat(item["expiry_date"]) if item.get("expiry_date") else None,
+                cost=item.get("cost"),
+                store=item.get("store"),
+            ))
+
+        return ParseTextResponse(
+            parsed_items=parsed_items,
+            raw_text=request.text,
+            success=True,
+            message=f"Parsed {len(parsed_items)} item(s) with AI"
+        )
+
+    except Exception as e:
+        import traceback
+        print(f"AI parsing failed: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        # Fall back to simple parsing
+        return _simple_parse_text(request.text, default_date)
+
+
+def _simple_parse_text(text: str, default_date: date) -> ParseTextResponse:
+    """Fallback simple line-by-line parsing without AI."""
+    lines = text.strip().split("\n")
+    parsed_items = []
 
     for line in lines:
         line = line.strip()
@@ -676,20 +721,251 @@ async def parse_grocery_text(
 
     return ParseTextResponse(
         parsed_items=parsed_items,
-        raw_text=request.text,
+        raw_text=text,
         success=True,
         message=f"Parsed {len(parsed_items)} item(s)" if parsed_items else "No items could be parsed"
     )
 
 
-@router.post("/parse-image")
-async def parse_grocery_image(
+@router.post("/parse-voice", response_model=ParseTextResponse)
+async def parse_grocery_voice(
+    audio: UploadFile = File(...),
+    language: str = Form(default="auto"),
+    default_purchase_date: Optional[date] = Form(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Parse grocery items from image/receipt using OCR."""
-    # TODO: Implement OCR integration (Google Vision API or similar)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Image/receipt OCR parsing is not yet implemented"
-    )
+    """Parse grocery items from voice recording using AI transcription."""
+    purchase_date = default_purchase_date or date.today()
+
+    try:
+        # Read audio file content
+        audio_content = await audio.read()
+
+        print(f"[Voice Parse] Received audio file: {audio.filename}, content_type: {audio.content_type}, size: {len(audio_content)} bytes")
+
+        if len(audio_content) < 1000:
+            print(f"[Voice Parse] Audio file too small: {len(audio_content)} bytes")
+            return ParseTextResponse(
+                parsed_items=[],
+                raw_text="[Voice recording too short]",
+                success=True,
+                message="Recording too short. Please record for at least a few seconds."
+            )
+
+        # Create a file-like object for OpenAI
+        import io
+        audio_file = io.BytesIO(audio_content)
+        # Use filename from upload or default based on content type
+        filename = audio.filename or "recording.webm"
+        # Ensure proper extension for Whisper
+        if audio.content_type:
+            ext_map = {
+                "audio/webm": ".webm",
+                "audio/mp4": ".mp4",
+                "audio/ogg": ".ogg",
+                "audio/mpeg": ".mp3",
+                "audio/wav": ".wav",
+            }
+            for content_type, ext in ext_map.items():
+                if content_type in audio.content_type and not filename.endswith(ext):
+                    filename = filename.rsplit(".", 1)[0] + ext
+                    break
+        audio_file.name = filename
+        print(f"[Voice Parse] Using filename: {filename}")
+
+        # Transcribe and parse
+        ai_parsed_items, transcribed_text = await ai_service.transcribe_and_parse_groceries(
+            audio_file=audio_file,
+            language=language,
+            db=db,
+            user_id=current_user.id,
+        )
+
+        if not ai_parsed_items:
+            return ParseTextResponse(
+                parsed_items=[],
+                raw_text=f"[Transcribed: {transcribed_text}]" if transcribed_text else "[No transcription]",
+                success=True,
+                message=f"Audio was transcribed as: \"{transcribed_text}\". No grocery items were detected. Try speaking more clearly and mention specific items like 'milk, eggs, bread'."
+            )
+
+        # Convert to GroceryCreate objects
+        parsed_items = []
+        for item in ai_parsed_items:
+            parsed_items.append(GroceryCreate(
+                item_name=item.get("item_name", "").strip(),
+                quantity=item.get("quantity"),
+                unit=item.get("unit"),
+                category=item.get("category"),
+                purchase_date=purchase_date,
+                expiry_date=date.fromisoformat(item["expiry_date"]) if item.get("expiry_date") else None,
+                cost=item.get("cost"),
+                store=item.get("store"),
+            ))
+
+        return ParseTextResponse(
+            parsed_items=parsed_items,
+            raw_text=f"[Transcribed: {transcribed_text}]",
+            success=True,
+            message=f"Transcribed and parsed {len(parsed_items)} item(s)"
+        )
+
+    except Exception as e:
+        import traceback
+        print(f"Voice parsing failed: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process voice recording: {str(e)}"
+        )
+
+
+@router.post("/parse-receipt-url", response_model=ParseTextResponse)
+async def parse_receipt_url(
+    request: ParseReceiptUrlRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Parse grocery items from a digital receipt URL."""
+    purchase_date = request.default_purchase_date or date.today()
+
+    try:
+        # Use AI service to fetch and parse the receipt
+        ai_parsed_items = await ai_service.parse_receipt_from_url(
+            url=request.url,
+            db=db,
+            user_id=current_user.id,
+        )
+
+        if not ai_parsed_items:
+            return ParseTextResponse(
+                parsed_items=[],
+                raw_text=f"[Receipt URL: {request.url}]",
+                success=True,
+                message="Could not extract items from this receipt. The page may require JavaScript or the format is not supported."
+            )
+
+        # Convert to GroceryCreate objects
+        parsed_items = []
+        for item in ai_parsed_items:
+            parsed_items.append(GroceryCreate(
+                item_name=item.get("item_name", "").strip(),
+                quantity=item.get("quantity"),
+                unit=item.get("unit"),
+                category=item.get("category"),
+                purchase_date=purchase_date,
+                expiry_date=date.fromisoformat(item["expiry_date"]) if item.get("expiry_date") else None,
+                cost=item.get("cost"),
+                store=item.get("store"),
+            ))
+
+        return ParseTextResponse(
+            parsed_items=parsed_items,
+            raw_text=f"[Receipt URL: {request.url}]",
+            success=True,
+            message=f"Parsed {len(parsed_items)} item(s) from receipt"
+        )
+
+    except ValueError as e:
+        # HTTP errors from fetching
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        import traceback
+        print(f"Receipt URL parsing failed: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to parse receipt: {str(e)}"
+        )
+
+
+@router.post("/parse-image", response_model=ParseTextResponse)
+async def parse_grocery_image(
+    image: Optional[UploadFile] = File(None),
+    images: Optional[List[UploadFile]] = File(None),
+    import_type: str = Form(default="delivery_app"),
+    default_purchase_date: Optional[date] = Form(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Parse grocery items from image(s) using AI vision."""
+    purchase_date = default_purchase_date or date.today()
+
+    try:
+        # Collect all images
+        image_data_list: List[bytes] = []
+
+        # Single image
+        if image is not None:
+            content = await image.read()
+            if content:
+                image_data_list.append(content)
+                print(f"[Image Parse] Single image: {image.filename}, size: {len(content)} bytes")
+
+        # Multiple images
+        if images is not None:
+            for img in images:
+                content = await img.read()
+                if content:
+                    image_data_list.append(content)
+                    print(f"[Image Parse] Multi image: {img.filename}, size: {len(content)} bytes")
+
+        if not image_data_list:
+            return ParseTextResponse(
+                parsed_items=[],
+                raw_text="[No images provided]",
+                success=False,
+                message="No images were provided"
+            )
+
+        print(f"[Image Parse] Processing {len(image_data_list)} image(s), type: {import_type}")
+
+        # Use AI service to parse images
+        ai_parsed_items = await ai_service.parse_grocery_images(
+            images=image_data_list,
+            import_type=import_type,
+            db=db,
+            user_id=current_user.id,
+        )
+
+        if not ai_parsed_items:
+            return ParseTextResponse(
+                parsed_items=[],
+                raw_text=f"[{len(image_data_list)} image(s) processed]",
+                success=True,
+                message="Could not extract items from the image(s). Please try with a clearer photo."
+            )
+
+        # Convert to GroceryCreate objects
+        parsed_items = []
+        for item in ai_parsed_items:
+            parsed_items.append(GroceryCreate(
+                item_name=item.get("item_name", "").strip(),
+                quantity=item.get("quantity"),
+                unit=item.get("unit"),
+                category=item.get("category"),
+                purchase_date=purchase_date,
+                expiry_date=date.fromisoformat(item["expiry_date"]) if item.get("expiry_date") else None,
+                cost=item.get("cost"),
+                store=item.get("store"),
+            ))
+
+        return ParseTextResponse(
+            parsed_items=parsed_items,
+            raw_text=f"[{len(image_data_list)} image(s) processed]",
+            success=True,
+            message=f"Parsed {len(parsed_items)} item(s) from {len(image_data_list)} image(s)"
+        )
+
+    except Exception as e:
+        import traceback
+        print(f"Image parsing failed: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to parse image(s): {str(e)}"
+        )

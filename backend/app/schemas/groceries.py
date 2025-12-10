@@ -135,6 +135,12 @@ class ParseTextRequest(BaseModel):
     default_purchase_date: Optional[date] = Field(None, description="Default purchase date for parsed items")
 
 
+class ParseReceiptUrlRequest(BaseModel):
+    """Request to parse grocery items from a receipt URL."""
+    url: str = Field(..., min_length=1, description="URL of the digital receipt")
+    default_purchase_date: Optional[date] = Field(None, description="Default purchase date for parsed items")
+
+
 class ParseTextResponse(BaseModel):
     """Response from text parsing."""
     parsed_items: List[GroceryCreate]
