@@ -24,6 +24,17 @@ class GroceryCategory(str, Enum):
     OTHER = "other"
 
 
+class WasteReason(str, Enum):
+    """Reason for food waste."""
+    EXPIRED = "expired"
+    SPOILED = "spoiled"
+    FORGOT = "forgot"
+    OVERCOOKED = "overcooked"
+    DIDNT_LIKE = "didnt_like"
+    TOO_MUCH = "too_much"
+    OTHER = "other"
+
+
 class GroceryBase(BaseModel):
     """Base grocery schema with common fields."""
     item_name: str = Field(..., min_length=1, max_length=255, description="Name of the grocery item")
@@ -73,6 +84,11 @@ class GroceryResponse(BaseModel):
     store: Optional[str] = None
     is_archived: bool
     created_at: datetime
+    # Waste tracking fields
+    is_wasted: bool = False
+    wasted_at: Optional[datetime] = None
+    waste_reason: Optional[str] = None
+    waste_notes: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -112,6 +128,19 @@ class BulkActionResponse(BaseModel):
     success: bool
     affected_count: int
     message: str
+
+
+class MarkAsWastedRequest(BaseModel):
+    """Request to mark a grocery item as wasted."""
+    waste_reason: WasteReason = Field(..., description="Reason for wasting the item")
+    waste_notes: Optional[str] = Field(None, max_length=500, description="Additional notes about the waste")
+
+
+class BulkMarkAsWastedRequest(BaseModel):
+    """Request to mark multiple grocery items as wasted."""
+    ids: List[UUID] = Field(..., min_length=1, description="List of grocery IDs")
+    waste_reason: WasteReason = Field(..., description="Reason for wasting the items")
+    waste_notes: Optional[str] = Field(None, max_length=500, description="Additional notes about the waste")
 
 
 class GroceryAnalytics(BaseModel):
@@ -194,3 +223,61 @@ class BarcodeLookupResponse(BaseModel):
     unit: Optional[str] = Field(None, description="Unit of measurement")
     image_url: Optional[str] = Field(None, description="URL to product image")
     message: Optional[str] = Field(None, description="Additional message")
+
+
+class WastedItem(BaseModel):
+    """Wasted grocery item response."""
+    id: UUID
+    item_name: str
+    quantity: Optional[float] = None
+    unit: Optional[str] = None
+    category: Optional[str] = None
+    purchase_date: date
+    cost: Optional[float] = None
+    store: Optional[str] = None
+    wasted_at: datetime
+    waste_reason: str
+    waste_notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WasteByReason(BaseModel):
+    """Waste breakdown by reason."""
+    reason: str
+    count: int
+    total_cost: float
+
+
+class WasteByCategory(BaseModel):
+    """Waste breakdown by category."""
+    category: str
+    count: int
+    total_cost: float
+
+
+class MonthlyWasteData(BaseModel):
+    """Monthly waste statistics."""
+    month: str = Field(..., description="Month in YYYY-MM format")
+    month_label: str = Field(..., description="Human readable month label")
+    wasted_count: int = Field(..., description="Number of items wasted")
+    wasted_cost: float = Field(..., description="Total cost of wasted items")
+    by_reason: dict = Field(..., description="Breakdown by waste reason")
+    by_category: dict = Field(..., description="Breakdown by category")
+
+
+class WasteAnalytics(BaseModel):
+    """Waste analytics data."""
+    total_wasted_items: int = Field(..., description="Total number of wasted items")
+    total_wasted_cost: float = Field(..., description="Total cost of wasted items")
+    wasted_this_week: int = Field(..., description="Items wasted this week")
+    wasted_this_month: int = Field(..., description="Items wasted this month")
+    cost_wasted_this_week: float = Field(..., description="Cost wasted this week")
+    cost_wasted_this_month: float = Field(..., description="Cost wasted this month")
+    waste_rate: float = Field(..., description="Percentage of items wasted vs total purchased")
+    by_reason: List[WasteByReason] = Field(..., description="Breakdown by waste reason")
+    by_category: List[WasteByCategory] = Field(..., description="Breakdown by category")
+    recent_wasted: List[WastedItem] = Field(..., description="Recently wasted items")
+    monthly_trends: List[MonthlyWasteData] = Field(default=[], description="Monthly waste trends")
+    suggestions: List[str] = Field(default=[], description="Suggestions to reduce waste")

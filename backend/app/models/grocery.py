@@ -24,6 +24,16 @@ class GroceryCategory(str, PyEnum):
     OTHER = "other"
 
 
+class WasteReason(str, PyEnum):
+    EXPIRED = "expired"
+    SPOILED = "spoiled"
+    FORGOT = "forgot"
+    OVERCOOKED = "overcooked"
+    DIDNT_LIKE = "didnt_like"
+    TOO_MUCH = "too_much"
+    OTHER = "other"
+
+
 class Grocery(Base):
     __tablename__ = "groceries"
 
@@ -39,6 +49,12 @@ class Grocery(Base):
     store = Column(String(255), nullable=True)
     is_archived = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Waste tracking fields
+    is_wasted = Column(Boolean, default=False)
+    wasted_at = Column(DateTime, nullable=True)
+    waste_reason = Column(String(50), nullable=True)
+    waste_notes = Column(String(500), nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="groceries")

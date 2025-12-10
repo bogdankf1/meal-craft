@@ -32,6 +32,13 @@ from app.schemas.groceries import (
     MonthlyData,
     TopItem,
     BarcodeLookupResponse,
+    MarkAsWastedRequest,
+    BulkMarkAsWastedRequest,
+    WasteAnalytics,
+    WastedItem,
+    WasteByReason,
+    WasteByCategory,
+    MonthlyWasteData,
 )
 import httpx
 from app.services.ai_service import ai_service
@@ -621,6 +628,322 @@ async def bulk_delete_groceries(
         affected_count=count,
         message=f"Successfully deleted {count} item(s)"
     )
+
+
+@router.post("/{grocery_id}/waste", response_model=GroceryResponse)
+async def mark_as_wasted(
+    grocery_id: UUID,
+    request: MarkAsWastedRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Mark a grocery item as wasted."""
+    result = await db.execute(
+        select(Grocery).where(
+            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
+        )
+    )
+    grocery = result.scalar_one_or_none()
+
+    if not grocery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grocery item not found"
+        )
+
+    grocery.is_wasted = True
+    grocery.wasted_at = datetime.utcnow()
+    grocery.waste_reason = request.waste_reason.value
+    grocery.waste_notes = request.waste_notes
+    grocery.is_archived = True  # Auto-archive wasted items
+
+    await db.commit()
+    await db.refresh(grocery)
+
+    return GroceryResponse.model_validate(grocery)
+
+
+@router.post("/bulk-waste", response_model=BulkActionResponse)
+async def bulk_mark_as_wasted(
+    request: BulkMarkAsWastedRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Mark multiple grocery items as wasted."""
+    result = await db.execute(
+        select(Grocery).where(
+            and_(
+                Grocery.id.in_(request.ids),
+                Grocery.user_id == current_user.id
+            )
+        )
+    )
+    groceries = result.scalars().all()
+
+    if not groceries:
+        return BulkActionResponse(
+            success=False,
+            affected_count=0,
+            message="No matching grocery items found"
+        )
+
+    now = datetime.utcnow()
+    for grocery in groceries:
+        grocery.is_wasted = True
+        grocery.wasted_at = now
+        grocery.waste_reason = request.waste_reason.value
+        grocery.waste_notes = request.waste_notes
+        grocery.is_archived = True  # Auto-archive wasted items
+
+    await db.commit()
+
+    return BulkActionResponse(
+        success=True,
+        affected_count=len(groceries),
+        message=f"Successfully marked {len(groceries)} item(s) as wasted"
+    )
+
+
+@router.post("/{grocery_id}/unwaste", response_model=GroceryResponse)
+async def unmark_as_wasted(
+    grocery_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Remove wasted status from a grocery item."""
+    result = await db.execute(
+        select(Grocery).where(
+            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
+        )
+    )
+    grocery = result.scalar_one_or_none()
+
+    if not grocery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grocery item not found"
+        )
+
+    grocery.is_wasted = False
+    grocery.wasted_at = None
+    grocery.waste_reason = None
+    grocery.waste_notes = None
+
+    await db.commit()
+    await db.refresh(grocery)
+
+    return GroceryResponse.model_validate(grocery)
+
+
+@router.get("/waste/analytics", response_model=WasteAnalytics)
+async def get_waste_analytics(
+    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get waste analytics data with trends and suggestions."""
+    today = date.today()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    start_date = today - relativedelta(months=months)
+
+    # Get all wasted items
+    wasted_result = await db.execute(
+        select(Grocery).where(
+            and_(
+                Grocery.user_id == current_user.id,
+                Grocery.is_wasted == True
+            )
+        ).order_by(Grocery.wasted_at.desc())
+    )
+    all_wasted = wasted_result.scalars().all()
+
+    # Total wasted items and cost
+    total_wasted_items = len(all_wasted)
+    total_wasted_cost = sum(g.cost or 0 for g in all_wasted)
+
+    # Get total items (for waste rate calculation)
+    total_items_result = await db.execute(
+        select(func.count()).where(Grocery.user_id == current_user.id)
+    )
+    total_items = total_items_result.scalar() or 0
+    waste_rate = (total_wasted_items / total_items * 100) if total_items > 0 else 0
+
+    # Wasted this week
+    wasted_week = [g for g in all_wasted if g.wasted_at and g.wasted_at.date() >= week_ago]
+    wasted_this_week = len(wasted_week)
+    cost_wasted_this_week = sum(g.cost or 0 for g in wasted_week)
+
+    # Wasted this month
+    wasted_month = [g for g in all_wasted if g.wasted_at and g.wasted_at.date() >= month_ago]
+    wasted_this_month = len(wasted_month)
+    cost_wasted_this_month = sum(g.cost or 0 for g in wasted_month)
+
+    # Breakdown by reason
+    reason_breakdown = {}
+    for g in all_wasted:
+        reason = g.waste_reason or "other"
+        if reason not in reason_breakdown:
+            reason_breakdown[reason] = {"count": 0, "total_cost": 0}
+        reason_breakdown[reason]["count"] += 1
+        reason_breakdown[reason]["total_cost"] += g.cost or 0
+
+    by_reason = [
+        WasteByReason(reason=reason, count=data["count"], total_cost=data["total_cost"])
+        for reason, data in sorted(reason_breakdown.items(), key=lambda x: x[1]["count"], reverse=True)
+    ]
+
+    # Breakdown by category
+    category_breakdown = {}
+    for g in all_wasted:
+        category = g.category or "other"
+        if category not in category_breakdown:
+            category_breakdown[category] = {"count": 0, "total_cost": 0}
+        category_breakdown[category]["count"] += 1
+        category_breakdown[category]["total_cost"] += g.cost or 0
+
+    by_category = [
+        WasteByCategory(category=cat, count=data["count"], total_cost=data["total_cost"])
+        for cat, data in sorted(category_breakdown.items(), key=lambda x: x[1]["count"], reverse=True)
+    ]
+
+    # Recent wasted items (last 10)
+    recent_wasted = [
+        WastedItem(
+            id=g.id,
+            item_name=g.item_name,
+            quantity=g.quantity,
+            unit=g.unit,
+            category=g.category,
+            purchase_date=g.purchase_date,
+            cost=g.cost,
+            store=g.store,
+            wasted_at=g.wasted_at,
+            waste_reason=g.waste_reason,
+            waste_notes=g.waste_notes,
+        )
+        for g in all_wasted[:10] if g.wasted_at
+    ]
+
+    # Monthly trends
+    monthly_trends = []
+    current_month = today.replace(day=1)
+    for i in range(months):
+        month_start = current_month - relativedelta(months=i)
+        month_end = month_start + relativedelta(months=1) - timedelta(days=1)
+        month_key = month_start.strftime("%Y-%m")
+        month_label = month_start.strftime("%b %Y")
+
+        # Filter wasted items for this month
+        month_wasted = [
+            g for g in all_wasted
+            if g.wasted_at and month_start <= g.wasted_at.date() <= month_end
+        ]
+
+        # Breakdown by reason and category for month
+        month_by_reason = {}
+        month_by_category = {}
+        for g in month_wasted:
+            reason = g.waste_reason or "other"
+            category = g.category or "other"
+            month_by_reason[reason] = month_by_reason.get(reason, 0) + 1
+            month_by_category[category] = month_by_category.get(category, 0) + 1
+
+        monthly_trends.append(MonthlyWasteData(
+            month=month_key,
+            month_label=month_label,
+            wasted_count=len(month_wasted),
+            wasted_cost=sum(g.cost or 0 for g in month_wasted),
+            by_reason=month_by_reason,
+            by_category=month_by_category,
+        ))
+
+    # Reverse to show oldest first
+    monthly_trends.reverse()
+
+    # Generate suggestions based on data
+    suggestions = _generate_waste_suggestions(
+        by_reason=by_reason,
+        by_category=by_category,
+        waste_rate=waste_rate,
+        total_wasted_cost=total_wasted_cost,
+    )
+
+    return WasteAnalytics(
+        total_wasted_items=total_wasted_items,
+        total_wasted_cost=total_wasted_cost,
+        wasted_this_week=wasted_this_week,
+        wasted_this_month=wasted_this_month,
+        cost_wasted_this_week=cost_wasted_this_week,
+        cost_wasted_this_month=cost_wasted_this_month,
+        waste_rate=round(waste_rate, 1),
+        by_reason=by_reason,
+        by_category=by_category,
+        recent_wasted=recent_wasted,
+        monthly_trends=monthly_trends,
+        suggestions=suggestions,
+    )
+
+
+def _generate_waste_suggestions(
+    by_reason: List[WasteByReason],
+    by_category: List[WasteByCategory],
+    waste_rate: float,
+    total_wasted_cost: float,
+) -> List[str]:
+    """Generate personalized suggestions to reduce food waste."""
+    suggestions = []
+
+    if not by_reason:
+        suggestions.append("Start tracking your food waste to get personalized tips!")
+        return suggestions
+
+    # Find top waste reasons
+    if by_reason:
+        top_reason = by_reason[0].reason
+        if top_reason == "expired":
+            suggestions.append("Consider organizing your fridge with FIFO (First In, First Out) to use older items first.")
+            suggestions.append("Set reminders for items approaching expiry dates.")
+        elif top_reason == "spoiled":
+            suggestions.append("Check your fridge temperature (should be below 4°C / 40°F).")
+            suggestions.append("Store produce properly - some items need refrigeration, others don't.")
+        elif top_reason == "forgot":
+            suggestions.append("Keep a running inventory of what's in your fridge.")
+            suggestions.append("Plan your meals for the week to ensure you use what you buy.")
+        elif top_reason == "too_much":
+            suggestions.append("Try buying smaller quantities more frequently.")
+            suggestions.append("Consider meal prepping to use up ingredients efficiently.")
+        elif top_reason == "overcooked":
+            suggestions.append("Use timers when cooking to avoid overcooking.")
+            suggestions.append("Consider batch cooking and freezing portions.")
+        elif top_reason == "didnt_like":
+            suggestions.append("Try smaller portions when trying new foods.")
+            suggestions.append("Look for recipes that transform ingredients you don't normally enjoy.")
+
+    # Category-specific suggestions
+    if by_category:
+        top_category = by_category[0].category
+        if top_category == "produce":
+            suggestions.append("Buy frozen vegetables as alternatives - they last longer and are just as nutritious.")
+            suggestions.append("Store leafy greens with a paper towel to absorb excess moisture.")
+        elif top_category == "dairy":
+            suggestions.append("Check expiry dates carefully when shopping for dairy products.")
+            suggestions.append("Freeze milk, cheese, and yogurt before they expire.")
+        elif top_category == "bakery":
+            suggestions.append("Freeze bread and defrost slices as needed.")
+            suggestions.append("Make breadcrumbs or croutons from stale bread.")
+
+    # Waste rate suggestions
+    if waste_rate > 20:
+        suggestions.append("Your waste rate is above 20%. Consider making a detailed shopping list before grocery trips.")
+    elif waste_rate > 10:
+        suggestions.append("Your waste rate is moderate. Try planning meals before shopping to reduce overbuying.")
+
+    # Cost suggestions
+    if total_wasted_cost > 100:
+        suggestions.append(f"You've wasted ${total_wasted_cost:.2f} worth of food. A meal planning app could help reduce this significantly.")
+
+    return suggestions[:5]  # Return top 5 suggestions
 
 
 @router.post("/parse-text", response_model=ParseTextResponse)
