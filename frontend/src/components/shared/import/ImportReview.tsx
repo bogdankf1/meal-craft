@@ -41,6 +41,7 @@ export interface ColumnDefinition<T extends ParsedItem> {
   width?: string;
   editable?: boolean;
   required?: boolean;
+  renderCell?: (value: unknown, item: T) => React.ReactNode; // Custom cell renderer for display mode
 }
 
 interface ImportReviewProps<T extends ParsedItem> {
@@ -49,6 +50,7 @@ interface ImportReviewProps<T extends ParsedItem> {
   itemNameKey?: keyof T;
   translationNamespace?: string;
   emptyMessage?: string;
+  saveButtonTextKey?: string;
 }
 
 export function ImportReview<T extends ParsedItem>({
@@ -57,6 +59,7 @@ export function ImportReview<T extends ParsedItem>({
   itemNameKey = "name" as keyof T,
   translationNamespace = "import",
   emptyMessage,
+  saveButtonTextKey,
 }: ImportReviewProps<T>) {
   const t = useTranslations(translationNamespace);
   const tCommon = useTranslations("common");
@@ -143,6 +146,10 @@ export function ImportReview<T extends ParsedItem>({
     const value = isEditing ? editedItem?.[column.key] : item[column.key];
 
     if (!isEditing || column.editable === false) {
+      // Use custom renderer if provided
+      if (column.renderCell) {
+        return column.renderCell(value, item);
+      }
       if (column.type === "select" && column.options) {
         const option = column.options.find((opt) => opt.value === value);
         return option ? option.label : String(value || "");
@@ -371,7 +378,9 @@ export function ImportReview<T extends ParsedItem>({
             ) : (
               <>
                 <Plus className="h-4 w-4 mr-2" />
-                {t("review.addToGroceries", { count: parsedItems.length })}
+                {saveButtonTextKey
+                  ? t(saveButtonTextKey, { count: parsedItems.length })
+                  : t("review.addToGroceries", { count: parsedItems.length })}
               </>
             )}
           </Button>

@@ -29,7 +29,9 @@ export type PhotoImportType =
   | "groceries" // Photo of groceries on table/floor
   | "paper_receipt" // Paper receipt photo
   | "digital_receipt" // Screenshot of digital receipt
-  | "delivery_app"; // Screenshot from delivery app
+  | "delivery_app" // Screenshot from delivery app
+  | "shopping_list" // Handwritten shopping list
+  | "screenshot"; // Screenshot from Notes or other app
 
 interface PhotoImportProps<T extends ParsedItem> {
   importType: PhotoImportType;
@@ -52,11 +54,12 @@ export function PhotoImport<T extends ParsedItem>({
   const { setParsedItems, setStep, isProcessing, setIsProcessing } =
     useImportWizard<T>();
 
-  // Multi-file support for delivery_app, groceries, and paper_receipt types
+  // Multi-file support for certain import types
   const supportsMultiple =
     (importType === "delivery_app" ||
       importType === "groceries" ||
-      importType === "paper_receipt") &&
+      importType === "paper_receipt" ||
+      importType === "shopping_list") &&
     !!onParseMultipleImages;
 
   // Use the image processor hook
@@ -139,6 +142,34 @@ export function PhotoImport<T extends ParsedItem>({
             "photo.deliveryApp.hint1",
             "photo.deliveryApp.hint2",
             "photo.deliveryApp.hint3",
+          ],
+        };
+      case "shopping_list":
+        return {
+          titleKey: "photo.shoppingList.title",
+          descriptionKey: supportsMultiple
+            ? "photo.shoppingList.descriptionMultiple"
+            : "photo.shoppingList.description",
+          icon: supportsMultiple ? (
+            <Images className="h-5 w-5" />
+          ) : (
+            <Camera className="h-5 w-5" />
+          ),
+          hints: [
+            "photo.shoppingList.hint1",
+            "photo.shoppingList.hint2",
+            "photo.shoppingList.hint3",
+          ],
+        };
+      case "screenshot":
+        return {
+          titleKey: "photo.screenshot.title",
+          descriptionKey: "photo.screenshot.description",
+          icon: <ImageIcon className="h-5 w-5" />,
+          hints: [
+            "photo.screenshot.hint1",
+            "photo.screenshot.hint2",
+            "photo.screenshot.hint3",
           ],
         };
     }

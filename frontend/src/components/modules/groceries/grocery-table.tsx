@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import {
   Pencil,
@@ -7,6 +8,7 @@ import {
   Archive,
   ArchiveRestore,
   AlertTriangle,
+  ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -26,6 +28,7 @@ import {
   type Grocery,
   type GroceryListResponse,
 } from "@/lib/api/groceries-api";
+import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 
 interface GroceryTableProps {
   data: GroceryListResponse | undefined;
@@ -80,13 +83,31 @@ export function GroceryTable({
 }: GroceryTableProps) {
   const t = useTranslations("groceries");
   const tCommon = useTranslations("common");
+  const tShoppingLists = useTranslations("shoppingLists");
 
   const [deleteGrocery, { isLoading: isDeleting }] = useDeleteGroceryMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteGroceriesMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveGroceriesMutation();
   const [bulkUnarchive, { isLoading: isBulkUnarchiving }] = useBulkUnarchiveGroceriesMutation();
 
+  // State for Add to Shopping List dialog
+  const [addToListOpen, setAddToListOpen] = useState(false);
+  const [itemsToAddToList, setItemsToAddToList] = useState<{
+    name: string;
+    quantity?: number | null;
+    unit?: string | null;
+    category?: string | null;
+  }[]>([]);
+
   const items = data?.items || [];
+
+  // Helper to convert grocery to shopping list item format
+  const groceryToShoppingItem = (grocery: Grocery) => ({
+    name: grocery.item_name,
+    quantity: grocery.quantity,
+    unit: grocery.unit,
+    category: grocery.category,
+  });
 
   // Define columns
   const columns: DataTableColumn<Grocery>[] = [
@@ -182,6 +203,18 @@ export function GroceryTable({
 
   // Define bulk actions
   const bulkActions: BulkAction[] = [
+    {
+      label: tShoppingLists("addToList.title"),
+      icon: <ShoppingCart className="h-4 w-4 mr-1" />,
+      variant: "outline" as const,
+      onClick: async (ids: string[]) => {
+        const selectedItems = items
+          .filter((item) => ids.includes(item.id))
+          .map(groceryToShoppingItem);
+        setItemsToAddToList(selectedItems);
+        setAddToListOpen(true);
+      },
+    },
     ...(isArchiveView
       ? [
           {
@@ -191,7 +224,7 @@ export function GroceryTable({
             isLoading: isBulkUnarchiving,
             onClick: async (ids: string[]) => {
               try {
-                const result = await bulkUnarchive(ids).unwrap();
+                await bulkUnarchive(ids).unwrap();
                 toast.success(t("messages.itemsUnarchived"));
               } catch {
                 toast.error(t("messages.errorUnarchiving"));
@@ -207,7 +240,7 @@ export function GroceryTable({
             isLoading: isBulkArchiving,
             onClick: async (ids: string[]) => {
               try {
-                const result = await bulkArchive(ids).unwrap();
+                await bulkArchive(ids).unwrap();
                 toast.success(t("messages.itemsArchived"));
               } catch {
                 toast.error(t("messages.errorArchiving"));
@@ -222,7 +255,7 @@ export function GroceryTable({
       isLoading: isBulkDeleting,
       onClick: async (ids: string[]) => {
         try {
-          const result = await bulkDelete(ids).unwrap();
+          await bulkDelete(ids).unwrap();
           toast.success(t("messages.itemsDeleted"));
         } catch {
           toast.error(t("messages.errorBulkDeleting"));
@@ -239,6 +272,14 @@ export function GroceryTable({
       onClick: onEdit,
     },
     {
+      label: tShoppingLists("addToList.title"),
+      icon: <ShoppingCart className="h-4 w-4 mr-2" />,
+      onClick: (grocery) => {
+        setItemsToAddToList([groceryToShoppingItem(grocery)]);
+        setAddToListOpen(true);
+      },
+    },
+    {
       label: tCommon("delete"),
       icon: <Trash2 className="h-4 w-4 mr-2" />,
       variant: "destructive",
@@ -248,6 +289,7 @@ export function GroceryTable({
   ];
 
   return (
+    <>
     <DataTable
       items={items}
       columns={columns}
@@ -294,5 +336,12 @@ export function GroceryTable({
         deleting: t("table.deleting"),
       }}
     />
+
+    <AddToShoppingListDialog
+      open={addToListOpen}
+      onOpenChange={setAddToListOpen}
+      items={itemsToAddToList}
+    />
+    </>
   );
 }

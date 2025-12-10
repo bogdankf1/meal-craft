@@ -512,6 +512,21 @@
         "hint1": "Screenshot the order summary",
         "hint2": "Include item names and quantities",
         "hint3": "Upload multiple screenshots if your order spans multiple pages"
+      },
+      "shoppingList": {
+        "title": "Handwritten Shopping List",
+        "description": "Take a photo of your handwritten shopping list",
+        "descriptionMultiple": "Take multiple photos of your handwritten shopping list",
+        "hint1": "Write clearly with good spacing",
+        "hint2": "Ensure good lighting",
+        "hint3": "Flatten the paper before taking photo"
+      },
+      "screenshot": {
+        "title": "Screenshot",
+        "description": "Upload a screenshot from Notes, Reminders, or another app",
+        "hint1": "Include the full list of items",
+        "hint2": "Make sure text is readable",
+        "hint3": "Crop out unnecessary parts"
       }
     },
     "digitalReceipt": {
@@ -581,5 +596,262 @@
       "viewItems": "View Items"
     }
   },
-  "comingSoon": "Coming Soon"
+  "comingSoon": "Coming Soon",
+  "shoppingLists": {
+    "title": "Shopping Lists",
+    "description": "Create and manage your shopping lists to stay organized.",
+    "tabs": {
+      "overview": "Overview",
+      "import": "Import",
+      "archive": "Archive",
+      "analysis": "Analysis",
+      "history": "History"
+    },
+    "stats": {
+      "totalLists": "Total Lists",
+      "activeLists": "Active Lists",
+      "completedLists": "Completed",
+      "avgCompletionRate": "Completion Rate",
+      "archivedLists": "Archived Lists",
+      "archivedItems": "Total Items",
+      "completionRate": "Completion Rate"
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "archived": "Archived"
+    },
+    "addList": "New List",
+    "empty": {
+      "title": "No shopping lists yet",
+      "description": "Create your first shopping list to start organizing your grocery runs."
+    },
+    "archive": {
+      "empty": {
+        "title": "No archived lists",
+        "description": "Completed shopping lists that you archive will appear here."
+      }
+    },
+    "import": {
+      "title": "Import Items",
+      "description": "Import items to create a new shopping list.",
+      "back": "Back",
+      "selectMethod": {
+        "title": "Choose Import Method",
+        "description": "Select how you want to add items to your shopping list"
+      },
+      "steps": {
+        "method": "Method",
+        "input": "Input",
+        "review": "Review",
+        "complete": "Done"
+      },
+      "methods": {
+        "text": {
+          "title": "Text Input",
+          "description": "Type or paste your shopping list"
+        },
+        "voice": {
+          "title": "Voice Input",
+          "description": "Dictate your shopping list items"
+        },
+        "paperList": {
+          "title": "Paper List",
+          "description": "Take a photo of a handwritten shopping list"
+        },
+        "screenshot": {
+          "title": "Screenshot",
+          "description": "Upload a screenshot from Notes or another app"
+        }
+      },
+      "fields": {
+        "itemName": "Item Name",
+        "quantity": "Quantity",
+        "unit": "Unit",
+        "category": "Category"
+      },
+      "textPlaceholder": "Enter your shopping list items...\n\nExample:\n2 kg chicken breast\n1 liter milk\nbread\n6 eggs",
+      "textExample": "2 kg chicken breast\n1 liter milk\nbread\n6 eggs\n500g cheese\n3 apples\nonions\ngarlic",
+      "review": {
+        "title": "Review Items",
+        "description": "Review and edit the items before creating your shopping list.",
+        "itemCount": "{count, plural, one {# item} other {# items}}",
+        "noItems": "No items to review. Go back and try again.",
+        "goBack": "Go Back",
+        "selectAll": "Select all",
+        "selectItem": "Select item",
+        "selectedCount": "{count, plural, one {# item selected} other {# items selected}}",
+        "deleteSelected": "Delete Selected",
+        "saving": "Creating list...",
+        "addShoppingList": "Create Shopping List",
+        "saveError": "Failed to create shopping list. Please try again."
+      }
+    },
+    "analysis": {
+      "listsThisWeek": "Lists This Week",
+      "listsThisMonth": "Lists This Month",
+      "avgItemsPerList": "Avg Items/List",
+      "totalItemsPurchased": "Items Purchased",
+      "completionProgress": "Completion Progress",
+      "avgCompletionRate": "Average Completion Rate",
+      "categoryDistribution": "Items by Category",
+      "items": "items",
+      "recentLists": "Recent Lists",
+      "noRecentLists": "No recent lists to display.",
+      "empty": {
+        "title": "No data for analysis",
+        "description": "Start creating shopping lists to see analytics and insights."
+      }
+    },
+    "history": {
+      "title": "List History",
+      "description": "Track your shopping list patterns over time.",
+      "months3": "3 Months",
+      "months6": "6 Months",
+      "months9": "9 Months",
+      "months12": "12 Months",
+      "totalInPeriod": "Total Lists",
+      "completedInPeriod": "Completed",
+      "avgMonthlyLists": "Avg Monthly",
+      "avgCompletionRate": "Avg Completion",
+      "listsTrend": "Lists Created",
+      "completionTrend": "Completion Rate Trend",
+      "topItems": "Most Added Items",
+      "occurrenceCount": "times added",
+      "purchaseCount": "Times purchased",
+      "lastAdded": "Last added",
+      "categoryTrends": "Category Trends",
+      "noData": "No historical data available for this period.",
+      "empty": {
+        "title": "No history data",
+        "description": "Start creating shopping lists to build your history."
+      }
+    },
+    "form": {
+      "addTitle": "Create Shopping List",
+      "editTitle": "Edit Shopping List",
+      "addDescription": "Create a new shopping list to organize your purchases.",
+      "editDescription": "Update the details of your shopping list.",
+      "name": "List Name",
+      "namePlaceholder": "e.g., Weekly groceries, Party supplies",
+      "estimatedCost": "Estimated Cost",
+      "saving": "Saving...",
+      "create": "Create List"
+    },
+    "itemForm": {
+      "addTitle": "Add Item",
+      "editTitle": "Edit Item",
+      "addDescription": "Add a new item to your shopping list.",
+      "editDescription": "Update the item details.",
+      "itemName": "Item Name",
+      "itemNamePlaceholder": "e.g., Milk, Bread, Eggs",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "category": "Category",
+      "add": "Add Item"
+    },
+    "filters": {
+      "search": "Search lists...",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "dateRange": "Date Range",
+      "from": "From",
+      "to": "To",
+      "clearDates": "Clear dates",
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "nameAZ": "Name (A-Z)",
+      "nameZA": "Name (Z-A)",
+      "recentlyUpdated": "Recently Updated"
+    },
+    "table": {
+      "name": "Name",
+      "status": "Status",
+      "progress": "Progress",
+      "estimatedCost": "Est. Cost",
+      "createdAt": "Created",
+      "completedAt": "Completed",
+      "selectedCount": "{count, plural, one {# list selected} other {# lists selected}}",
+      "itemsOnPage": "{count, plural, one {# list on this page} other {# lists on this page}}",
+      "selectToAction": "Select lists to archive or delete",
+      "pageInfo": "Page {page} of {totalPages} ({total} lists)",
+      "deleting": "Deleting..."
+    },
+    "actions": {
+      "view": "View List",
+      "complete": "Mark Complete"
+    },
+    "detail": {
+      "backToLists": "Back to Lists",
+      "notFound": "Shopping list not found",
+      "createdOn": "Created on {date}",
+      "progress": "Progress",
+      "items": "items",
+      "itemsSection": "Items",
+      "complete": "complete",
+      "estimatedCost": "Estimated cost",
+      "addItem": "Add Item",
+      "addFirstItem": "Add your first item",
+      "noItems": "This list is empty. Add items to get started.",
+      "toPurchase": "To Purchase",
+      "purchased": "Purchased",
+      "markAllPurchased": "Mark All",
+      "completeList": "Complete List"
+    },
+    "calendar": {
+      "today": "Today",
+      "items": "items"
+    },
+    "confirmDelete": {
+      "title": "Delete Shopping List",
+      "description": "Are you sure you want to delete \"{name}\"? This will also delete all items in the list."
+    },
+    "confirmDeleteItem": {
+      "title": "Delete Item",
+      "description": "Are you sure you want to delete \"{name}\" from this list?"
+    },
+    "messages": {
+      "listCreated": "Shopping list created successfully",
+      "listUpdated": "Shopping list updated successfully",
+      "listDeleted": "Shopping list deleted successfully",
+      "listCompleted": "Shopping list marked as complete",
+      "listsArchived": "Lists archived successfully",
+      "listsUnarchived": "Lists unarchived successfully",
+      "listsDeleted": "Lists deleted successfully",
+      "listsCompleted": "Lists marked as complete",
+      "itemAdded": "Item added successfully",
+      "itemUpdated": "Item updated successfully",
+      "itemDeleted": "Item deleted successfully",
+      "allItemsMarked": "All items marked as purchased",
+      "errorCreating": "Failed to create shopping list",
+      "errorUpdating": "Failed to update shopping list",
+      "errorDeleting": "Failed to delete shopping list",
+      "errorCompleting": "Failed to complete shopping list",
+      "errorArchiving": "Failed to archive lists",
+      "errorUnarchiving": "Failed to unarchive lists",
+      "errorBulkDeleting": "Failed to delete lists",
+      "errorAddingItem": "Failed to add item",
+      "errorUpdatingItem": "Failed to update item",
+      "errorDeletingItem": "Failed to delete item",
+      "errorTogglingItem": "Failed to update item status",
+      "errorMarkingAll": "Failed to mark all items"
+    },
+    "addToList": {
+      "title": "Add to Shopping List",
+      "description": "Add {count, plural, one {# item} other {# items}} to a shopping list",
+      "itemsToAdd": "Items to add",
+      "more": "more",
+      "selectList": "Select a shopping list",
+      "createNew": "Create new list",
+      "newListName": "New list name",
+      "noLists": "No active shopping lists. Create a new one.",
+      "items": "items",
+      "selectOrCreate": "Please select a list or create a new one",
+      "enterListName": "Please enter a name for the new list",
+      "success": "{count, plural, one {# item added} other {# items added}} to shopping list",
+      "error": "Failed to add items to shopping list",
+      "adding": "Adding...",
+      "addButton": "Add to List"
+    }
+  }
 }
