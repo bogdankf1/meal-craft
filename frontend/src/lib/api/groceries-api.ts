@@ -158,6 +158,18 @@ export interface ParseTextResponse {
   message?: string;
 }
 
+export interface BarcodeLookupResponse {
+  success: boolean;
+  barcode: string;
+  product_name?: string;
+  brand?: string;
+  category?: string;
+  quantity?: number;
+  unit?: string;
+  image_url?: string;
+  message?: string;
+}
+
 export const groceriesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // List groceries with filters
@@ -321,6 +333,11 @@ export const groceriesApi = baseApi.injectEndpoints({
       query: (months) => `/groceries/history?months=${months}`,
       providesTags: [{ type: "Groceries", id: "HISTORY" }],
     }),
+
+    // Lookup barcode
+    lookupBarcode: builder.query<BarcodeLookupResponse, string>({
+      query: (barcode) => `/groceries/lookup-barcode/${barcode}`,
+    }),
   }),
 });
 
@@ -339,4 +356,5 @@ export const {
   useParseReceiptUrlMutation,
   useGetGroceryAnalyticsQuery,
   useGetGroceryHistoryQuery,
+  useLazyLookupBarcodeQuery,
 } = groceriesApi;

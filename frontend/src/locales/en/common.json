@@ -410,6 +410,10 @@
       "deliveryApp": {
         "title": "Delivery App",
         "description": "Upload a screenshot from delivery app"
+      },
+      "barcode": {
+        "title": "Barcode Scanner",
+        "description": "Scan product barcodes to add items"
       }
     },
     "text": {
@@ -520,6 +524,31 @@
         "hint1": "Copy the full receipt URL from your email or SMS",
         "hint2": "Make sure the link is still valid (not expired)",
         "hint3": "Works with most Ukrainian supermarket digital receipts"
+      }
+    },
+    "barcode": {
+      "title": "Barcode Scanner",
+      "description": "Point your camera at a product barcode to look up item details",
+      "selectCamera": "Select Camera",
+      "selectCameraPlaceholder": "Choose a camera",
+      "startScanning": "Start Scanning",
+      "stopScanning": "Stop Scanning",
+      "lookingUp": "Looking up product...",
+      "notFound": "Product Not Found",
+      "notFoundDescription": "Barcode {barcode} was not found in the database. You can add it manually.",
+      "scanAnother": "Scan Another",
+      "addToList": "Add to List",
+      "category": "Category",
+      "scannedItems": "{count, plural, one {# item} other {# items}} scanned",
+      "proceedToReview": "Proceed to Review",
+      "permissionDenied": "Camera permission was denied. Please enable camera access to use the barcode scanner.",
+      "requestPermission": "Request Permission",
+      "requestingPermission": "Requesting camera access...",
+      "hints": {
+        "title": "Tips for scanning",
+        "hint1": "Hold the barcode steady in good lighting",
+        "hint2": "Keep the barcode centered in the viewfinder",
+        "hint3": "Works with EAN, UPC, and most product barcodes"
       }
     },
     "review": {

@@ -14,3 +14,10 @@ export {
   type UseVoiceRecorderOptions,
   type UseVoiceRecorderReturn,
 } from "./useVoiceRecorder";
+
+// Barcode scanner hook
+export {
+  useBarcodeScanner,
+  type UseBarcodeSccannerOptions,
+  type UseBarcodeScannerReturn,
+} from "./useBarcodeScanner";

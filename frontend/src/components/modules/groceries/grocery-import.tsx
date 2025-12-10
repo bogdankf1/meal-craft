@@ -9,6 +9,7 @@ import {
   Receipt,
   Smartphone,
   Link2,
+  ScanBarcode,
 } from "lucide-react";
 
 import {
@@ -20,6 +21,7 @@ import {
   VoiceImport,
   PhotoImport,
   DigitalReceiptImport,
+  BarcodeImport,
   ImportReview,
   ImportComplete,
   useImportWizard,
@@ -27,6 +29,7 @@ import {
   type ParsedItem,
   type ColumnDefinition,
   type PhotoImportType,
+  type BarcodeProductInfo,
 } from "@/components/shared/import";
 import {
   useCreateGroceriesMutation,
@@ -34,6 +37,7 @@ import {
   useParseGroceryVoiceMutation,
   useParseGroceryImageMutation,
   useParseReceiptUrlMutation,
+  useLazyLookupBarcodeQuery,
   GROCERY_CATEGORIES,
   type CreateGroceryInput,
   type GroceryCategory,
@@ -65,6 +69,7 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
   const [parseGroceryVoice] = useParseGroceryVoiceMutation();
   const [parseGroceryImage] = useParseGroceryImageMutation();
   const [parseReceiptUrl] = useParseReceiptUrlMutation();
+  const [lookupBarcode] = useLazyLookupBarcodeQuery();
 
   // Define available import methods
   const importMethods: ImportMethod[] = useMemo(
@@ -104,6 +109,12 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
         icon: <Smartphone className="h-6 w-6" />,
         titleKey: "methods.deliveryApp.title",
         descriptionKey: "methods.deliveryApp.description",
+      },
+      {
+        id: "barcode",
+        icon: <ScanBarcode className="h-6 w-6" />,
+        titleKey: "methods.barcode.title",
+        descriptionKey: "methods.barcode.description",
       },
     ],
     []
@@ -294,6 +305,46 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
     [parseReceiptUrl, convertToParseItem]
   );
 
+  // Handle barcode lookup
+  const handleLookupBarcode = useCallback(
+    async (barcode: string): Promise<BarcodeProductInfo | null> => {
+      const response = await lookupBarcode(barcode).unwrap();
+
+      if (!response.success || !response.product_name) {
+        return null;
+      }
+
+      return {
+        barcode: response.barcode,
+        name: response.product_name,
+        brand: response.brand,
+        category: response.category,
+        quantity: response.quantity,
+        unit: response.unit,
+      };
+    },
+    [lookupBarcode]
+  );
+
+  // Create grocery item from barcode product info
+  const handleCreateItemFromBarcode = useCallback(
+    (product: BarcodeProductInfo): ParsedGroceryItem => {
+      const today = new Date().toISOString().split("T")[0];
+      return {
+        id: crypto.randomUUID(),
+        item_name: product.brand ? `${product.brand} ${product.name}` : product.name,
+        quantity: product.quantity || 1,
+        unit: product.unit || "pcs",
+        category: product.category || null,
+        purchase_date: today,
+        expiry_date: null,
+        cost: null,
+        store: null,
+      };
+    },
+    []
+  );
+
   // Handle saving items to the database
   const handleSave = useCallback(
     async (items: ParsedGroceryItem[]) => {
@@ -333,6 +384,8 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
             onParseImage={handleParseImage}
             onParseMultipleImages={handleParseMultipleImages}
             onParseReceiptUrl={handleParseReceiptUrl}
+            onLookupBarcode={handleLookupBarcode}
+            onCreateItemFromBarcode={handleCreateItemFromBarcode}
             exampleText={exampleText}
           />
         </ImportStepContent>
@@ -362,6 +415,8 @@ function ImportInputContent({
   onParseImage,
   onParseMultipleImages,
   onParseReceiptUrl,
+  onLookupBarcode,
+  onCreateItemFromBarcode,
   exampleText,
 }: {
   onParseText: (text: string) => Promise<ParsedGroceryItem[]>;
@@ -369,6 +424,8 @@ function ImportInputContent({
   onParseImage: (file: File, type: PhotoImportType) => Promise<ParsedGroceryItem[]>;
   onParseMultipleImages: (files: File[], type: PhotoImportType) => Promise<ParsedGroceryItem[]>;
   onParseReceiptUrl: (url: string) => Promise<ParsedGroceryItem[]>;
+  onLookupBarcode: (barcode: string) => Promise<BarcodeProductInfo | null>;
+  onCreateItemFromBarcode: (product: BarcodeProductInfo) => ParsedGroceryItem;
   exampleText: string;
 }) {
   const { selectedMethod } = useImportWizard<ParsedGroceryItem>();
@@ -423,6 +480,14 @@ function ImportInputContent({
           importType="delivery_app"
           onParseImage={onParseImage}
           onParseMultipleImages={onParseMultipleImages}
+        />
+      );
+
+    case "barcode":
+      return (
+        <BarcodeImport<ParsedGroceryItem>
+          onLookupBarcode={onLookupBarcode}
+          onCreateItem={onCreateItemFromBarcode}
         />
       );
 
