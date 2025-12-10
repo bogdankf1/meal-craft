@@ -26,6 +26,9 @@ import {
   Import,
   TableIcon,
   Calendar,
+  Trash2,
+  Lightbulb,
+  Percent,
 } from "lucide-react";
 
 import {
@@ -69,9 +72,12 @@ import {
   useGetGroceriesQuery,
   useGetGroceryAnalyticsQuery,
   useGetGroceryHistoryQuery,
+  useGetWasteAnalyticsQuery,
   type Grocery,
   type GroceryFilters,
 } from "@/lib/api/groceries-api";
+import { Badge } from "@/components/ui/badge";
+import { format, parseISO } from "date-fns";
 
 export function GroceriesContent() {
   const t = useTranslations("groceries");
@@ -124,6 +130,8 @@ export function GroceriesContent() {
   const { data: analytics } = useGetGroceryAnalyticsQuery();
   const { data: historyData, isLoading: isLoadingHistory } =
     useGetGroceryHistoryQuery(historyMonths);
+  const { data: wasteAnalytics, isLoading: isLoadingWaste } =
+    useGetWasteAnalyticsQuery(historyMonths);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -139,6 +147,7 @@ export function GroceriesContent() {
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
     { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
     { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
+    { value: "waste", label: t("tabs.waste"), icon: <Trash2 className="h-4 w-4" /> },
     { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
     { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
   ];
@@ -397,6 +406,152 @@ export function GroceriesContent() {
                 icon={<Archive />}
                 title={t("archive.empty.title")}
                 description={t("archive.empty.description")}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Waste Tab */}
+        <TabsContent value="waste">
+          <div className="space-y-6">
+            {isLoadingWaste ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-muted-foreground">{tCommon("loading")}</div>
+              </div>
+            ) : wasteAnalytics && wasteAnalytics.total_wasted_items > 0 ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <StatsCard
+                    title={t("waste.stats.totalWasted")}
+                    value={wasteAnalytics.total_wasted_items.toString()}
+                    icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                    variant="danger"
+                  />
+                  <StatsCard
+                    title={t("waste.stats.costWasted")}
+                    value={formatCurrency(wasteAnalytics.total_wasted_cost)}
+                    icon={<DollarSign className="h-5 w-5 text-red-500" />}
+                    variant="danger"
+                  />
+                  <StatsCard
+                    title={t("waste.stats.wastedThisMonth")}
+                    value={wasteAnalytics.wasted_this_month.toString()}
+                    icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+                    variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
+                  />
+                  <StatsCard
+                    title={t("waste.stats.wasteRate")}
+                    value={`${wasteAnalytics.waste_rate}%`}
+                    icon={<Percent className="h-5 w-5 text-purple-500" />}
+                    variant={wasteAnalytics.waste_rate > 10 ? "warning" : "default"}
+                  />
+                </div>
+
+                {/* Suggestions card */}
+                {wasteAnalytics.suggestions.length > 0 && (
+                  <AnalyticsCard
+                    title={t("waste.analytics.suggestions")}
+                    icon={<Lightbulb className="h-4 w-4 text-yellow-500" />}
+                  >
+                    <ul className="space-y-2">
+                      {wasteAnalytics.suggestions.map((suggestion, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <span className="text-yellow-500 mt-0.5">•</span>
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </AnalyticsCard>
+                )}
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <AnalyticsCard title={t("waste.analytics.byReason")}>
+                    <DistributionList
+                      items={wasteAnalytics.by_reason.map((item) => ({
+                        key: item.reason,
+                        label: t(`waste.reasons.${item.reason}`),
+                        value: item.count,
+                        formattedValue: formatCurrency(item.total_cost),
+                      }))}
+                      valueLabel={t("waste.stats.items")}
+                      emptyMessage={t("waste.analytics.noWasteData")}
+                    />
+                  </AnalyticsCard>
+
+                  <AnalyticsCard title={t("waste.analytics.byCategory")}>
+                    <DistributionList
+                      items={wasteAnalytics.by_category.map((item) => ({
+                        key: item.category,
+                        label: translateCategory(item.category),
+                        value: item.count,
+                        formattedValue: formatCurrency(item.total_cost),
+                      }))}
+                      valueLabel={t("waste.stats.items")}
+                      emptyMessage={t("waste.analytics.noWasteData")}
+                    />
+                  </AnalyticsCard>
+                </div>
+
+                {/* Waste trends chart */}
+                {wasteAnalytics.monthly_trends.length > 0 && (
+                  <AnalyticsCard
+                    title={t("waste.analytics.trends")}
+                    icon={<TrendingUp className="h-4 w-4" />}
+                  >
+                    <BarChart
+                      data={wasteAnalytics.monthly_trends.map((month) => ({
+                        key: month.month,
+                        value: month.wasted_count,
+                        label: month.month_label.split(" ")[0],
+                      }))}
+                      color="bg-red-500"
+                      emptyMessage={t("waste.analytics.noWasteData")}
+                    />
+                  </AnalyticsCard>
+                )}
+
+                {/* Recent wasted items */}
+                <AnalyticsCard title={t("waste.analytics.recentWasted")}>
+                  <div className="space-y-3">
+                    {wasteAnalytics.recent_wasted.length > 0 ? (
+                      wasteAnalytics.recent_wasted.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{item.item_name}</span>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>
+                                {t("waste.analytics.wastedOn", {
+                                  date: format(parseISO(item.wasted_at), "MMM d, yyyy"),
+                                })}
+                              </span>
+                              <Badge variant="secondary" className="text-xs">
+                                {t(`waste.reasons.${item.waste_reason}`)}
+                              </Badge>
+                            </div>
+                          </div>
+                          {item.cost && (
+                            <span className="text-sm font-medium text-red-500">
+                              {formatCurrency(item.cost)}
+                            </span>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        {t("waste.analytics.noWasteData")}
+                      </p>
+                    )}
+                  </div>
+                </AnalyticsCard>
+              </>
+            ) : (
+              <EmptyState
+                icon={<Trash2 />}
+                title={t("waste.empty.title")}
+                description={t("waste.empty.description")}
               />
             )}
           </div>

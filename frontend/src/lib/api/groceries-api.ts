@@ -30,6 +30,26 @@ export const GROCERY_CATEGORIES: { value: GroceryCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+// Waste reason enum matching backend
+export type WasteReason =
+  | "expired"
+  | "spoiled"
+  | "forgot"
+  | "overcooked"
+  | "didnt_like"
+  | "too_much"
+  | "other";
+
+export const WASTE_REASONS: { value: WasteReason; label: string }[] = [
+  { value: "expired", label: "Expired" },
+  { value: "spoiled", label: "Spoiled" },
+  { value: "forgot", label: "Forgot about it" },
+  { value: "overcooked", label: "Overcooked" },
+  { value: "didnt_like", label: "Didn't like it" },
+  { value: "too_much", label: "Bought too much" },
+  { value: "other", label: "Other" },
+];
+
 export interface Grocery {
   id: string;
   user_id: string;
@@ -43,6 +63,11 @@ export interface Grocery {
   store: string | null;
   is_archived: boolean;
   created_at: string;
+  // Waste tracking fields
+  is_wasted: boolean;
+  wasted_at: string | null;
+  waste_reason: string | null;
+  waste_notes: string | null;
 }
 
 export interface GroceryListResponse {
@@ -168,6 +193,68 @@ export interface BarcodeLookupResponse {
   unit?: string;
   image_url?: string;
   message?: string;
+}
+
+// Waste tracking types
+export interface MarkAsWastedInput {
+  waste_reason: WasteReason;
+  waste_notes?: string | null;
+}
+
+export interface BulkMarkAsWastedInput {
+  ids: string[];
+  waste_reason: WasteReason;
+  waste_notes?: string | null;
+}
+
+export interface WastedItem {
+  id: string;
+  item_name: string;
+  quantity: number | null;
+  unit: string | null;
+  category: string | null;
+  purchase_date: string;
+  cost: number | null;
+  store: string | null;
+  wasted_at: string;
+  waste_reason: string;
+  waste_notes: string | null;
+}
+
+export interface WasteByReason {
+  reason: string;
+  count: number;
+  total_cost: number;
+}
+
+export interface WasteByCategory {
+  category: string;
+  count: number;
+  total_cost: number;
+}
+
+export interface MonthlyWasteData {
+  month: string;
+  month_label: string;
+  wasted_count: number;
+  wasted_cost: number;
+  by_reason: Record<string, number>;
+  by_category: Record<string, number>;
+}
+
+export interface WasteAnalytics {
+  total_wasted_items: number;
+  total_wasted_cost: number;
+  wasted_this_week: number;
+  wasted_this_month: number;
+  cost_wasted_this_week: number;
+  cost_wasted_this_month: number;
+  waste_rate: number;
+  by_reason: WasteByReason[];
+  by_category: WasteByCategory[];
+  recent_wasted: WastedItem[];
+  monthly_trends: MonthlyWasteData[];
+  suggestions: string[];
 }
 
 export const groceriesApi = baseApi.injectEndpoints({
@@ -338,6 +425,62 @@ export const groceriesApi = baseApi.injectEndpoints({
     lookupBarcode: builder.query<BarcodeLookupResponse, string>({
       query: (barcode) => `/groceries/lookup-barcode/${barcode}`,
     }),
+
+    // Mark as wasted
+    markAsWasted: builder.mutation<
+      Grocery,
+      { id: string; data: MarkAsWastedInput }
+    >({
+      query: ({ id, data }) => ({
+        url: `/groceries/${id}/waste`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Groceries", id },
+        { type: "Groceries", id: "LIST" },
+        { type: "Groceries", id: "ANALYTICS" },
+        { type: "Groceries", id: "HISTORY" },
+        { type: "Groceries", id: "WASTE_ANALYTICS" },
+      ],
+    }),
+
+    // Bulk mark as wasted
+    bulkMarkAsWasted: builder.mutation<BulkActionResponse, BulkMarkAsWastedInput>({
+      query: (body) => ({
+        url: "/groceries/bulk-waste",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { ids }) => [
+        { type: "Groceries", id: "LIST" },
+        { type: "Groceries", id: "ANALYTICS" },
+        { type: "Groceries", id: "HISTORY" },
+        { type: "Groceries", id: "WASTE_ANALYTICS" },
+        ...ids.map((id) => ({ type: "Groceries" as const, id })),
+      ],
+    }),
+
+    // Unmark as wasted
+    unmarkAsWasted: builder.mutation<Grocery, string>({
+      query: (id) => ({
+        url: `/groceries/${id}/unwaste`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Groceries", id },
+        { type: "Groceries", id: "LIST" },
+        { type: "Groceries", id: "ANALYTICS" },
+        { type: "Groceries", id: "HISTORY" },
+        { type: "Groceries", id: "WASTE_ANALYTICS" },
+      ],
+    }),
+
+    // Get waste analytics
+    getWasteAnalytics: builder.query<WasteAnalytics, number>({
+      query: (months = 3) => `/groceries/waste/analytics?months=${months}`,
+      providesTags: [{ type: "Groceries", id: "WASTE_ANALYTICS" }],
+    }),
   }),
 });
 
@@ -357,4 +500,9 @@ export const {
   useGetGroceryAnalyticsQuery,
   useGetGroceryHistoryQuery,
   useLazyLookupBarcodeQuery,
+  // Waste tracking hooks
+  useMarkAsWastedMutation,
+  useBulkMarkAsWastedMutation,
+  useUnmarkAsWastedMutation,
+  useGetWasteAnalyticsQuery,
 } = groceriesApi;

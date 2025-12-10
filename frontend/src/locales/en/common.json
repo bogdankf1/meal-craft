@@ -163,6 +163,7 @@
       "import": "Import",
       "inventory": "Inventory",
       "archive": "Archive",
+      "waste": "Waste",
       "analysis": "Analysis",
       "history": "History"
     },
@@ -381,6 +382,57 @@
       "today": "Today",
       "items": "items",
       "itemsCount": "Items purchased on this day"
+    },
+    "waste": {
+      "markAsWasted": "Mark as Wasted",
+      "dialogTitle": "Mark as Wasted",
+      "dialogDescription": "Mark \"{name}\" as wasted. This will archive the item.",
+      "dialogDescriptionBulk": "Mark {count, plural, one {# item} other {# items}} as wasted. These items will be archived.",
+      "itemsToMark": "Items to mark as wasted",
+      "more": "more",
+      "selectReason": "Why was this item wasted?",
+      "reasons": {
+        "expired": "Expired",
+        "spoiled": "Spoiled",
+        "forgot": "Forgot about it",
+        "overcooked": "Overcooked",
+        "didnt_like": "Didn't like it",
+        "too_much": "Bought too much",
+        "other": "Other reason"
+      },
+      "notes": "Additional notes (optional)",
+      "notesPlaceholder": "Any details about the waste...",
+      "marking": "Marking...",
+      "success": "Item marked as wasted",
+      "bulkSuccess": "{count, plural, one {# item} other {# items}} marked as wasted",
+      "error": "Failed to mark as wasted",
+      "tab": {
+        "title": "Waste",
+        "description": "Track food waste and get tips to reduce it."
+      },
+      "stats": {
+        "totalWasted": "Total Wasted",
+        "wastedThisWeek": "This Week",
+        "wastedThisMonth": "This Month",
+        "wasteRate": "Waste Rate",
+        "costWasted": "Cost Wasted",
+        "items": "items"
+      },
+      "analytics": {
+        "byReason": "Waste by Reason",
+        "byCategory": "Waste by Category",
+        "trends": "Waste Trends",
+        "suggestions": "Tips to Reduce Waste",
+        "noSuggestions": "Start tracking waste to get personalized tips.",
+        "recentWasted": "Recently Wasted Items",
+        "noWasteData": "No waste data yet. Items marked as wasted will appear here.",
+        "wastedOn": "Wasted on {date}",
+        "reason": "Reason"
+      },
+      "empty": {
+        "title": "No wasted items",
+        "description": "That's great! You haven't wasted any food yet. Keep it up!"
+      }
     }
   },
   "import": {

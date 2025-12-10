@@ -9,6 +9,7 @@ import {
   ArchiveRestore,
   AlertTriangle,
   ShoppingCart,
+  Ban,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -29,6 +30,7 @@ import {
   type GroceryListResponse,
 } from "@/lib/api/groceries-api";
 import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
+import { MarkAsWastedDialog } from "./mark-as-wasted-dialog";
 
 interface GroceryTableProps {
   data: GroceryListResponse | undefined;
@@ -99,6 +101,13 @@ export function GroceryTable({
     category?: string | null;
   }[]>([]);
 
+  // State for Mark as Wasted dialog
+  const [markAsWastedOpen, setMarkAsWastedOpen] = useState(false);
+  const [itemsToMarkAsWasted, setItemsToMarkAsWasted] = useState<{
+    id: string;
+    name: string;
+  }[]>([]);
+
   const items = data?.items || [];
 
   // Helper to convert grocery to shopping list item format
@@ -107,6 +116,12 @@ export function GroceryTable({
     quantity: grocery.quantity,
     unit: grocery.unit,
     category: grocery.category,
+  });
+
+  // Helper to convert grocery to waste item format
+  const groceryToWasteItem = (grocery: Grocery) => ({
+    id: grocery.id,
+    name: grocery.item_name,
   });
 
   // Define columns
@@ -215,6 +230,23 @@ export function GroceryTable({
         setAddToListOpen(true);
       },
     },
+    // Mark as Wasted action - only show on Overview (not Archive)
+    ...(!isArchiveView
+      ? [
+          {
+            label: t("waste.markAsWasted"),
+            icon: <Ban className="h-4 w-4 mr-1" />,
+            variant: "outline" as const,
+            onClick: async (ids: string[]) => {
+              const selectedItems = items
+                .filter((item) => ids.includes(item.id))
+                .map(groceryToWasteItem);
+              setItemsToMarkAsWasted(selectedItems);
+              setMarkAsWastedOpen(true);
+            },
+          },
+        ]
+      : []),
     ...(isArchiveView
       ? [
           {
@@ -279,6 +311,21 @@ export function GroceryTable({
         setAddToListOpen(true);
       },
     },
+    // Mark as Wasted action - only show on Overview (not Archive) and for non-wasted items
+    ...(!isArchiveView
+      ? [
+          {
+            label: t("waste.markAsWasted"),
+            icon: <Ban className="h-4 w-4 mr-2" />,
+            onClick: (grocery: Grocery) => {
+              if (!grocery.is_wasted) {
+                setItemsToMarkAsWasted([groceryToWasteItem(grocery)]);
+                setMarkAsWastedOpen(true);
+              }
+            },
+          } as RowAction<Grocery>,
+        ]
+      : []),
     {
       label: tCommon("delete"),
       icon: <Trash2 className="h-4 w-4 mr-2" />,
@@ -341,6 +388,12 @@ export function GroceryTable({
       open={addToListOpen}
       onOpenChange={setAddToListOpen}
       items={itemsToAddToList}
+    />
+
+    <MarkAsWastedDialog
+      open={markAsWastedOpen}
+      onOpenChange={setMarkAsWastedOpen}
+      items={itemsToMarkAsWasted}
     />
     </>
   );

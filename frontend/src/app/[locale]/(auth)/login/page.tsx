@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +15,10 @@ import {
 export default function LoginPage() {
   const t = useTranslations("auth");
   const tApp = useTranslations("app");
+  const searchParams = useSearchParams();
+
+  // Get the callback URL from query params, default to dashboard
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
@@ -28,7 +33,7 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl })}
           >
             <svg
               className="mr-2 h-4 w-4"
