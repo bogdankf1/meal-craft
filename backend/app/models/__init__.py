@@ -26,6 +26,10 @@ from app.models.recipe import (
     RecipeNutrition,
     SavedRecipe,
     RecipeDifficulty,
+    RecipeCategory,
+    CookingHistory,
+    RecipeCollection,
+    recipe_collection_association,
 )
 
 # Meal Planning
@@ -104,6 +108,10 @@ __all__ = [
     "RecipeNutrition",
     "SavedRecipe",
     "RecipeDifficulty",
+    "RecipeCategory",
+    "CookingHistory",
+    "RecipeCollection",
+    "recipe_collection_association",
     # Meal Plan
     "MealPlan",
     "Meal",

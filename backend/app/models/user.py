@@ -61,3 +61,5 @@ class User(Base):
     usage_tracking = relationship("UsageTracking", back_populates="user")
     saved_recipes = relationship("SavedRecipe", back_populates="user")
     kitchen_equipment = relationship("KitchenEquipment", back_populates="user")
+    cooking_history = relationship("CookingHistory", backref="user")
+    recipe_collections = relationship("RecipeCollection", backref="user")
