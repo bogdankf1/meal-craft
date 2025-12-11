@@ -25,6 +25,7 @@ export const baseApi = createApi({
     "MealPlans",
     "ShoppingLists",
     "Pantry",
+    "KitchenEquipment",
     "Restaurants",
     "Nutrition",
     "Health",

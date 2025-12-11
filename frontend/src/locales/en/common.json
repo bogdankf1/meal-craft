@@ -504,6 +504,10 @@
       "appScreenshot": {
         "title": "App Screenshot",
         "description": "Upload a screenshot from another app"
+      },
+      "photoEquipment": {
+        "title": "Photo of Equipment",
+        "description": "Take photos of kitchen equipment and appliances"
       }
     },
     "text": {
@@ -513,6 +517,8 @@
       "groceryExample": "2 kg apples 89.50₴\n1l milk from Silpo\nbread, eggs, cheese\n500g ground beef 189.99₴\norganic bananas x4\n1 loaf sourdough bread\nyogurt - strawberry flavor\n2L orange juice",
       "pantryPlaceholder": "Enter your pantry items here...\nExample:\n2 kg rice in pantry\n1 bottle olive oil\nmilk in fridge",
       "pantryExample": "2 kg rice in pantry\n1 bottle olive oil\nmilk in fridge\nbutter - expires Dec 15\n3 cans tomatoes\nfrozen vegetables in freezer\ncheese, eggs, yogurt\nspice: cumin, paprika, oregano",
+      "equipmentPlaceholder": "Enter your kitchen equipment here...\nExample:\nCast iron skillet - Lodge\nKitchenAid stand mixer\nChef's knife 8 inch",
+      "equipmentExample": "Cast iron skillet - Lodge, good condition\nKitchenAid stand mixer model KSM150\n8 inch chef's knife - needs sharpening\nInstant Pot 6qt\nStainless steel pot set\nCutting board - bamboo\nFood processor - Cuisinart",
       "useExample": "Use example",
       "parsing": "Parsing...",
       "parseWithAI": "Parse with AI",
@@ -626,6 +632,14 @@
         "hint1": "Write clearly with good spacing",
         "hint2": "Ensure good lighting",
         "hint3": "Flatten the paper before taking photo"
+      },
+      "equipment": {
+        "title": "Photo of Equipment",
+        "description": "Take a photo of your kitchen equipment",
+        "descriptionMultiple": "Take multiple photos of different equipment",
+        "hint1": "Take photos with equipment labels visible",
+        "hint2": "Include multiple items in one photo when possible",
+        "hint3": "Take photos of both front and brand labels"
       }
     },
     "digitalReceipt": {
@@ -1211,6 +1225,225 @@
     "confirmDelete": {
       "title": "Delete Pantry Item",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    }
+  },
+  "kitchenEquipment": {
+    "title": "Kitchen Equipment",
+    "description": "Manage your kitchen tools, appliances, and equipment",
+    "addItem": "Add Equipment",
+    "addSingle": "Add Single Item",
+    "addMultiple": "Add Multiple Items",
+    "importItems": "Import Equipment",
+    "tabs": {
+      "overview": "Overview",
+      "import": "Import",
+      "archive": "Archive",
+      "maintenance": "Maintenance",
+      "analysis": "Analysis"
+    },
+    "categories": {
+      "cookware": "Cookware",
+      "bakeware": "Bakeware",
+      "appliances": "Appliances",
+      "knives_cutting": "Knives & Cutting",
+      "utensils": "Utensils",
+      "storage": "Storage",
+      "small_tools": "Small Tools",
+      "specialty": "Specialty",
+      "other": "Other"
+    },
+    "conditions": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "needs_repair": "Needs Repair",
+      "replace_soon": "Replace Soon"
+    },
+    "locations": {
+      "kitchen_drawer": "Kitchen Drawer",
+      "cabinet": "Cabinet",
+      "countertop": "Countertop",
+      "pantry": "Pantry",
+      "storage": "Storage",
+      "other": "Other"
+    },
+    "stats": {
+      "totalItems": "Total Items",
+      "needsMaintenance": "Needs Maintenance",
+      "needsRepair": "Needs Repair",
+      "totalValue": "Total Value"
+    },
+    "form": {
+      "addTitle": "Add Equipment",
+      "editTitle": "Edit Equipment",
+      "addDescription": "Add a new kitchen equipment item to your inventory.",
+      "editDescription": "Update the details of your kitchen equipment.",
+      "name": "Name",
+      "namePlaceholder": "e.g., Cast Iron Skillet",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "condition": "Condition",
+      "selectCondition": "Select condition",
+      "brand": "Brand",
+      "brandPlaceholder": "e.g., Lodge, KitchenAid",
+      "model": "Model",
+      "modelPlaceholder": "e.g., 10.25 inch",
+      "location": "Location",
+      "selectLocation": "Select location",
+      "purchaseDate": "Purchase Date",
+      "purchasePrice": "Purchase Price",
+      "maintenanceSection": "Maintenance",
+      "lastMaintenanceDate": "Last Maintenance",
+      "maintenanceInterval": "Interval (days)",
+      "maintenanceIntervalPlaceholder": "e.g., 90",
+      "maintenanceHint": "Set a maintenance interval to receive reminders",
+      "maintenanceNotes": "Maintenance Notes",
+      "maintenanceNotesPlaceholder": "e.g., Season after each use",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional notes about this equipment",
+      "saving": "Saving..."
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "brand": "Brand",
+      "model": "Model",
+      "condition": "Condition",
+      "location": "Location"
+    },
+    "filters": {
+      "search": "Search equipment...",
+      "allCategories": "All Categories",
+      "allConditions": "All Conditions",
+      "allLocations": "All Locations",
+      "maintenanceStatus": "Maintenance Status",
+      "allItems": "All Items",
+      "needsMaintenance": "Needs Maintenance",
+      "upToDate": "Up to Date",
+      "loading": "Loading..."
+    },
+    "table": {
+      "name": "Name",
+      "category": "Category",
+      "brand": "Brand",
+      "condition": "Condition",
+      "location": "Location",
+      "maintenance": "Maintenance",
+      "addedOn": "Added On",
+      "needsMaintenance": "Needs maintenance",
+      "daysUntilMaintenance": "{days}d until maintenance",
+      "selectedCount": "{count, plural, one {# item selected} other {# items selected}}",
+      "itemsOnPage": "{count, plural, one {# item on this page} other {# items on this page}}",
+      "selectToAction": "Select items to archive or delete",
+      "pageInfo": "Page {page} of {totalPages} ({total} items)",
+      "deleting": "Deleting..."
+    },
+    "empty": {
+      "title": "No Equipment Yet",
+      "description": "Start adding your kitchen equipment to track and maintain your tools."
+    },
+    "archive": {
+      "empty": {
+        "title": "No Archived Equipment",
+        "description": "Equipment you archive will appear here."
+      }
+    },
+    "maintenance": {
+      "record": "Record Maintenance",
+      "recordTitle": "Record Maintenance",
+      "recordDescription": "Record maintenance for {name}",
+      "recordDescriptionMultiple": "Record maintenance for {count} items",
+      "selectedItems": "Selected items",
+      "date": "Maintenance Date",
+      "notes": "Notes",
+      "notesPlaceholder": "What maintenance was performed?",
+      "recordButton": "Record",
+      "recording": "Recording...",
+      "recorded": "Maintenance recorded successfully",
+      "recordedMultiple": "Maintenance recorded for {count} items",
+      "errorRecording": "Failed to record maintenance",
+      "markDone": "Mark Done",
+      "lastMaintained": "Last maintained",
+      "interval": "Interval",
+      "days": "days",
+      "scheduledItems": "Scheduled Maintenance",
+      "stats": {
+        "total": "Total Equipment",
+        "needsMaintenance": "Needs Maintenance",
+        "rate": "Maintenance Rate",
+        "overdue": "Overdue"
+      },
+      "overdueItems": "Overdue Maintenance",
+      "upcomingItems": "Upcoming Maintenance",
+      "daysOverdue": "{days}d overdue",
+      "daysUntil": "In {days}d",
+      "empty": {
+        "title": "No Maintenance Scheduled",
+        "description": "Add maintenance intervals to your equipment to track their care."
+      }
+    },
+    "analysis": {
+      "period": "Period",
+      "months3": "Last 3 months",
+      "months6": "Last 6 months",
+      "months12": "Last 12 months",
+      "byCategory": "By Category",
+      "byCondition": "By Condition",
+      "byLocation": "By Location",
+      "recentlyAdded": "Recently Added",
+      "noData": "No data available",
+      "empty": {
+        "title": "No Data Yet",
+        "description": "Add some equipment to see analytics."
+      }
+    },
+    "bulkForm": {
+      "title": "Add Multiple Equipment",
+      "description": "Add multiple kitchen equipment items at once using the table below.",
+      "addRow": "Add Row",
+      "addAll": "Add All",
+      "itemCount": "{count, plural, one {# item} other {# items}}"
+    },
+    "messages": {
+      "itemAdded": "Equipment added successfully",
+      "itemUpdated": "Equipment updated successfully",
+      "itemDeleted": "Equipment deleted successfully",
+      "itemsArchived": "Items archived successfully",
+      "itemsUnarchived": "Items unarchived successfully",
+      "itemsDeleted": "Items deleted successfully",
+      "bulkItemsAdded": "{count, plural, one {# item added} other {# items added}} successfully",
+      "errorAdding": "Failed to add equipment",
+      "errorUpdating": "Failed to update equipment",
+      "errorDeleting": "Failed to delete equipment",
+      "errorArchiving": "Failed to archive selected items",
+      "errorUnarchiving": "Failed to unarchive selected items",
+      "errorBulkDeleting": "Failed to delete selected items"
+    },
+    "confirmDelete": {
+      "title": "Delete Equipment",
+      "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    },
+    "import": {
+      "review": {
+        "title": "Review Equipment",
+        "description": "Review and edit parsed equipment before adding them to your inventory",
+        "itemCount": "{count, plural, one {# item} other {# items}} found",
+        "selectedCount": "{count, plural, one {# item} other {# items}} selected",
+        "selectAll": "Select all",
+        "selectItem": "Select item",
+        "deleteSelected": "Delete selected",
+        "noItems": "No equipment items were parsed. Please try again with different input.",
+        "goBack": "Go back",
+        "saving": "Saving...",
+        "saveError": "Failed to save equipment. Please try again.",
+        "addToGroceries": "Add {count, plural, one {# item} other {# items}} to Equipment"
+      },
+      "complete": {
+        "title": "Import Complete!",
+        "description": "{count, plural, one {# item has} other {# items have}} been added to your kitchen equipment",
+        "addMore": "Import More",
+        "viewItems": "View Equipment"
+      }
     }
   }
 }

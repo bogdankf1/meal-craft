@@ -28,6 +28,7 @@ import { useImportWizard, ParsedItem } from "./ImportWizard";
 export type PhotoImportType =
   | "groceries" // Photo of groceries on table/floor
   | "pantry" // Photo of pantry items
+  | "equipment" // Photo of kitchen equipment
   | "paper_receipt" // Paper receipt photo
   | "paper_list" // Paper list/notes photo
   | "digital_receipt" // Screenshot of digital receipt
@@ -208,6 +209,23 @@ export function PhotoImport<T extends ParsedItem>({
             "photo.paperList.hint1",
             "photo.paperList.hint2",
             "photo.paperList.hint3",
+          ],
+        };
+      case "equipment":
+        return {
+          titleKey: "photo.equipment.title",
+          descriptionKey: supportsMultiple
+            ? "photo.equipment.descriptionMultiple"
+            : "photo.equipment.description",
+          icon: supportsMultiple ? (
+            <Images className="h-5 w-5" />
+          ) : (
+            <Camera className="h-5 w-5" />
+          ),
+          hints: [
+            "photo.equipment.hint1",
+            "photo.equipment.hint2",
+            "photo.equipment.hint3",
           ],
         };
       default:
