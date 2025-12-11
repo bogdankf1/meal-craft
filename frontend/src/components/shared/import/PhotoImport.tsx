@@ -27,11 +27,14 @@ import { useImportWizard, ParsedItem } from "./ImportWizard";
 
 export type PhotoImportType =
   | "groceries" // Photo of groceries on table/floor
+  | "pantry" // Photo of pantry items
   | "paper_receipt" // Paper receipt photo
+  | "paper_list" // Paper list/notes photo
   | "digital_receipt" // Screenshot of digital receipt
   | "delivery_app" // Screenshot from delivery app
   | "shopping_list" // Handwritten shopping list
-  | "screenshot"; // Screenshot from Notes or other app
+  | "screenshot" // Screenshot from Notes or other app
+  | "app_screenshot"; // Screenshot from other app
 
 interface PhotoImportProps<T extends ParsedItem> {
   importType: PhotoImportType;
@@ -162,6 +165,7 @@ export function PhotoImport<T extends ParsedItem>({
           ],
         };
       case "screenshot":
+      case "app_screenshot":
         return {
           titleKey: "photo.screenshot.title",
           descriptionKey: "photo.screenshot.description",
@@ -170,6 +174,51 @@ export function PhotoImport<T extends ParsedItem>({
             "photo.screenshot.hint1",
             "photo.screenshot.hint2",
             "photo.screenshot.hint3",
+          ],
+        };
+      case "pantry":
+        return {
+          titleKey: "photo.pantry.title",
+          descriptionKey: supportsMultiple
+            ? "photo.pantry.descriptionMultiple"
+            : "photo.pantry.description",
+          icon: supportsMultiple ? (
+            <Images className="h-5 w-5" />
+          ) : (
+            <Camera className="h-5 w-5" />
+          ),
+          hints: [
+            "photo.pantry.hint1",
+            "photo.pantry.hint2",
+            "photo.pantry.hint3",
+          ],
+        };
+      case "paper_list":
+        return {
+          titleKey: "photo.paperList.title",
+          descriptionKey: supportsMultiple
+            ? "photo.paperList.descriptionMultiple"
+            : "photo.paperList.description",
+          icon: supportsMultiple ? (
+            <Images className="h-5 w-5" />
+          ) : (
+            <FileImage className="h-5 w-5" />
+          ),
+          hints: [
+            "photo.paperList.hint1",
+            "photo.paperList.hint2",
+            "photo.paperList.hint3",
+          ],
+        };
+      default:
+        return {
+          titleKey: "photo.groceries.title",
+          descriptionKey: "photo.groceries.description",
+          icon: <Camera className="h-5 w-5" />,
+          hints: [
+            "photo.groceries.hint1",
+            "photo.groceries.hint2",
+            "photo.groceries.hint3",
           ],
         };
     }

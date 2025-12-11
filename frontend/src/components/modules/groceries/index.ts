@@ -5,3 +5,4 @@ export { GroceryFiltersBar } from "./grocery-filters";
 export { GroceryImport } from "./grocery-import";
 export { GroceryCalendarView } from "./grocery-calendar-view";
 export { MarkAsWastedDialog } from "./mark-as-wasted-dialog";
+export { MoveToPantryDialog } from "./move-to-pantry-dialog";

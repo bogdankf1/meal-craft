@@ -433,6 +433,23 @@
         "title": "No wasted items",
         "description": "That's great! You haven't wasted any food yet. Keep it up!"
       }
+    },
+    "moveToPantry": {
+      "title": "Move to Pantry",
+      "dialogTitle": "Move to Pantry",
+      "dialogDescription": "Move \"{name}\" to your pantry. The grocery item will be archived.",
+      "dialogDescriptionBulk": "Move {count, plural, one {# item} other {# items}} to your pantry. These grocery items will be archived.",
+      "itemsToMove": "Items to move",
+      "more": "more",
+      "selectLocation": "Select storage location",
+      "selectLocationPlaceholder": "Where will you store this?",
+      "locationHint": "Choose where you'll store these items at home.",
+      "moveExplanation": "Items will be moved from Groceries to Pantry. The original grocery entries will be archived to avoid duplication.",
+      "moving": "Moving...",
+      "moveToPantry": "Move to Pantry",
+      "success": "Item moved to pantry",
+      "bulkSuccess": "{count, plural, one {# item} other {# items}} moved to pantry",
+      "error": "Failed to move to pantry"
     }
   },
   "import": {
@@ -475,6 +492,18 @@
       "barcode": {
         "title": "Barcode Scanner",
         "description": "Scan product barcodes to add items"
+      },
+      "photoPantry": {
+        "title": "Photo of Pantry",
+        "description": "Take photos of items in your pantry, fridge, or freezer"
+      },
+      "paperList": {
+        "title": "Paper List",
+        "description": "Scan a handwritten inventory list"
+      },
+      "appScreenshot": {
+        "title": "App Screenshot",
+        "description": "Upload a screenshot from another app"
       }
     },
     "text": {
@@ -482,6 +511,8 @@
       "description": "Type or paste your grocery list in any format. AI will parse and structure it for you.",
       "placeholder": "Enter your groceries here...\nExample:\n2 kg apples 89.50₴\n1l milk from Silpo\nbread, eggs, cheese",
       "groceryExample": "2 kg apples 89.50₴\n1l milk from Silpo\nbread, eggs, cheese\n500g ground beef 189.99₴\norganic bananas x4\n1 loaf sourdough bread\nyogurt - strawberry flavor\n2L orange juice",
+      "pantryPlaceholder": "Enter your pantry items here...\nExample:\n2 kg rice in pantry\n1 bottle olive oil\nmilk in fridge",
+      "pantryExample": "2 kg rice in pantry\n1 bottle olive oil\nmilk in fridge\nbutter - expires Dec 15\n3 cans tomatoes\nfrozen vegetables in freezer\ncheese, eggs, yogurt\nspice: cumin, paprika, oregano",
       "useExample": "Use example",
       "parsing": "Parsing...",
       "parseWithAI": "Parse with AI",
@@ -579,6 +610,22 @@
         "hint1": "Include the full list of items",
         "hint2": "Make sure text is readable",
         "hint3": "Crop out unnecessary parts"
+      },
+      "pantry": {
+        "title": "Photo of Pantry Items",
+        "description": "Take a photo of items in your pantry, fridge, or freezer",
+        "descriptionMultiple": "Take multiple photos of items in different storage locations",
+        "hint1": "Arrange items with labels visible",
+        "hint2": "Take photos of different shelves or sections",
+        "hint3": "Include expiry dates if visible"
+      },
+      "paperList": {
+        "title": "Handwritten List",
+        "description": "Take a photo of your handwritten list",
+        "descriptionMultiple": "Take multiple photos of your handwritten list",
+        "hint1": "Write clearly with good spacing",
+        "hint2": "Ensure good lighting",
+        "hint3": "Flatten the paper before taking photo"
       }
     },
     "digitalReceipt": {
@@ -904,6 +951,266 @@
       "error": "Failed to add items to shopping list",
       "adding": "Adding...",
       "addButton": "Add to List"
+    }
+  },
+  "pantry": {
+    "title": "Pantry & Storage",
+    "description": "Track your pantry inventory, expiration dates, and storage locations.",
+    "tabs": {
+      "overview": "Overview",
+      "import": "Import",
+      "archive": "Archive",
+      "waste": "Waste",
+      "analysis": "Analysis",
+      "history": "History"
+    },
+    "fields": {
+      "itemName": "Item Name",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "category": "Category",
+      "storageLocation": "Storage Location",
+      "expiryDate": "Expiry Date"
+    },
+    "stats": {
+      "totalItems": "Total Items",
+      "expiringSoon": "Expiring Soon",
+      "lowStock": "Low Stock",
+      "expired": "Expired",
+      "archivedItems": "Archived Items",
+      "categories": "Categories",
+      "locations": "Locations"
+    },
+    "waste": {
+      "markAsWasted": "Mark as Wasted",
+      "dialogTitle": "Mark as Wasted",
+      "dialogDescription": "Mark \"{name}\" as wasted. This will archive the item.",
+      "dialogDescriptionBulk": "Mark {count, plural, one {# item} other {# items}} as wasted. These items will be archived.",
+      "itemsToMark": "Items to mark as wasted",
+      "selectReason": "Why was this item wasted?",
+      "reasons": {
+        "expired": "Expired",
+        "spoiled": "Spoiled",
+        "forgot": "Forgot about it",
+        "overcooked": "Overcooked",
+        "didnt_like": "Didn't like it",
+        "too_much": "Had too much",
+        "other": "Other reason"
+      },
+      "notes": "Additional notes (optional)",
+      "notesPlaceholder": "Any details about the waste...",
+      "marking": "Marking...",
+      "success": "Item marked as wasted",
+      "bulkSuccess": "{count, plural, one {# item} other {# items}} marked as wasted",
+      "error": "Failed to mark as wasted",
+      "stats": {
+        "totalWasted": "Total Wasted",
+        "wastedThisMonth": "This Month",
+        "wasteRate": "Waste Rate",
+        "topLocation": "Top Location",
+        "items": "items"
+      },
+      "analytics": {
+        "byReason": "Waste by Reason",
+        "byCategory": "Waste by Category",
+        "byLocation": "Waste by Location",
+        "trends": "Waste Trends",
+        "suggestions": "Tips to Reduce Waste",
+        "recentWasted": "Recently Wasted Items",
+        "noWasteData": "No waste data yet. Items marked as wasted will appear here.",
+        "wastedOn": "Wasted on {date}"
+      },
+      "empty": {
+        "title": "No wasted items",
+        "description": "Great job! You haven't wasted any pantry items. Keep tracking your inventory to minimize waste."
+      }
+    },
+    "storageLocations": {
+      "pantry": "Pantry",
+      "fridge": "Fridge",
+      "freezer": "Freezer",
+      "cabinet": "Cabinet",
+      "spice_rack": "Spice Rack",
+      "other": "Other"
+    },
+    "categories": {
+      "produce": "Produce",
+      "meat": "Meat",
+      "seafood": "Seafood",
+      "dairy": "Dairy",
+      "bakery": "Bakery",
+      "frozen": "Frozen",
+      "canned": "Canned Goods",
+      "dry_goods": "Dry Goods",
+      "beverages": "Beverages",
+      "snacks": "Snacks",
+      "condiments": "Condiments",
+      "spices": "Spices",
+      "oils": "Oils & Vinegars",
+      "grains": "Grains & Rice",
+      "pasta": "Pasta & Noodles",
+      "cereals": "Cereals",
+      "baking": "Baking Supplies",
+      "other": "Other"
+    },
+    "addItem": "Add Item",
+    "empty": {
+      "title": "Your pantry is empty",
+      "description": "Start adding items to track your home inventory. You can also move items from Groceries."
+    },
+    "archive": {
+      "empty": {
+        "title": "No archived items",
+        "description": "Archived pantry items will appear here."
+      }
+    },
+    "analysis": {
+      "locationDistribution": "Items by Location",
+      "categoryDistribution": "Items by Category",
+      "expiryOverview": "Expiry Overview",
+      "lowStockItems": "Low Stock Items",
+      "expiringItems": "Expiring Soon",
+      "minQuantity": "Min",
+      "inFridge": "In Fridge",
+      "inFreezer": "In Freezer",
+      "inPantry": "In Pantry",
+      "expiryStatus": "Expiry Status",
+      "items": "items",
+      "expired": "Expired",
+      "expiringSoon": "Expiring Soon",
+      "fresh": "Fresh",
+      "empty": {
+        "title": "No data for analysis",
+        "description": "Start adding pantry items to see analytics and insights."
+      }
+    },
+    "history": {
+      "title": "Pantry History",
+      "description": "Track your pantry usage patterns over time.",
+      "months3": "3 Months",
+      "months6": "6 Months",
+      "months9": "9 Months",
+      "months12": "12 Months",
+      "monthsCount": "{count, plural, one {# month} other {# months}}",
+      "totalAdded": "Total Added",
+      "totalConsumed": "Total Consumed",
+      "totalWasted": "Total Wasted",
+      "wasteRate": "Waste Rate",
+      "timesAdded": "times added",
+      "timesConsumed": "times consumed",
+      "itemsAddedTrend": "Items Added",
+      "itemsConsumedTrend": "Items Consumed",
+      "topItems": "Most Used Items",
+      "categoryTrends": "Category Trends",
+      "locationTrends": "Location Trends",
+      "wasteOverview": "Waste Overview",
+      "noData": "No historical data available for this period.",
+      "empty": {
+        "title": "No history data",
+        "description": "Start adding pantry items to build your usage history."
+      }
+    },
+    "form": {
+      "addTitle": "Add Pantry Item",
+      "editTitle": "Edit Pantry Item",
+      "addDescription": "Add a new item to your pantry inventory.",
+      "editDescription": "Update the details of your pantry item.",
+      "itemName": "Item Name",
+      "itemNamePlaceholder": "e.g., Rice, Olive Oil, Canned Tomatoes",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "selectUnit": "Select unit",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "storageLocation": "Storage Location",
+      "selectLocation": "Select location",
+      "expiryDate": "Expiry Date",
+      "openedDate": "Opened Date",
+      "minimumQuantity": "Minimum Quantity",
+      "minimumQuantityPlaceholder": "Alert when below this",
+      "minimumQuantityHint": "You'll be notified when stock falls below this level.",
+      "notes": "Notes",
+      "notesPlaceholder": "Any additional notes...",
+      "saving": "Saving..."
+    },
+    "bulkForm": {
+      "title": "Add Multiple Items",
+      "description": "Add multiple pantry items at once. Fill in the details for each item.",
+      "addRow": "Add Row",
+      "addAll": "Add All Items",
+      "addMultiple": "Add Multiple",
+      "itemCount": "{count, plural, one {# item} other {# items}}"
+    },
+    "views": {
+      "table": "Table",
+      "calendar": "Calendar"
+    },
+    "calendar": {
+      "today": "Today",
+      "items": "items",
+      "itemsExpiring": "Items expiring on this day",
+      "expiringSoon": "Expiring Soon",
+      "expired": "Expired",
+      "more": "more"
+    },
+    "filters": {
+      "search": "Search pantry...",
+      "storageLocation": "Location",
+      "allLocations": "All Locations",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "expiry": "Expiry",
+      "allItems": "All Items",
+      "expiringIn3Days": "Expiring in 3 days",
+      "expiringIn7Days": "Expiring in 7 days",
+      "expiringIn14Days": "Expiring in 14 days",
+      "expiringIn30Days": "Expiring in 30 days",
+      "stock": "Stock",
+      "allStock": "All Stock",
+      "lowStockOnly": "Low Stock Only",
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "nameAZ": "Name (A-Z)",
+      "nameZA": "Name (Z-A)",
+      "expirySoonest": "Expiry (Soonest)",
+      "byLocation": "By Location",
+      "quantityLowToHigh": "Quantity (Low to High)",
+      "quantityHighToLow": "Quantity (High to Low)",
+      "loading": "Loading pantry...",
+      "daysAgo": "{days}d ago",
+      "daysLeft": "{days}d"
+    },
+    "table": {
+      "item": "Item",
+      "location": "Location",
+      "category": "Category",
+      "quantity": "Quantity",
+      "expiry": "Expiry",
+      "addedOn": "Added On",
+      "selectedCount": "{count, plural, one {# item selected} other {# items selected}}",
+      "itemsOnPage": "{count, plural, one {# item on this page} other {# items on this page}}",
+      "selectToAction": "Select items to archive or delete",
+      "pageInfo": "Page {page} of {totalPages} ({total} items)",
+      "deleting": "Deleting..."
+    },
+    "messages": {
+      "itemAdded": "Pantry item added successfully",
+      "itemUpdated": "Pantry item updated successfully",
+      "itemDeleted": "Pantry item deleted successfully",
+      "bulkItemsAdded": "{count, plural, one {# item} other {# items}} added successfully",
+      "itemsArchived": "Items archived successfully",
+      "itemsUnarchived": "Items unarchived successfully",
+      "itemsDeleted": "Items deleted successfully",
+      "errorAdding": "Failed to add pantry item",
+      "errorUpdating": "Failed to update pantry item",
+      "errorDeleting": "Failed to delete pantry item",
+      "errorArchiving": "Failed to archive selected items",
+      "errorUnarchiving": "Failed to unarchive selected items",
+      "errorBulkDeleting": "Failed to delete selected items"
+    },
+    "confirmDelete": {
+      "title": "Delete Pantry Item",
+      "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
     }
   }
 }
