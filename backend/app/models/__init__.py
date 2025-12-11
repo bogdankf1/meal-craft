@@ -51,6 +51,9 @@ from app.models.pantry import (
     PantryWasteReason,
 )
 
+# Kitchen Equipment
+from app.models.kitchen_equipment import KitchenEquipment
+
 # Restaurants
 from app.models.restaurant import (
     Restaurant,
@@ -115,6 +118,8 @@ __all__ = [
     "StorageLocation",
     "PantryCategory",
     "PantryWasteReason",
+    # Kitchen Equipment
+    "KitchenEquipment",
     # Restaurant
     "Restaurant",
     "RestaurantOrder",

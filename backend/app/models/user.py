@@ -60,3 +60,4 @@ class User(Base):
     notes = relationship("UserNote", back_populates="user")
     usage_tracking = relationship("UsageTracking", back_populates="user")
     saved_recipes = relationship("SavedRecipe", back_populates="user")
+    kitchen_equipment = relationship("KitchenEquipment", back_populates="user")
