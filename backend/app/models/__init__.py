@@ -45,8 +45,10 @@ from app.models.grocery import (
 
 # Pantry
 from app.models.pantry import (
-    PantryInventory,
+    PantryItem,
     StorageLocation,
+    PantryCategory,
+    PantryWasteReason,
 )
 
 # Restaurants
@@ -109,8 +111,10 @@ __all__ = [
     "ShoppingList",
     "ShoppingListItem",
     # Pantry
-    "PantryInventory",
+    "PantryItem",
     "StorageLocation",
+    "PantryCategory",
+    "PantryWasteReason",
     # Restaurant
     "Restaurant",
     "RestaurantOrder",

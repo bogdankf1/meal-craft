@@ -9,12 +9,14 @@ from typing import Optional, List
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from uuid import UUID
+from pydantic import BaseModel
 import math
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.grocery import Grocery, GroceryCategory
+from app.models.pantry import PantryItem
 from app.schemas.groceries import (
     GroceryCreate,
     GroceryBatchCreate,
@@ -1395,6 +1397,120 @@ def parse_quantity_from_off(product: dict) -> tuple:
                 pass
 
     return quantity, unit
+
+
+# ============ Move to Pantry ============
+
+class MoveToPantryRequest(BaseModel):
+    """Request to move a grocery item to pantry."""
+    storage_location: str = "pantry"
+
+
+class BulkMoveToPantryRequest(BaseModel):
+    """Request to move multiple grocery items to pantry."""
+    ids: List[UUID]
+    storage_location: str = "pantry"
+
+
+class MoveToPantryResponse(BaseModel):
+    """Response from moving items to pantry."""
+    success: bool
+    moved_count: int
+    message: str
+
+
+@router.post("/{grocery_id}/move-to-pantry", response_model=MoveToPantryResponse)
+async def move_to_pantry(
+    grocery_id: UUID,
+    request: MoveToPantryRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Move a grocery item to pantry (archives the grocery and creates pantry item)."""
+    result = await db.execute(
+        select(Grocery).where(
+            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
+        )
+    )
+    grocery = result.scalar_one_or_none()
+
+    if not grocery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grocery item not found"
+        )
+
+    # Create pantry item from grocery
+    pantry_item = PantryItem(
+        user_id=current_user.id,
+        item_name=grocery.item_name,
+        quantity=grocery.quantity,
+        unit=grocery.unit,
+        category=grocery.category,
+        storage_location=request.storage_location,
+        expiry_date=grocery.expiry_date,
+        source_grocery_id=grocery.id,
+    )
+    db.add(pantry_item)
+
+    # Archive the grocery item (not delete, to preserve history)
+    grocery.is_archived = True
+
+    await db.commit()
+
+    return MoveToPantryResponse(
+        success=True,
+        moved_count=1,
+        message=f"Successfully moved '{grocery.item_name}' to pantry"
+    )
+
+
+@router.post("/bulk-move-to-pantry", response_model=MoveToPantryResponse)
+async def bulk_move_to_pantry(
+    request: BulkMoveToPantryRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Move multiple grocery items to pantry."""
+    result = await db.execute(
+        select(Grocery).where(
+            and_(
+                Grocery.id.in_(request.ids),
+                Grocery.user_id == current_user.id
+            )
+        )
+    )
+    groceries = result.scalars().all()
+
+    if not groceries:
+        return MoveToPantryResponse(
+            success=False,
+            moved_count=0,
+            message="No matching grocery items found"
+        )
+
+    # Create pantry items and archive groceries
+    for grocery in groceries:
+        pantry_item = PantryItem(
+            user_id=current_user.id,
+            item_name=grocery.item_name,
+            quantity=grocery.quantity,
+            unit=grocery.unit,
+            category=grocery.category,
+            storage_location=request.storage_location,
+            expiry_date=grocery.expiry_date,
+            source_grocery_id=grocery.id,
+        )
+        db.add(pantry_item)
+        grocery.is_archived = True
+
+    await db.commit()
+
+    return MoveToPantryResponse(
+        success=True,
+        moved_count=len(groceries),
+        message=f"Successfully moved {len(groceries)} item(s) to pantry"
+    )
 
 
 @router.get("/lookup-barcode/{barcode}", response_model=BarcodeLookupResponse)

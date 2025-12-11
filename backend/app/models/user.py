@@ -50,7 +50,7 @@ class User(Base):
     meal_plans = relationship("MealPlan", back_populates="user")
     shopping_lists = relationship("ShoppingList", back_populates="user")
     groceries = relationship("Grocery", back_populates="user")
-    pantry_items = relationship("PantryInventory", back_populates="user")
+    pantry_items = relationship("PantryItem", back_populates="user")
     restaurants = relationship("Restaurant", back_populates="user")
     restaurant_orders = relationship("RestaurantOrder", back_populates="user")
     nutrition_goals = relationship("NutritionGoal", back_populates="user")
