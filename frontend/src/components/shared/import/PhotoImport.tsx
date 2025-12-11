@@ -35,7 +35,8 @@ export type PhotoImportType =
   | "delivery_app" // Screenshot from delivery app
   | "shopping_list" // Handwritten shopping list
   | "screenshot" // Screenshot from Notes or other app
-  | "app_screenshot"; // Screenshot from other app
+  | "app_screenshot" // Screenshot from other app
+  | "recipe_handwriting"; // Handwritten recipe from notebook
 
 interface PhotoImportProps<T extends ParsedItem> {
   importType: PhotoImportType;
@@ -226,6 +227,17 @@ export function PhotoImport<T extends ParsedItem>({
             "photo.equipment.hint1",
             "photo.equipment.hint2",
             "photo.equipment.hint3",
+          ],
+        };
+      case "recipe_handwriting":
+        return {
+          titleKey: "photo.recipeHandwriting.title",
+          descriptionKey: "photo.recipeHandwriting.description",
+          icon: <FileImage className="h-5 w-5" />,
+          hints: [
+            "photo.recipeHandwriting.hint1",
+            "photo.recipeHandwriting.hint2",
+            "photo.recipeHandwriting.hint3",
           ],
         };
       default:

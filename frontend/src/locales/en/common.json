@@ -44,7 +44,10 @@
     "pro": "Pro"
   },
   "common": {
+    "all": "All",
     "save": "Save",
+    "saving": "Saving...",
+    "deleting": "Deleting...",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -63,6 +66,7 @@
     "success": "Success!",
     "error": "Error",
     "selectAll": "Select All",
+    "deselectAll": "Deselect All",
     "selected": "selected",
     "actions": "Actions",
     "view": "View",
@@ -508,6 +512,37 @@
       "photoEquipment": {
         "title": "Photo of Equipment",
         "description": "Take photos of kitchen equipment and appliances"
+      },
+      "photo": {
+        "title": "Photo Import",
+        "description": "Take a photo to import items",
+        "recipeDescription": "Take a photo of a handwritten recipe from your notebook"
+      },
+      "url": {
+        "title": "URL Import",
+        "description": "Import a recipe from a website URL"
+      }
+    },
+    "url": {
+      "title": "URL Import",
+      "description": "Paste a recipe URL and AI will extract the recipe details",
+      "label": "Recipe URL",
+      "placeholder": "https://...",
+      "parse": "Parse Recipe",
+      "parsing": "Parsing...",
+      "errorEmpty": "Please enter a URL",
+      "errorInvalid": "Please enter a valid URL",
+      "errorNoRecipes": "No recipes found at this URL",
+      "errorFailed": "Failed to parse recipe from URL",
+      "hint": "Paste a link to a recipe from any website",
+      "hintItem1": "Works with most recipe websites",
+      "hintItem2": "Schema.org recipes are parsed automatically",
+      "hintItem3": "Other pages are analyzed with AI",
+      "hints": {
+        "title": "Tips for best results",
+        "hint1": "Works with most recipe websites",
+        "hint2": "Schema.org recipes are parsed automatically",
+        "hint3": "Other pages are analyzed with AI"
       }
     },
     "text": {
@@ -519,6 +554,8 @@
       "pantryExample": "2 kg rice in pantry\n1 bottle olive oil\nmilk in fridge\nbutter - expires Dec 15\n3 cans tomatoes\nfrozen vegetables in freezer\ncheese, eggs, yogurt\nspice: cumin, paprika, oregano",
       "equipmentPlaceholder": "Enter your kitchen equipment here...\nExample:\nCast iron skillet - Lodge\nKitchenAid stand mixer\nChef's knife 8 inch",
       "equipmentExample": "Cast iron skillet - Lodge, good condition\nKitchenAid stand mixer model KSM150\n8 inch chef's knife - needs sharpening\nInstant Pot 6qt\nStainless steel pot set\nCutting board - bamboo\nFood processor - Cuisinart",
+      "recipePlaceholder": "Enter your recipe here...\nExample:\nPasta Carbonara\n\nIngredients:\n400g spaghetti\n200g pancetta\n4 eggs\n100g parmesan\n\nInstructions:\n1. Cook pasta\n2. Fry pancetta\n3. Mix eggs and cheese\n4. Combine all",
+      "recipeExample": "Pasta Carbonara\n\nIngredients:\n400g spaghetti\n200g pancetta or guanciale\n4 large eggs\n100g pecorino romano, grated\n2 cloves garlic\nBlack pepper to taste\n\nInstructions:\n1. Bring a large pot of salted water to boil and cook spaghetti until al dente\n2. While pasta cooks, cut pancetta into small cubes\n3. In a bowl, whisk eggs with grated cheese and plenty of black pepper\n4. Fry pancetta until crispy, add minced garlic for 30 seconds\n5. Drain pasta, reserving 1 cup of pasta water\n6. Add hot pasta to the pan with pancetta (heat off)\n7. Quickly add egg mixture and toss vigorously\n8. Add pasta water as needed for creamy sauce\n9. Serve immediately with extra cheese and pepper\n\nServes 4 | Prep: 10 min | Cook: 20 min | Difficulty: Medium",
       "useExample": "Use example",
       "parsing": "Parsing...",
       "parseWithAI": "Parse with AI",
@@ -640,6 +677,13 @@
         "hint1": "Take photos with equipment labels visible",
         "hint2": "Include multiple items in one photo when possible",
         "hint3": "Take photos of both front and brand labels"
+      },
+      "recipeHandwriting": {
+        "title": "Handwritten Recipe",
+        "description": "Take a photo of a handwritten recipe from your notebook",
+        "hint1": "Ensure the handwriting is clear and legible",
+        "hint2": "Include ingredients and instructions in the photo",
+        "hint3": "Use good lighting to avoid shadows"
       }
     },
     "digitalReceipt": {
@@ -1444,6 +1488,301 @@
         "addMore": "Import More",
         "viewItems": "View Equipment"
       }
+    }
+  },
+  "recipes": {
+    "title": "Recipes",
+    "description": "Manage your recipe collection, cooking history, and favorites",
+    "addRecipe": "Add Recipe",
+    "addSingle": "Add Single Recipe",
+    "importRecipes": "Import Recipes",
+    "tabs": {
+      "overview": "Overview",
+      "import": "Import",
+      "collections": "Collections",
+      "archive": "Archive",
+      "analysis": "Analysis"
+    },
+    "categories": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "dessert": "Dessert",
+      "snack": "Snack",
+      "appetizer": "Appetizer",
+      "side": "Side Dish",
+      "beverage": "Beverage",
+      "other": "Other"
+    },
+    "difficulties": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "cuisines": {
+      "italian": "Italian",
+      "mexican": "Mexican",
+      "asian": "Asian",
+      "american": "American",
+      "french": "French",
+      "mediterranean": "Mediterranean",
+      "indian": "Indian",
+      "ukrainian": "Ukrainian",
+      "japanese": "Japanese",
+      "chinese": "Chinese",
+      "other": "Other"
+    },
+    "units": {
+      "pcs": "pcs",
+      "kg": "kg",
+      "g": "g",
+      "l": "L",
+      "ml": "ml",
+      "pack": "pack",
+      "box": "box",
+      "bag": "bag",
+      "bottle": "bottle",
+      "can": "can",
+      "tbsp": "tbsp",
+      "tsp": "tsp",
+      "cup": "cup"
+    },
+    "stats": {
+      "totalRecipes": "Total Recipes",
+      "favorites": "Favorites",
+      "timesCooked": "Times Cooked",
+      "avgCookTime": "Avg Cook Time"
+    },
+    "table": {
+      "name": "Name",
+      "category": "Category",
+      "cuisine": "Cuisine",
+      "time": "Time",
+      "servings": "Servings",
+      "difficulty": "Difficulty",
+      "rating": "Rating",
+      "cooked": "Cooked",
+      "addedOn": "Added On",
+      "selectedCount": "{count, plural, one {# recipe selected} other {# recipes selected}}",
+      "itemsOnPage": "{count, plural, one {# recipe on this page} other {# recipes on this page}}",
+      "selectToAction": "Select recipes to archive or delete",
+      "pageInfo": "Page {page} of {totalPages} ({total} recipes)",
+      "deleting": "Deleting..."
+    },
+    "filters": {
+      "search": "Search recipes...",
+      "category": "Category",
+      "difficulty": "Difficulty",
+      "cuisine": "Cuisine",
+      "favorites": "Favorites",
+      "favoritesOnly": "Favorites Only",
+      "nonFavorites": "Non-Favorites",
+      "loading": "Loading recipes..."
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "cuisine": "Cuisine",
+      "difficulty": "Difficulty",
+      "servings": "Servings",
+      "prepTime": "Prep Time",
+      "cookTime": "Cook Time"
+    },
+    "form": {
+      "addTitle": "Add Recipe",
+      "editTitle": "Edit Recipe",
+      "basicInfo": "Basic Information",
+      "name": "Name",
+      "namePlaceholder": "e.g., Pasta Carbonara",
+      "description": "Description",
+      "descriptionPlaceholder": "A brief description of the recipe...",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "cuisineType": "Cuisine Type",
+      "cuisinePlaceholder": "e.g., Italian, Mexican",
+      "timeServings": "Time & Servings",
+      "prepTime": "Prep Time (min)",
+      "cookTime": "Cook Time (min)",
+      "servings": "Servings",
+      "difficulty": "Difficulty",
+      "selectDifficulty": "Select difficulty",
+      "ingredients": "Ingredients",
+      "addIngredient": "Add Ingredient",
+      "qty": "Qty",
+      "unit": "Unit",
+      "ingredientName": "Ingredient name",
+      "instructions": "Instructions",
+      "instructionsPlaceholder": "Step by step cooking instructions...",
+      "sourceNotes": "Source & Notes",
+      "source": "Source",
+      "sourcePlaceholder": "e.g., Grandma's recipe, Food blog",
+      "sourceUrl": "Source URL",
+      "notes": "Notes",
+      "notesPlaceholder": "Any additional notes...",
+      "markAsFavorite": "Mark as favorite",
+      "addRecipe": "Add Recipe"
+    },
+    "actions": {
+      "favorite": "Favorite",
+      "toggleFavorite": "Toggle Favorite",
+      "markCooked": "Mark as Cooked",
+      "addToShoppingList": "Add to Shopping List",
+      "addToCollection": "Add to Collection"
+    },
+    "empty": {
+      "title": "No Recipes Yet",
+      "description": "Start building your recipe collection by adding or importing recipes."
+    },
+    "archive": {
+      "empty": {
+        "title": "No Archived Recipes",
+        "description": "Recipes you archive will appear here."
+      }
+    },
+    "analysis": {
+      "period": "Period",
+      "months3": "Last 3 months",
+      "months6": "Last 6 months",
+      "months12": "Last 12 months",
+      "byCategory": "By Category",
+      "byCuisine": "By Cuisine",
+      "byDifficulty": "By Difficulty",
+      "mostCooked": "Most Cooked",
+      "cookedTimes": "Cooked {count} times",
+      "recentlyCookedTitle": "Recently Cooked",
+      "noData": "No data available",
+      "empty": {
+        "title": "No Data Yet",
+        "description": "Add some recipes to see analytics."
+      }
+    },
+    "cooking": {
+      "recordTitle": "Record Cooking",
+      "recordDescription": "Record that you cooked {name}",
+      "date": "Date Cooked",
+      "pickDate": "Pick a date",
+      "servingsMade": "Servings Made",
+      "rating": "Rating",
+      "notes": "Notes",
+      "notesPlaceholder": "How did it turn out? Any modifications?",
+      "record": "Record Cooking"
+    },
+    "collections": {
+      "title": "Collections",
+      "create": "Create Collection",
+      "createTitle": "Create Collection",
+      "createDescription": "Create a new collection to organize your recipes.",
+      "editTitle": "Edit Collection",
+      "editDescription": "Update the collection details.",
+      "name": "Name",
+      "namePlaceholder": "e.g., Italian Favorites",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional description...",
+      "color": "Color",
+      "recipeCount": "{count} recipes",
+      "deleteTitle": "Delete Collection",
+      "deleteDescription": "Are you sure you want to delete \"{name}\"? The recipes will not be deleted.",
+      "created": "Collection created",
+      "updated": "Collection updated",
+      "deleted": "Collection deleted",
+      "errorSaving": "Failed to save collection",
+      "errorDeleting": "Failed to delete collection",
+      "empty": {
+        "title": "No Collections Yet",
+        "description": "Create collections to organize your recipes by cuisine, occasion, or any way you like."
+      }
+    },
+    "collectionDetail": {
+      "empty": {
+        "title": "No Recipes in Collection",
+        "description": "Add recipes to this collection from the overview page."
+      }
+    },
+    "addToCollection": {
+      "title": "Add to Collection",
+      "description": "Add {count, plural, one {# recipe} other {# recipes}} to a collection",
+      "recipesToAdd": "Recipes to add",
+      "more": "more",
+      "selectCollection": "Select a collection",
+      "createNew": "Create new collection",
+      "newName": "Collection name",
+      "color": "Color",
+      "noCollections": "No collections yet. Create one!",
+      "recipes": "recipes",
+      "selectOrCreate": "Please select a collection or create a new one",
+      "enterName": "Please enter a collection name",
+      "success": "{count, plural, one {# recipe} other {# recipes}} added to collection",
+      "error": "Failed to add recipes to collection",
+      "adding": "Adding...",
+      "addButton": "Add to Collection"
+    },
+    "addToShoppingList": {
+      "title": "Add to Shopping List",
+      "description": "Add ingredients from {name} to a shopping list",
+      "scale": "Scale Recipe",
+      "servings": "servings",
+      "ingredients": "Select Ingredients",
+      "selectedCount": "{count} of {total} selected",
+      "selectList": "Select a shopping list",
+      "createNew": "Create new list",
+      "newListName": "List name",
+      "listNamePlaceholder": "e.g., Weekly groceries",
+      "noLists": "No active shopping lists. Create one!",
+      "items": "items",
+      "selectOrCreate": "Please select a list or create a new one",
+      "selectIngredients": "Please select at least one ingredient",
+      "enterListName": "Please enter a list name",
+      "success": "{count, plural, one {# ingredient} other {# ingredients}} added to shopping list",
+      "error": "Failed to add ingredients to shopping list",
+      "adding": "Adding...",
+      "addButton": "Add to List"
+    },
+    "import": {
+      "review": {
+        "title": "Review Recipes",
+        "description": "Review and edit parsed recipes before adding them",
+        "itemCount": "{count, plural, one {# recipe} other {# recipes}} found",
+        "selectedCount": "{count, plural, one {# recipe} other {# recipes}} selected",
+        "selectAll": "Select all",
+        "selectItem": "Select recipe",
+        "deleteSelected": "Delete selected",
+        "noItems": "No recipes were parsed. Please try again with different input.",
+        "goBack": "Go back",
+        "saving": "Saving...",
+        "saveError": "Failed to save recipes. Please try again.",
+        "addToGroceries": "Add {count, plural, one {# recipe} other {# recipes}}"
+      },
+      "complete": {
+        "title": "Import Complete!",
+        "description": "{count, plural, one {# recipe has} other {# recipes have}} been added to your collection",
+        "addMore": "Import More",
+        "viewItems": "View Recipes"
+      }
+    },
+    "messages": {
+      "recipeCreated": "Recipe created successfully",
+      "recipeUpdated": "Recipe updated successfully",
+      "itemDeleted": "Recipe deleted successfully",
+      "itemsArchived": "Recipes archived successfully",
+      "itemsUnarchived": "Recipes unarchived successfully",
+      "itemsDeleted": "Recipes deleted successfully",
+      "itemsFavorited": "Recipes added to favorites",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "cookingRecorded": "Cooking recorded successfully",
+      "errorCreating": "Failed to create recipe",
+      "errorUpdating": "Failed to update recipe",
+      "errorDeleting": "Failed to delete recipe",
+      "errorArchiving": "Failed to archive recipes",
+      "errorUnarchiving": "Failed to unarchive recipes",
+      "errorBulkDeleting": "Failed to delete recipes",
+      "errorFavoriting": "Failed to update favorites",
+      "errorTogglingFavorite": "Failed to toggle favorite",
+      "errorRecordingCooking": "Failed to record cooking"
+    },
+    "confirmDelete": {
+      "title": "Delete Recipe",
+      "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
     }
   }
 }
