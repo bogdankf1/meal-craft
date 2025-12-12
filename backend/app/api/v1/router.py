@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth, groceries, billing, ai, shopping_lists, pantry, kitchen_equipment, recipes
+from app.api.v1.routes import auth, groceries, billing, ai, shopping_lists, pantry, kitchen_equipment, recipes, meal_plans
 
 api_router = APIRouter()
 
@@ -25,9 +25,11 @@ api_router.include_router(kitchen_equipment.router, tags=["Kitchen Equipment"])
 # Recipes (Phase 5 module)
 api_router.include_router(recipes.router, tags=["Recipes"])
 
+# Meal Plans (Phase 6 module)
+api_router.include_router(meal_plans.router, tags=["Meal Plans"])
+
 # AI Features (text parsing, categorization)
 api_router.include_router(ai.router, tags=["AI"])
-# api_router.include_router(meal_plans.router, prefix="/meal-plans", tags=["Meal Plans"])
 # api_router.include_router(restaurants.router, prefix="/restaurants", tags=["Restaurants"])
 # api_router.include_router(nutrition.router, prefix="/nutrition", tags=["Nutrition"])
 # api_router.include_router(subscription.router, prefix="/subscription", tags=["Subscription"])

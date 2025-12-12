@@ -44,6 +44,7 @@ class Meal(Base):
     date = Column(Date, nullable=False)
     meal_type = Column(String(20), nullable=False)
     recipe_id = Column(UUID(as_uuid=True), ForeignKey("recipes.id", ondelete="SET NULL"), nullable=True)
+    custom_name = Column(String(255), nullable=True)  # For non-recipe meals (leftovers, eating out, etc.)
     servings = Column(Integer, nullable=True)
     notes = Column(Text, nullable=True)
     is_leftover = Column(Boolean, default=False)
