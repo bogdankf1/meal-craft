@@ -61,7 +61,7 @@ from app.models.kitchen_equipment import KitchenEquipment
 # Restaurants
 from app.models.restaurant import (
     Restaurant,
-    RestaurantOrder,
+    RestaurantMeal,
 )
 
 # Nutrition and Health
@@ -130,7 +130,7 @@ __all__ = [
     "KitchenEquipment",
     # Restaurant
     "Restaurant",
-    "RestaurantOrder",
+    "RestaurantMeal",
     # Nutrition
     "NutritionGoal",
     "NutritionLog",

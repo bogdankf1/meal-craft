@@ -52,7 +52,7 @@ class User(Base):
     groceries = relationship("Grocery", back_populates="user")
     pantry_items = relationship("PantryItem", back_populates="user")
     restaurants = relationship("Restaurant", back_populates="user")
-    restaurant_orders = relationship("RestaurantOrder", back_populates="user")
+    restaurant_meals = relationship("RestaurantMeal", back_populates="user")
     nutrition_goals = relationship("NutritionGoal", back_populates="user")
     nutrition_logs = relationship("NutritionLog", back_populates="user")
     health_metrics = relationship("HealthMetric", back_populates="user")
