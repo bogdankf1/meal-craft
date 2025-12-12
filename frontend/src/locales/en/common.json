@@ -515,6 +515,14 @@
         "title": "Photo of Equipment",
         "description": "Take photos of kitchen equipment and appliances"
       },
+      "photoFood": {
+        "title": "Photo of Food",
+        "description": "Take a photo of your meal to log it"
+      },
+      "receipt": {
+        "title": "Receipt",
+        "description": "Upload a restaurant receipt or order confirmation"
+      },
       "photo": {
         "title": "Photo Import",
         "description": "Take a photo to import items",
@@ -561,6 +569,8 @@
       "recipeExample": "Pasta Carbonara\n\nIngredients:\n400g spaghetti\n200g pancetta or guanciale\n4 large eggs\n100g pecorino romano, grated\n2 cloves garlic\nBlack pepper to taste\n\nInstructions:\n1. Bring a large pot of salted water to boil and cook spaghetti until al dente\n2. While pasta cooks, cut pancetta into small cubes\n3. In a bowl, whisk eggs with grated cheese and plenty of black pepper\n4. Fry pancetta until crispy, add minced garlic for 30 seconds\n5. Drain pasta, reserving 1 cup of pasta water\n6. Add hot pasta to the pan with pancetta (heat off)\n7. Quickly add egg mixture and toss vigorously\n8. Add pasta water as needed for creamy sauce\n9. Serve immediately with extra cheese and pepper\n\nServes 4 | Prep: 10 min | Cook: 20 min | Difficulty: Medium",
       "mealPlanPlaceholder": "Enter your meal plan here...\nExample:\nMonday:\n- Breakfast: Oatmeal with berries\n- Lunch: Chicken salad\n- Dinner: Pasta carbonara",
       "mealPlanExample": "Week of December 15\n\nMonday:\n- Breakfast: Oatmeal with berries and honey\n- Lunch: Grilled chicken salad\n- Dinner: Pasta carbonara\n\nTuesday:\n- Breakfast: Scrambled eggs with toast\n- Lunch: Leftover pasta\n- Dinner: Beef stir-fry with vegetables\n\nWednesday:\n- Breakfast: Greek yogurt with granola\n- Lunch: Tuna sandwich\n- Dinner: Baked salmon with roasted potatoes\n\nThursday:\n- Breakfast: Pancakes\n- Lunch: Leftover salmon\n- Dinner: Chicken curry with rice\n\nFriday:\n- Breakfast: Smoothie bowl\n- Lunch: Caesar salad\n- Dinner: Homemade pizza\n\nSaturday:\n- Breakfast: French toast\n- Lunch: Eating out\n- Dinner: Grilled steak with vegetables\n\nSunday:\n- Breakfast: Eggs benedict\n- Lunch: Leftover steak salad\n- Dinner: Roast chicken with mashed potatoes",
+      "restaurantPlaceholder": "Enter your restaurant meals here...\nExample:\nMcDonald's - lunch, delivery - Big Mac, fries\nPizza Hut dinner takeout: pepperoni pizza",
+      "restaurantExample": "McDonald's - lunch, delivery - Big Mac, large fries, Coke\nPizza Hut dinner takeout: pepperoni pizza, garlic bread\nStarbucks breakfast - cappuccino, croissant\nSushi restaurant dine-in for dinner: salmon roll, miso soup\nThai Express - pad thai, spring rolls - lunch delivery",
       "useExample": "Use example",
       "parsing": "Parsing...",
       "parseWithAI": "Parse with AI",
@@ -749,13 +759,25 @@
       "goBack": "Go back",
       "saving": "Saving...",
       "saveError": "Failed to save items. Please try again.",
-      "addToGroceries": "Add {count, plural, one {# item} other {# items}} to Groceries"
+      "addToGroceries": "Add {count, plural, one {# item} other {# items}} to Groceries",
+      "addToRestaurants": "Add {count, plural, one {# meal} other {# meals}} to Restaurants",
+      "addToPantry": "Add {count, plural, one {# item} other {# items}} to Pantry",
+      "addToEquipment": "Add {count, plural, one {# item} other {# items}} to Equipment"
     },
     "complete": {
       "title": "Import Complete!",
       "description": "{count, plural, one {# item has} other {# items have}} been added to your groceries",
       "addMore": "Import More",
       "viewItems": "View Items"
+    },
+    "restaurants": {
+      "review": {
+        "description": "Review and edit parsed meals before adding them"
+      },
+      "complete": {
+        "description": "{count, plural, one {# meal has} other {# meals have}} been added to your restaurant history",
+        "viewItems": "View Meals"
+      }
     }
   },
   "comingSoon": "Coming Soon",
@@ -1788,6 +1810,258 @@
     "confirmDelete": {
       "title": "Delete Recipe",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    }
+  },
+  "restaurants": {
+    "title": "Restaurants & Takeout",
+    "description": "Track your restaurant visits, takeout orders, and dining experiences.",
+    "tabs": {
+      "overview": "Overview",
+      "import": "Import",
+      "analytics": "Analytics",
+      "history": "History",
+      "archive": "Archive"
+    },
+    "stats": {
+      "totalMeals": "Total Meals",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "avgRating": "Avg Rating",
+      "avgFeeling": "Avg Feeling",
+      "favoriteRestaurant": "Top Restaurant",
+      "archivedMeals": "Archived Meals"
+    },
+    "views": {
+      "table": "Table",
+      "calendar": "Calendar",
+      "cards": "Cards"
+    },
+    "addMeal": "Add Meal",
+    "mealTypes": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "orderTypes": {
+      "dine_in": "Dine In",
+      "delivery": "Delivery",
+      "takeout": "Takeout"
+    },
+    "tags": {
+      "healthy": "Healthy",
+      "cheat_meal": "Cheat Meal",
+      "business": "Business",
+      "date_night": "Date Night",
+      "family": "Family",
+      "quick_bite": "Quick Bite",
+      "celebration": "Celebration",
+      "comfort_food": "Comfort Food"
+    },
+    "fields": {
+      "restaurant": "Restaurant",
+      "date": "Date",
+      "mealType": "Meal Type",
+      "orderType": "Order Type",
+      "items": "Items"
+    },
+    "filters": {
+      "search": "Search restaurants or items...",
+      "mealType": "Meal Type",
+      "allMealTypes": "All Meal Types",
+      "orderType": "Order Type",
+      "allOrderTypes": "All Order Types",
+      "dateRange": "Date Range",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "clearDates": "Clear dates"
+    },
+    "table": {
+      "restaurant": "Restaurant",
+      "date": "Date",
+      "mealType": "Meal Type",
+      "orderType": "Order Type",
+      "items": "Items Ordered",
+      "rating": "Rating",
+      "feeling": "Feeling",
+      "noMeals": "No meals recorded yet",
+      "selected": "{count} selected",
+      "itemsOnPage": "{count, plural, one {# item} other {# items}} on this page",
+      "selectToAction": "Select items to archive or delete"
+    },
+    "calendar": {
+      "more": "more"
+    },
+    "form": {
+      "addTitle": "Add Restaurant Meal",
+      "editTitle": "Edit Restaurant Meal",
+      "addDescription": "Record a meal from a restaurant, takeout, or delivery.",
+      "editDescription": "Update the details of your restaurant meal.",
+      "restaurantName": "Restaurant Name",
+      "restaurantNamePlaceholder": "e.g., McDonald's, Local Pizza Place",
+      "date": "Date",
+      "time": "Time",
+      "mealType": "Meal Type",
+      "orderType": "Order Type",
+      "itemsOrdered": "Items Ordered",
+      "itemsOrderedPlaceholder": "e.g., Burger, Fries, Coke",
+      "itemsOrderedHint": "Separate items with commas",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of the meal...",
+      "estimatedCalories": "Estimated Calories",
+      "rating": "Rating",
+      "feelingAfter": "How Did You Feel After?",
+      "tags": "Tags",
+      "notes": "Notes",
+      "notesPlaceholder": "Any additional notes...",
+      "saving": "Saving...",
+      "itemsPlaceholder": "e.g., Burger, Fries, Coke",
+      "star": "star",
+      "stars": "stars"
+    },
+    "bulkForm": {
+      "title": "Add Multiple Meals",
+      "description": "Add multiple restaurant meals at once. Fill in the details for each meal.",
+      "addRow": "Add Row",
+      "addAll": "Add All Meals",
+      "addMultiple": "Add Multiple",
+      "mealCount": "{count, plural, one {# meal} other {# meals}}"
+    },
+    "messages": {
+      "mealAdded": "Meal added successfully",
+      "mealUpdated": "Meal updated successfully",
+      "mealDeleted": "Meal deleted successfully",
+      "bulkMealsAdded": "{count, plural, one {# meal added} other {# meals added}} successfully",
+      "errorAdding": "Failed to add meal"
+    },
+    "import": {
+      "title": "Import Meals",
+      "description": "Add restaurant meals from various sources.",
+      "methods": {
+        "text": {
+          "title": "Text Input",
+          "description": "Type or paste meal information",
+          "hint": "Describe your meals with restaurant name, date, and items ordered.",
+          "placeholder": "Example:\nMcDonald's - Big Mac, fries, and coke for lunch today\nPizza Hut delivery - large pepperoni pizza, ate it for dinner"
+        },
+        "voice": {
+          "title": "Voice Input",
+          "description": "Dictate your meal information",
+          "hint": "Speak clearly about what you ordered.",
+          "notImplemented": "Voice input coming soon!"
+        },
+        "photo": {
+          "title": "Photo of Food",
+          "description": "Take a photo of your meal",
+          "hint": "Take a clear photo of your food to identify items."
+        },
+        "receipt": {
+          "title": "Receipt",
+          "description": "Scan a restaurant receipt",
+          "hint": "Take a photo of your receipt to extract order details."
+        },
+        "screenshot": {
+          "title": "Delivery App Screenshot",
+          "description": "Upload from Uber Eats, DoorDash, etc.",
+          "hint": "Upload a screenshot from your delivery app order."
+        }
+      },
+      "clickToUpload": "Click to upload image",
+      "processing": "Processing image...",
+      "parsing": "Parsing...",
+      "parse": "Parse",
+      "parsedMeals": "{count} meals parsed",
+      "saveAll": "Save All",
+      "saving": "Saving...",
+      "clearAll": "Clear All",
+      "success": {
+        "parsed": "{count} meals successfully parsed!",
+        "saved": "{count} meals saved successfully!"
+      },
+      "errors": {
+        "emptyText": "Please enter some text to parse",
+        "noParsed": "No meals could be parsed from the input",
+        "parsing": "Failed to parse meals",
+        "saving": "Failed to save meals",
+        "notImplemented": "This import method is coming soon!"
+      }
+    },
+    "analytics": {
+      "title": "Meal Analytics",
+      "description": "Insights about your dining habits.",
+      "byMealType": "Meals by Type",
+      "byOrderType": "Meals by Order Type",
+      "byTags": "Meals by Tags",
+      "topRestaurants": "Top Restaurants",
+      "visits": "visits",
+      "meals": "meals",
+      "avgRating": "avg rating",
+      "ratingDistribution": "Rating Distribution",
+      "feelingDistribution": "Feeling After Distribution",
+      "monthlyTrend": "Monthly Trend",
+      "noData": "No data available",
+      "noTags": "No tags used yet",
+      "empty": {
+        "title": "No analytics data yet",
+        "description": "Start recording restaurant meals to see insights about your dining habits."
+      }
+    },
+    "history": {
+      "title": "Dining History",
+      "description": "Track your dining patterns over time.",
+      "months3": "3 Months",
+      "months6": "6 Months",
+      "months9": "9 Months",
+      "months12": "12 Months",
+      "totalMeals": "Total Meals",
+      "totalInPeriod": "Total in Period",
+      "avgMonthly": "Avg Monthly",
+      "mealsTrend": "Meals Trend",
+      "uniqueRestaurants": "Unique Restaurants",
+      "avgMealsPerMonth": "Avg Meals/Month",
+      "avgRating": "Avg Rating",
+      "topRestaurants": "Most Visited Restaurants",
+      "visitCount": "visits",
+      "lastVisit": "Last visit",
+      "monthlyBreakdown": "Monthly Breakdown",
+      "meals": "meals",
+      "noData": "No data available",
+      "empty": {
+        "title": "No history data",
+        "description": "Start recording restaurant meals to build your dining history."
+      }
+    },
+    "archive": {
+      "title": "Archived Meals",
+      "description": "View and manage your archived restaurant meals.",
+      "empty": {
+        "title": "No archived meals",
+        "description": "Archived restaurant meals will appear here."
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "archive": "Archive",
+      "unarchive": "Unarchive",
+      "delete": "Delete"
+    },
+    "messages": {
+      "mealAdded": "Meal added successfully",
+      "mealUpdated": "Meal updated successfully",
+      "mealDeleted": "Meal deleted successfully",
+      "bulkMealsAdded": "{count, plural, one {# meal added} other {# meals added}} successfully",
+      "mealsArchived": "{count} meals archived",
+      "mealsUnarchived": "{count} meals unarchived",
+      "mealsDeleted": "{count} meals deleted",
+      "errorAdding": "Failed to add meal",
+      "errorUpdating": "Failed to update meal",
+      "errorDeleting": "Failed to delete meal",
+      "errorArchiving": "Failed to archive meals",
+      "errorUnarchiving": "Failed to unarchive meals"
+    },
+    "empty": {
+      "title": "No meals recorded yet",
+      "description": "Start tracking your restaurant visits, takeout orders, and delivery meals."
     }
   },
   "mealPlanner": {

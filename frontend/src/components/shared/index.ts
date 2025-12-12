@@ -19,6 +19,7 @@ export type {
   RowAction,
   PaginationInfo,
 } from "./DataTable";
+export { DataTablePagination } from "./DataTablePagination";
 
 // Filters
 export { FilterBar } from "./FilterBar";

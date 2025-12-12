@@ -37,7 +37,9 @@ export type PhotoImportType =
   | "screenshot" // Screenshot from Notes or other app
   | "app_screenshot" // Screenshot from other app
   | "recipe_handwriting" // Handwritten recipe from notebook
-  | "meal_plan"; // Handwritten meal plan
+  | "meal_plan" // Handwritten meal plan
+  | "food" // Photo of food/meal at restaurant
+  | "receipt"; // Restaurant receipt
 
 interface PhotoImportProps<T extends ParsedItem> {
   importType: PhotoImportType;

@@ -11,6 +11,8 @@ interface ImportCompleteProps {
   onAddMore?: () => void;
   onViewItems?: () => void;
   translationNamespace?: string;
+  descriptionKey?: string;
+  viewItemsKey?: string;
 }
 
 export function ImportComplete({
@@ -18,6 +20,8 @@ export function ImportComplete({
   onAddMore,
   onViewItems,
   translationNamespace = "import",
+  descriptionKey = "complete.description",
+  viewItemsKey = "complete.viewItems",
 }: ImportCompleteProps) {
   const t = useTranslations(translationNamespace);
   const { reset } = useImportWizard();
@@ -40,7 +44,7 @@ export function ImportComplete({
               {t("complete.title")}
             </h3>
             <p className="text-muted-foreground mt-1">
-              {t("complete.description", { count: itemCount })}
+              {t(descriptionKey, { count: itemCount })}
             </p>
           </div>
 
@@ -51,7 +55,7 @@ export function ImportComplete({
             </Button>
             {onViewItems && (
               <Button onClick={onViewItems}>
-                {t("complete.viewItems")}
+                {t(viewItemsKey)}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}

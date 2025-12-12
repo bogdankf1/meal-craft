@@ -51,6 +51,7 @@ interface ImportReviewProps<T extends ParsedItem> {
   translationNamespace?: string;
   emptyMessage?: string;
   saveButtonTextKey?: string;
+  descriptionKey?: string;
 }
 
 export function ImportReview<T extends ParsedItem>({
@@ -60,6 +61,7 @@ export function ImportReview<T extends ParsedItem>({
   translationNamespace = "import",
   emptyMessage,
   saveButtonTextKey,
+  descriptionKey = "review.description",
 }: ImportReviewProps<T>) {
   const t = useTranslations(translationNamespace);
   const tCommon = useTranslations("common");
@@ -235,7 +237,7 @@ export function ImportReview<T extends ParsedItem>({
             {t("review.itemCount", { count: parsedItems.length })}
           </Badge>
         </CardTitle>
-        <CardDescription>{t("review.description")}</CardDescription>
+        <CardDescription>{t(descriptionKey)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Bulk actions */}
