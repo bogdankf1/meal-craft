@@ -352,6 +352,19 @@ export const restaurantsApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // Calculate/recalculate nutrition for a restaurant meal using AI
+    calculateRestaurantMealNutrition: builder.mutation<RestaurantMeal, string>({
+      query: (id) => ({
+        url: `/restaurants/meals/${id}/calculate-nutrition`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "RestaurantMeals", id },
+        { type: "RestaurantMeals", id: "LIST" },
+        { type: "RestaurantMeals", id: "ANALYTICS" },
+      ],
+    }),
+
     // Bulk archive meals
     bulkArchiveRestaurantMeals: builder.mutation<BulkActionResponse, string[]>({
       query: (ids) => ({
@@ -514,6 +527,7 @@ export const {
   useCreateRestaurantMealsMutation,
   useUpdateRestaurantMealMutation,
   useDeleteRestaurantMealMutation,
+  useCalculateRestaurantMealNutritionMutation,
   useBulkArchiveRestaurantMealsMutation,
   useBulkUnarchiveRestaurantMealsMutation,
   useBulkDeleteRestaurantMealsMutation,

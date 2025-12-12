@@ -2236,5 +2236,171 @@
       "title": "Import Meal Plan",
       "description": "Import meal plans from text, voice, or image."
     }
+  },
+  "nutrition": {
+    "title": "Nutrition",
+    "description": "Track your daily nutrition, set goals, and monitor your macros.",
+    "tabs": {
+      "overview": "Overview",
+      "goals": "Goals",
+      "analytics": "Analytics",
+      "history": "History"
+    },
+    "views": {
+      "daily": "Daily View",
+      "calendar": "Calendar"
+    },
+    "stats": {
+      "todayCalories": "Today's Calories",
+      "todayProtein": "Today's Protein",
+      "todayMeals": "Today's Meals",
+      "goalProgress": "Goal Progress",
+      "of": "of",
+      "ofDailyGoal": "of daily goal",
+      "noGoalSet": "No goal set"
+    },
+    "mealTypes": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "macros": {
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "fiber": "Fiber",
+      "sugar": "Sugar",
+      "sodium": "Sodium"
+    },
+    "units": {
+      "kcal": "kcal",
+      "g": "g",
+      "mg": "mg"
+    },
+    "sources": {
+      "meal_plan": "Meal Plan",
+      "restaurant": "Restaurant",
+      "custom": "Custom Entry"
+    },
+    "today": "Today",
+    "meals": "meals",
+    "meal": "meal",
+    "noData": "No data",
+    "noDataForDate": "No nutrition data for this date",
+    "noMealsForType": "No meals logged",
+    "dailySummary": "Daily Summary",
+    "addEntry": "Add Entry",
+    "goalTypes": {
+      "weight_loss": "Weight Loss",
+      "muscle_gain": "Muscle Gain",
+      "maintenance": "Maintenance",
+      "custom": "Custom"
+    },
+    "goals": {
+      "activeGoal": "Active Goal",
+      "newGoal": "New Goal",
+      "createGoal": "Create Goal",
+      "addTitle": "Create Nutrition Goal",
+      "addDescription": "Set your daily nutrition targets.",
+      "editTitle": "Edit Nutrition Goal",
+      "editDescription": "Update your nutrition targets.",
+      "goalType": "Goal Type",
+      "selectGoalType": "Select goal type",
+      "goalTypeHint": "Choose a preset or customize your own targets.",
+      "dailyCalories": "Daily Calories",
+      "active": "Active",
+      "activeGoalHint": "Only one goal can be active at a time.",
+      "goalHistory": "Goal History",
+      "empty": {
+        "title": "No nutrition goals set",
+        "description": "Create a goal to track your daily nutrition targets."
+      }
+    },
+    "logs": {
+      "addTitle": "Add Food Entry",
+      "addDescription": "Log a custom food item or snack.",
+      "editTitle": "Edit Food Entry",
+      "editDescription": "Update your food entry.",
+      "foodName": "Food Name",
+      "foodNamePlaceholder": "e.g., Apple, Protein Shake, Sandwich",
+      "foodNameHint": "Describe what you ate. Click the wand to estimate nutrition.",
+      "date": "Date",
+      "pickDate": "Pick a date",
+      "mealType": "Meal Type",
+      "selectMealType": "Select meal type",
+      "calories": "Calories",
+      "notes": "Notes",
+      "notesPlaceholder": "Any additional notes...",
+      "estimateNutrition": "Estimate nutrition with AI",
+      "unnamed": "Unnamed entry"
+    },
+    "legend": {
+      "onTarget": "On target",
+      "under": "Under",
+      "over": "Over",
+      "partial": "Partial"
+    },
+    "analytics": {
+      "avgDailyCalories": "Avg Daily Calories",
+      "daysLogged": "Days Logged",
+      "outOf": "out of {total}",
+      "totalMeals": "Total Meals",
+      "goalAchievement": "Goal Achievement",
+      "daysOnTarget": "days on target",
+      "noGoalSet": "No goal set",
+      "mealSources": "Meal Sources",
+      "macroDistribution": "Macro Distribution",
+      "avgDailyNutrients": "Average Daily Nutrients",
+      "periodSummary": "Period Summary",
+      "periodSummaryText": "Data from {startDate} to {endDate} ({days} days)",
+      "calories": "Calories",
+      "noData": "No data available",
+      "empty": {
+        "title": "No analytics data yet",
+        "description": "Start tracking your meals to see nutrition insights and trends."
+      }
+    },
+    "history": {
+      "period": "Period",
+      "months1": "1 Month",
+      "months3": "3 Months",
+      "months6": "6 Months",
+      "months12": "12 Months",
+      "daysLogged": "Days Logged",
+      "outOfDays": "out of {days} days",
+      "totalMeals": "Total Meals",
+      "avgDailyCalories": "Avg Daily Calories",
+      "weeklyTrend": "Weekly Trend",
+      "daysRecorded": "days recorded",
+      "avgCal": "avg cal/day",
+      "recentEntries": "Recent Entries",
+      "noEntries": "No entries yet",
+      "dailyBreakdown": "Daily Breakdown",
+      "page": "Page",
+      "of": "of",
+      "previous": "Previous",
+      "next": "Next",
+      "empty": {
+        "title": "No history data",
+        "description": "Start tracking your nutrition to build your history."
+      }
+    },
+    "messages": {
+      "goalCreated": "Nutrition goal created successfully",
+      "goalUpdated": "Nutrition goal updated successfully",
+      "goalDeleted": "Nutrition goal deleted successfully",
+      "errorCreatingGoal": "Failed to create nutrition goal",
+      "errorUpdatingGoal": "Failed to update nutrition goal",
+      "errorDeletingGoal": "Failed to delete nutrition goal",
+      "logCreated": "Food entry added successfully",
+      "logUpdated": "Food entry updated successfully",
+      "errorCreatingLog": "Failed to add food entry",
+      "errorUpdatingLog": "Failed to update food entry",
+      "nutritionEstimated": "Nutrition values estimated",
+      "errorEstimating": "Failed to estimate nutrition",
+      "enterFoodFirst": "Please enter a food name first"
+    }
   }
 }

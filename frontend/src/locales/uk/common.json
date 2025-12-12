@@ -2236,5 +2236,171 @@
       "title": "Імпорт плану меню",
       "description": "Імпортуйте плани меню з тексту, голосу або зображення."
     }
+  },
+  "nutrition": {
+    "title": "Харчування",
+    "description": "Відстежуйте щоденне харчування, встановлюйте цілі та контролюйте макроси.",
+    "tabs": {
+      "overview": "Огляд",
+      "goals": "Цілі",
+      "analytics": "Аналітика",
+      "history": "Історія"
+    },
+    "views": {
+      "daily": "Щоденний вигляд",
+      "calendar": "Календар"
+    },
+    "stats": {
+      "todayCalories": "Калорії сьогодні",
+      "todayProtein": "Білок сьогодні",
+      "todayMeals": "Страв сьогодні",
+      "goalProgress": "Прогрес цілі",
+      "of": "з",
+      "ofDailyGoal": "від денної цілі",
+      "noGoalSet": "Ціль не встановлена"
+    },
+    "mealTypes": {
+      "breakfast": "Сніданок",
+      "lunch": "Обід",
+      "dinner": "Вечеря",
+      "snack": "Перекус"
+    },
+    "macros": {
+      "calories": "Калорії",
+      "protein": "Білок",
+      "carbs": "Вуглеводи",
+      "fat": "Жири",
+      "fiber": "Клітковина",
+      "sugar": "Цукор",
+      "sodium": "Натрій"
+    },
+    "units": {
+      "kcal": "ккал",
+      "g": "г",
+      "mg": "мг"
+    },
+    "sources": {
+      "meal_plan": "План меню",
+      "restaurant": "Ресторан",
+      "custom": "Власний запис"
+    },
+    "today": "Сьогодні",
+    "meals": "страв",
+    "meal": "страва",
+    "noData": "Немає даних",
+    "noDataForDate": "Немає даних про харчування за цю дату",
+    "noMealsForType": "Страв не записано",
+    "dailySummary": "Денний підсумок",
+    "addEntry": "Додати запис",
+    "goalTypes": {
+      "weight_loss": "Схуднення",
+      "muscle_gain": "Набір м'язів",
+      "maintenance": "Підтримка",
+      "custom": "Власний"
+    },
+    "goals": {
+      "activeGoal": "Активна ціль",
+      "newGoal": "Нова ціль",
+      "createGoal": "Створити ціль",
+      "addTitle": "Створити ціль харчування",
+      "addDescription": "Встановіть ваші щоденні цілі харчування.",
+      "editTitle": "Редагувати ціль харчування",
+      "editDescription": "Оновіть ваші цілі харчування.",
+      "goalType": "Тип цілі",
+      "selectGoalType": "Оберіть тип цілі",
+      "goalTypeHint": "Оберіть шаблон або налаштуйте власні цілі.",
+      "dailyCalories": "Денні калорії",
+      "active": "Активна",
+      "activeGoalHint": "Лише одна ціль може бути активною одночасно.",
+      "goalHistory": "Історія цілей",
+      "empty": {
+        "title": "Цілі харчування не встановлені",
+        "description": "Створіть ціль для відстеження щоденного харчування."
+      }
+    },
+    "logs": {
+      "addTitle": "Додати запис про їжу",
+      "addDescription": "Запишіть страву або перекус.",
+      "editTitle": "Редагувати запис",
+      "editDescription": "Оновіть запис про їжу.",
+      "foodName": "Назва їжі",
+      "foodNamePlaceholder": "напр., Яблуко, Протеїновий коктейль, Бутерброд",
+      "foodNameHint": "Опишіть що ви з'їли. Натисніть паличку для оцінки харчової цінності.",
+      "date": "Дата",
+      "pickDate": "Оберіть дату",
+      "mealType": "Тип прийому їжі",
+      "selectMealType": "Оберіть тип прийому їжі",
+      "calories": "Калорії",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Додаткові нотатки...",
+      "estimateNutrition": "Оцінити харчову цінність за допомогою ШІ",
+      "unnamed": "Без назви"
+    },
+    "legend": {
+      "onTarget": "В межах цілі",
+      "under": "Нижче",
+      "over": "Вище",
+      "partial": "Частково"
+    },
+    "analytics": {
+      "avgDailyCalories": "Середні денні калорії",
+      "daysLogged": "Днів записано",
+      "outOf": "з {total}",
+      "totalMeals": "Всього страв",
+      "goalAchievement": "Досягнення цілі",
+      "daysOnTarget": "днів в межах цілі",
+      "noGoalSet": "Ціль не встановлена",
+      "mealSources": "Джерела страв",
+      "macroDistribution": "Розподіл макросів",
+      "avgDailyNutrients": "Середні денні показники",
+      "periodSummary": "Підсумок періоду",
+      "periodSummaryText": "Дані з {startDate} по {endDate} ({days} днів)",
+      "calories": "Калорії",
+      "noData": "Дані відсутні",
+      "empty": {
+        "title": "Дані аналітики відсутні",
+        "description": "Почніть відстежувати харчування, щоб бачити статистику та тренди."
+      }
+    },
+    "history": {
+      "period": "Період",
+      "months1": "1 місяць",
+      "months3": "3 місяці",
+      "months6": "6 місяців",
+      "months12": "12 місяців",
+      "daysLogged": "Днів записано",
+      "outOfDays": "з {days} днів",
+      "totalMeals": "Всього страв",
+      "avgDailyCalories": "Середні денні калорії",
+      "weeklyTrend": "Тижневий тренд",
+      "daysRecorded": "днів записано",
+      "avgCal": "середньо кал/день",
+      "recentEntries": "Останні записи",
+      "noEntries": "Записів поки немає",
+      "dailyBreakdown": "Щоденна деталізація",
+      "page": "Сторінка",
+      "of": "з",
+      "previous": "Попередня",
+      "next": "Наступна",
+      "empty": {
+        "title": "Історія відсутня",
+        "description": "Почніть відстежувати харчування, щоб побудувати історію."
+      }
+    },
+    "messages": {
+      "goalCreated": "Ціль харчування успішно створено",
+      "goalUpdated": "Ціль харчування успішно оновлено",
+      "goalDeleted": "Ціль харчування успішно видалено",
+      "errorCreatingGoal": "Не вдалося створити ціль харчування",
+      "errorUpdatingGoal": "Не вдалося оновити ціль харчування",
+      "errorDeletingGoal": "Не вдалося видалити ціль харчування",
+      "logCreated": "Запис про їжу успішно додано",
+      "logUpdated": "Запис про їжу успішно оновлено",
+      "errorCreatingLog": "Не вдалося додати запис про їжу",
+      "errorUpdatingLog": "Не вдалося оновити запис про їжу",
+      "nutritionEstimated": "Харчову цінність оцінено",
+      "errorEstimating": "Не вдалося оцінити харчову цінність",
+      "enterFoodFirst": "Спочатку введіть назву їжі"
+    }
   }
 }

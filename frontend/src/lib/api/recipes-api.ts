@@ -730,6 +730,32 @@ export const recipesApi = baseApi.injectEndpoints({
       }),
     }),
 
+    // ============ Nutrition Calculation ============
+
+    // Calculate and save nutrition for a single recipe using AI
+    recalculateRecipeNutrition: builder.mutation<Recipe, string>({
+      query: (recipeId) => ({
+        url: `/recipes/${recipeId}/calculate-nutrition`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, recipeId) => [
+        { type: "Recipes", id: recipeId },
+        { type: "Recipes", id: "LIST" },
+      ],
+    }),
+
+    // Calculate nutrition for all recipes without nutrition data
+    bulkRecalculateNutrition: builder.mutation<
+      { success: boolean; processed: number; failed: number; skipped: number; total: number },
+      void
+    >({
+      query: () => ({
+        url: `/recipes/bulk/calculate-nutrition`,
+        method: "POST",
+      }),
+      invalidatesTags: [{ type: "Recipes", id: "LIST" }],
+    }),
+
     // ============ Shopping List Integration ============
 
     // Add recipe to shopping list
@@ -785,6 +811,9 @@ export const {
   useParseRecipeVoiceMutation,
   useParseRecipeImageMutation,
   useParseRecipeUrlMutation,
+  // Nutrition Calculation
+  useRecalculateRecipeNutritionMutation,
+  useBulkRecalculateNutritionMutation,
   // Shopping List
   useAddRecipeToShoppingListMutation,
 } = recipesApi;
