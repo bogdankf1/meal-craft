@@ -51,8 +51,14 @@ class RestaurantMeal(Base):
     items_ordered = Column(ARRAY(String), nullable=True)
     description = Column(Text, nullable=True)  # Free text description of the meal
 
-    # Nutrition tracking (optional estimates)
+    # Nutrition tracking (AI-estimated or manual)
     estimated_calories = Column(Integer, nullable=True)
+    estimated_protein_g = Column(Numeric(10, 1), nullable=True)
+    estimated_carbs_g = Column(Numeric(10, 1), nullable=True)
+    estimated_fat_g = Column(Numeric(10, 1), nullable=True)
+    estimated_fiber_g = Column(Numeric(10, 1), nullable=True)
+    estimated_sugar_g = Column(Numeric(10, 1), nullable=True)
+    estimated_sodium_mg = Column(Numeric(10, 1), nullable=True)
 
     # Health/feeling tracking
     rating = Column(Integer, nullable=True)  # 1-5 how good was it
@@ -73,3 +79,4 @@ class RestaurantMeal(Base):
     # Relationships
     user = relationship("User", back_populates="restaurant_meals")
     restaurant = relationship("Restaurant", back_populates="meals")
+    nutrition_logs = relationship("NutritionLog", back_populates="restaurant_meal")
