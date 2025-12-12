@@ -21,6 +21,7 @@ from app.models.recipe import (
     RecipeCollection,
     recipe_collection_association,
 )
+from app.services.ai_service import AIService
 from app.schemas.recipe import (
     RecipeCreate,
     RecipeBatchCreate,
@@ -311,6 +312,7 @@ async def create_recipes(
 ):
     """Create one or more recipes."""
     created_recipes = []
+    ai_service = AIService()
 
     for recipe_data in data.items:
         # Create recipe
@@ -338,6 +340,7 @@ async def create_recipes(
         await db.flush()
 
         # Add ingredients
+        ingredients_for_ai = []
         for ing_data in recipe_data.ingredients:
             ingredient = RecipeIngredient(
                 recipe_id=recipe.id,
@@ -347,8 +350,14 @@ async def create_recipes(
                 category=ing_data.category,
             )
             db.add(ingredient)
+            # Collect ingredients for AI nutrition calculation
+            ingredients_for_ai.append({
+                "ingredient_name": ing_data.ingredient_name,
+                "quantity": float(ing_data.quantity) if ing_data.quantity else None,
+                "unit": ing_data.unit,
+            })
 
-        # Add nutrition if provided
+        # Add nutrition if provided, otherwise calculate using AI
         if recipe_data.nutrition:
             nutrition = RecipeNutrition(
                 recipe_id=recipe.id,
@@ -361,6 +370,29 @@ async def create_recipes(
                 sodium_mg=recipe_data.nutrition.sodium_mg,
             )
             db.add(nutrition)
+        elif ingredients_for_ai:
+            # Calculate nutrition using AI
+            try:
+                ai_nutrition = await ai_service.calculate_recipe_nutrition(
+                    recipe_name=recipe_data.name,
+                    ingredients=ingredients_for_ai,
+                    servings=recipe_data.servings or 1,
+                )
+                if ai_nutrition:
+                    nutrition = RecipeNutrition(
+                        recipe_id=recipe.id,
+                        calories=ai_nutrition.get("calories"),
+                        protein_g=ai_nutrition.get("protein_g"),
+                        carbs_g=ai_nutrition.get("carbs_g"),
+                        fat_g=ai_nutrition.get("fat_g"),
+                        fiber_g=ai_nutrition.get("fiber_g"),
+                        sugar_g=ai_nutrition.get("sugar_g"),
+                        sodium_mg=ai_nutrition.get("sodium_mg"),
+                    )
+                    db.add(nutrition)
+            except Exception as e:
+                # Log error but don't fail recipe creation
+                print(f"[Recipes] Failed to calculate AI nutrition for '{recipe_data.name}': {e}")
 
         created_recipes.append(recipe)
 
@@ -509,6 +541,177 @@ async def delete_recipe(
     await db.commit()
 
     return {"success": True, "message": "Recipe deleted"}
+
+
+@router.post("/{recipe_id}/calculate-nutrition", response_model=RecipeResponse)
+async def calculate_recipe_nutrition(
+    recipe_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Calculate or recalculate nutrition for a recipe using AI."""
+    query = (
+        select(Recipe)
+        .where(Recipe.id == recipe_id, Recipe.user_id == current_user.id)
+        .options(
+            selectinload(Recipe.ingredients),
+            selectinload(Recipe.nutrition),
+            selectinload(Recipe.collections),
+            selectinload(Recipe.cooking_history),
+        )
+    )
+    result = await db.execute(query)
+    recipe = result.scalar_one_or_none()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    if not recipe.ingredients:
+        raise HTTPException(status_code=400, detail="Recipe has no ingredients to calculate nutrition from")
+
+    # Prepare ingredients for AI
+    ingredients_for_ai = [
+        {
+            "ingredient_name": ing.ingredient_name,
+            "quantity": float(ing.quantity) if ing.quantity else None,
+            "unit": ing.unit,
+        }
+        for ing in recipe.ingredients
+    ]
+
+    # Calculate nutrition using AI
+    ai_service = AIService()
+    try:
+        ai_nutrition = await ai_service.calculate_recipe_nutrition(
+            recipe_name=recipe.name,
+            ingredients=ingredients_for_ai,
+            servings=recipe.servings or 1,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to calculate nutrition: {str(e)}")
+
+    if not ai_nutrition:
+        raise HTTPException(status_code=500, detail="AI returned empty nutrition data")
+
+    # Update or create nutrition record
+    if recipe.nutrition:
+        recipe.nutrition.calories = ai_nutrition.get("calories")
+        recipe.nutrition.protein_g = ai_nutrition.get("protein_g")
+        recipe.nutrition.carbs_g = ai_nutrition.get("carbs_g")
+        recipe.nutrition.fat_g = ai_nutrition.get("fat_g")
+        recipe.nutrition.fiber_g = ai_nutrition.get("fiber_g")
+        recipe.nutrition.sugar_g = ai_nutrition.get("sugar_g")
+        recipe.nutrition.sodium_mg = ai_nutrition.get("sodium_mg")
+    else:
+        nutrition = RecipeNutrition(
+            recipe_id=recipe.id,
+            calories=ai_nutrition.get("calories"),
+            protein_g=ai_nutrition.get("protein_g"),
+            carbs_g=ai_nutrition.get("carbs_g"),
+            fat_g=ai_nutrition.get("fat_g"),
+            fiber_g=ai_nutrition.get("fiber_g"),
+            sugar_g=ai_nutrition.get("sugar_g"),
+            sodium_mg=ai_nutrition.get("sodium_mg"),
+        )
+        db.add(nutrition)
+
+    await db.commit()
+
+    # Reload with relationships
+    query = (
+        select(Recipe)
+        .where(Recipe.id == recipe.id)
+        .options(
+            selectinload(Recipe.ingredients),
+            selectinload(Recipe.nutrition),
+            selectinload(Recipe.collections),
+            selectinload(Recipe.cooking_history),
+        )
+    )
+    result = await db.execute(query)
+    recipe = result.scalar_one()
+
+    return recipe
+
+
+@router.post("/bulk/calculate-nutrition")
+async def bulk_calculate_nutrition(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Calculate nutrition for all user's recipes that don't have nutrition data."""
+    # Get all recipes without nutrition
+    query = (
+        select(Recipe)
+        .where(Recipe.user_id == current_user.id)
+        .options(
+            selectinload(Recipe.ingredients),
+            selectinload(Recipe.nutrition),
+        )
+    )
+    result = await db.execute(query)
+    recipes = result.scalars().all()
+
+    ai_service = AIService()
+    processed = 0
+    failed = 0
+    skipped = 0
+
+    for recipe in recipes:
+        # Skip if already has nutrition
+        if recipe.nutrition:
+            skipped += 1
+            continue
+
+        # Skip if no ingredients
+        if not recipe.ingredients:
+            skipped += 1
+            continue
+
+        # Prepare ingredients for AI
+        ingredients_for_ai = [
+            {
+                "ingredient_name": ing.ingredient_name,
+                "quantity": float(ing.quantity) if ing.quantity else None,
+                "unit": ing.unit,
+            }
+            for ing in recipe.ingredients
+        ]
+
+        try:
+            ai_nutrition = await ai_service.calculate_recipe_nutrition(
+                recipe_name=recipe.name,
+                ingredients=ingredients_for_ai,
+                servings=recipe.servings or 1,
+            )
+            if ai_nutrition:
+                nutrition = RecipeNutrition(
+                    recipe_id=recipe.id,
+                    calories=ai_nutrition.get("calories"),
+                    protein_g=ai_nutrition.get("protein_g"),
+                    carbs_g=ai_nutrition.get("carbs_g"),
+                    fat_g=ai_nutrition.get("fat_g"),
+                    fiber_g=ai_nutrition.get("fiber_g"),
+                    sugar_g=ai_nutrition.get("sugar_g"),
+                    sodium_mg=ai_nutrition.get("sodium_mg"),
+                )
+                db.add(nutrition)
+                processed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"[Recipes] Failed to calculate nutrition for '{recipe.name}': {e}")
+            failed += 1
+
+    await db.commit()
+
+    return {
+        "success": True,
+        "processed": processed,
+        "failed": failed,
+        "skipped": skipped,
+        "total": len(recipes),
+    }
 
 
 # ============ Scaling ============

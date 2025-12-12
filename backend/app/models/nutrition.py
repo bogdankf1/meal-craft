@@ -18,6 +18,8 @@ class NutritionGoal(Base):
     daily_carbs_g = Column(Integer, nullable=True)
     daily_fat_g = Column(Integer, nullable=True)
     daily_fiber_g = Column(Integer, nullable=True)
+    daily_sugar_g = Column(Integer, nullable=True)
+    daily_sodium_mg = Column(Integer, nullable=True)
     goal_type = Column(String(50), nullable=True)  # weight_loss, muscle_gain, maintenance, custom
     start_date = Column(Date, nullable=True)
     is_active = Column(Boolean, default=True)
@@ -29,25 +31,36 @@ class NutritionGoal(Base):
 
 
 class NutritionLog(Base):
+    """Custom nutrition log entry for items not in Meal Planner or Restaurants."""
     __tablename__ = "nutrition_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     date = Column(Date, nullable=False)
     meal_type = Column(String(20), nullable=True)  # breakfast, lunch, dinner, snack
+    # Link to meal plan meal (optional)
     meal_id = Column(UUID(as_uuid=True), ForeignKey("meals.id", ondelete="SET NULL"), nullable=True)
+    # Link to restaurant meal (optional)
+    restaurant_meal_id = Column(UUID(as_uuid=True), ForeignKey("restaurant_meals.id", ondelete="SET NULL"), nullable=True)
+    # For standalone custom entries
+    name = Column(String(255), nullable=True)  # e.g., "Apple", "Protein shake"
     manual_entry = Column(Boolean, default=False)
+    # Nutrition values
     calories = Column(Integer, nullable=True)
     protein_g = Column(Numeric(10, 1), nullable=True)
     carbs_g = Column(Numeric(10, 1), nullable=True)
     fat_g = Column(Numeric(10, 1), nullable=True)
     fiber_g = Column(Numeric(10, 1), nullable=True)
+    sugar_g = Column(Numeric(10, 1), nullable=True)
+    sodium_mg = Column(Numeric(10, 1), nullable=True)
     notes = Column(Text, nullable=True)
+    is_archived = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     user = relationship("User", back_populates="nutrition_logs")
     meal = relationship("Meal", back_populates="nutrition_logs")
+    restaurant_meal = relationship("RestaurantMeal", back_populates="nutrition_logs")
 
 
 class HealthMetric(Base):

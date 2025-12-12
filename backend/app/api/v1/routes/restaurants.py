@@ -150,10 +150,39 @@ async def create_restaurant_meals(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Create one or more restaurant meals."""
+    """Create one or more restaurant meals with automatic nutrition estimation."""
     created_meals = []
 
     for item_data in request.items:
+        # Start with provided nutrition values (if any)
+        estimated_calories = item_data.estimated_calories
+        estimated_protein_g = item_data.estimated_protein_g
+        estimated_carbs_g = item_data.estimated_carbs_g
+        estimated_fat_g = item_data.estimated_fat_g
+        estimated_fiber_g = item_data.estimated_fiber_g
+        estimated_sugar_g = item_data.estimated_sugar_g
+        estimated_sodium_mg = item_data.estimated_sodium_mg
+
+        # Auto-estimate nutrition if not provided and we have items ordered
+        if estimated_calories is None and item_data.items_ordered:
+            try:
+                nutrition = await ai_service.estimate_restaurant_meal_nutrition(
+                    restaurant_name=item_data.restaurant_name,
+                    items_ordered=item_data.items_ordered,
+                    meal_type=item_data.meal_type.value,
+                )
+                if nutrition:
+                    estimated_calories = nutrition.get("calories")
+                    estimated_protein_g = nutrition.get("protein_g")
+                    estimated_carbs_g = nutrition.get("carbs_g")
+                    estimated_fat_g = nutrition.get("fat_g")
+                    estimated_fiber_g = nutrition.get("fiber_g")
+                    estimated_sugar_g = nutrition.get("sugar_g")
+                    estimated_sodium_mg = nutrition.get("sodium_mg")
+            except Exception as e:
+                # Log error but don't fail meal creation
+                print(f"[Restaurants] Failed to estimate nutrition for '{item_data.restaurant_name}': {e}")
+
         meal = RestaurantMeal(
             user_id=current_user.id,
             restaurant_id=item_data.restaurant_id,
@@ -164,7 +193,13 @@ async def create_restaurant_meals(
             order_type=item_data.order_type.value,
             items_ordered=item_data.items_ordered,
             description=item_data.description,
-            estimated_calories=item_data.estimated_calories,
+            estimated_calories=estimated_calories,
+            estimated_protein_g=estimated_protein_g,
+            estimated_carbs_g=estimated_carbs_g,
+            estimated_fat_g=estimated_fat_g,
+            estimated_fiber_g=estimated_fiber_g,
+            estimated_sugar_g=estimated_sugar_g,
+            estimated_sodium_mg=estimated_sodium_mg,
             rating=item_data.rating,
             feeling_after=item_data.feeling_after,
             tags=item_data.tags,
@@ -502,6 +537,65 @@ async def update_restaurant_meal(
             setattr(meal, field, value.value if hasattr(value, "value") else value)
         else:
             setattr(meal, field, value)
+
+    await db.commit()
+    await db.refresh(meal)
+
+    return RestaurantMealResponse.model_validate(meal)
+
+
+@router.post("/meals/{meal_id}/calculate-nutrition", response_model=RestaurantMealResponse)
+async def calculate_restaurant_meal_nutrition(
+    meal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Calculate or recalculate nutrition for a restaurant meal using AI."""
+    result = await db.execute(
+        select(RestaurantMeal).where(
+            and_(RestaurantMeal.id == meal_id, RestaurantMeal.user_id == current_user.id)
+        )
+    )
+    meal = result.scalar_one_or_none()
+
+    if not meal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Restaurant meal not found"
+        )
+
+    if not meal.items_ordered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot estimate nutrition without items ordered"
+        )
+
+    try:
+        nutrition = await ai_service.estimate_restaurant_meal_nutrition(
+            restaurant_name=meal.restaurant_name,
+            items_ordered=meal.items_ordered,
+            meal_type=meal.meal_type,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to estimate nutrition: {str(e)}"
+        )
+
+    if not nutrition:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="AI returned empty nutrition data"
+        )
+
+    # Update the meal with estimated nutrition
+    meal.estimated_calories = nutrition.get("calories")
+    meal.estimated_protein_g = nutrition.get("protein_g")
+    meal.estimated_carbs_g = nutrition.get("carbs_g")
+    meal.estimated_fat_g = nutrition.get("fat_g")
+    meal.estimated_fiber_g = nutrition.get("fiber_g")
+    meal.estimated_sugar_g = nutrition.get("sugar_g")
+    meal.estimated_sodium_mg = nutrition.get("sodium_mg")
 
     await db.commit()
     await db.refresh(meal)

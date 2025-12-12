@@ -105,7 +105,15 @@ class RestaurantMealBase(BaseModel):
     order_type: OrderType = OrderType.DINE_IN
     items_ordered: Optional[List[str]] = None
     description: Optional[str] = None
+    # Nutrition estimates
     estimated_calories: Optional[int] = Field(None, ge=0)
+    estimated_protein_g: Optional[float] = Field(None, ge=0)
+    estimated_carbs_g: Optional[float] = Field(None, ge=0)
+    estimated_fat_g: Optional[float] = Field(None, ge=0)
+    estimated_fiber_g: Optional[float] = Field(None, ge=0)
+    estimated_sugar_g: Optional[float] = Field(None, ge=0)
+    estimated_sodium_mg: Optional[float] = Field(None, ge=0)
+    # Ratings
     rating: Optional[int] = Field(None, ge=1, le=5)
     feeling_after: Optional[int] = Field(None, ge=1, le=5)
     tags: Optional[List[str]] = None
@@ -133,7 +141,15 @@ class RestaurantMealUpdate(BaseModel):
     order_type: Optional[OrderType] = None
     items_ordered: Optional[List[str]] = None
     description: Optional[str] = None
+    # Nutrition estimates
     estimated_calories: Optional[int] = Field(None, ge=0)
+    estimated_protein_g: Optional[float] = Field(None, ge=0)
+    estimated_carbs_g: Optional[float] = Field(None, ge=0)
+    estimated_fat_g: Optional[float] = Field(None, ge=0)
+    estimated_fiber_g: Optional[float] = Field(None, ge=0)
+    estimated_sugar_g: Optional[float] = Field(None, ge=0)
+    estimated_sodium_mg: Optional[float] = Field(None, ge=0)
+    # Ratings
     rating: Optional[int] = Field(None, ge=1, le=5)
     feeling_after: Optional[int] = Field(None, ge=1, le=5)
     tags: Optional[List[str]] = None
@@ -154,7 +170,15 @@ class RestaurantMealResponse(BaseModel):
     order_type: str
     items_ordered: Optional[List[str]] = None
     description: Optional[str] = None
+    # Nutrition estimates
     estimated_calories: Optional[int] = None
+    estimated_protein_g: Optional[float] = None
+    estimated_carbs_g: Optional[float] = None
+    estimated_fat_g: Optional[float] = None
+    estimated_fiber_g: Optional[float] = None
+    estimated_sugar_g: Optional[float] = None
+    estimated_sodium_mg: Optional[float] = None
+    # Ratings
     rating: Optional[int] = None
     feeling_after: Optional[int] = None
     tags: Optional[List[str]] = None
