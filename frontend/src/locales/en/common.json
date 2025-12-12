@@ -75,7 +75,9 @@
     "reset": "Reset",
     "back": "Back",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "active": "Active",
+    "archived": "Archived"
   },
   "theme": {
     "light": "Light",
@@ -516,7 +518,8 @@
       "photo": {
         "title": "Photo Import",
         "description": "Take a photo to import items",
-        "recipeDescription": "Take a photo of a handwritten recipe from your notebook"
+        "recipeDescription": "Take a photo of a handwritten recipe from your notebook",
+        "mealPlanDescription": "Take a photo of a handwritten meal plan"
       },
       "url": {
         "title": "URL Import",
@@ -556,6 +559,8 @@
       "equipmentExample": "Cast iron skillet - Lodge, good condition\nKitchenAid stand mixer model KSM150\n8 inch chef's knife - needs sharpening\nInstant Pot 6qt\nStainless steel pot set\nCutting board - bamboo\nFood processor - Cuisinart",
       "recipePlaceholder": "Enter your recipe here...\nExample:\nPasta Carbonara\n\nIngredients:\n400g spaghetti\n200g pancetta\n4 eggs\n100g parmesan\n\nInstructions:\n1. Cook pasta\n2. Fry pancetta\n3. Mix eggs and cheese\n4. Combine all",
       "recipeExample": "Pasta Carbonara\n\nIngredients:\n400g spaghetti\n200g pancetta or guanciale\n4 large eggs\n100g pecorino romano, grated\n2 cloves garlic\nBlack pepper to taste\n\nInstructions:\n1. Bring a large pot of salted water to boil and cook spaghetti until al dente\n2. While pasta cooks, cut pancetta into small cubes\n3. In a bowl, whisk eggs with grated cheese and plenty of black pepper\n4. Fry pancetta until crispy, add minced garlic for 30 seconds\n5. Drain pasta, reserving 1 cup of pasta water\n6. Add hot pasta to the pan with pancetta (heat off)\n7. Quickly add egg mixture and toss vigorously\n8. Add pasta water as needed for creamy sauce\n9. Serve immediately with extra cheese and pepper\n\nServes 4 | Prep: 10 min | Cook: 20 min | Difficulty: Medium",
+      "mealPlanPlaceholder": "Enter your meal plan here...\nExample:\nMonday:\n- Breakfast: Oatmeal with berries\n- Lunch: Chicken salad\n- Dinner: Pasta carbonara",
+      "mealPlanExample": "Week of December 15\n\nMonday:\n- Breakfast: Oatmeal with berries and honey\n- Lunch: Grilled chicken salad\n- Dinner: Pasta carbonara\n\nTuesday:\n- Breakfast: Scrambled eggs with toast\n- Lunch: Leftover pasta\n- Dinner: Beef stir-fry with vegetables\n\nWednesday:\n- Breakfast: Greek yogurt with granola\n- Lunch: Tuna sandwich\n- Dinner: Baked salmon with roasted potatoes\n\nThursday:\n- Breakfast: Pancakes\n- Lunch: Leftover salmon\n- Dinner: Chicken curry with rice\n\nFriday:\n- Breakfast: Smoothie bowl\n- Lunch: Caesar salad\n- Dinner: Homemade pizza\n\nSaturday:\n- Breakfast: French toast\n- Lunch: Eating out\n- Dinner: Grilled steak with vegetables\n\nSunday:\n- Breakfast: Eggs benedict\n- Lunch: Leftover steak salad\n- Dinner: Roast chicken with mashed potatoes",
       "useExample": "Use example",
       "parsing": "Parsing...",
       "parseWithAI": "Parse with AI",
@@ -1783,6 +1788,179 @@
     "confirmDelete": {
       "title": "Delete Recipe",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    }
+  },
+  "mealPlanner": {
+    "title": "Meal Planner",
+    "description": "Plan your weekly meals and generate shopping lists",
+    "tabs": {
+      "overview": "Overview",
+      "import": "Import",
+      "archive": "Archive",
+      "analysis": "Analysis",
+      "history": "History"
+    },
+    "views": {
+      "calendar": "Calendar",
+      "table": "Table"
+    },
+    "navigation": {
+      "today": "Today",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "mealTypes": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "stats": {
+      "totalPlans": "Total Plans",
+      "totalMeals": "Total Meals",
+      "avgMealsPerPlan": "Avg Meals/Plan",
+      "recipeVariety": "Unique Recipes",
+      "recipeVarietySubtitle": "unique recipes"
+    },
+    "fields": {
+      "name": "Name",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "servings": "Servings",
+      "meals": "Meals",
+      "dateRange": "Date Range",
+      "mealType": "Meal Type",
+      "recipe": "Recipe",
+      "customMeal": "Custom Meal",
+      "notes": "Notes",
+      "isTemplate": "Template",
+      "isLeftover": "Leftover",
+      "status": "Status"
+    },
+    "filters": {
+      "search": "Search meal plans..."
+    },
+    "createPlan": "Create Plan",
+    "createNew": "Create New Plan",
+    "importPlan": "Import Plan",
+    "noMeal": "No meal",
+    "leftover": "Leftover",
+    "template": "Template",
+    "empty": {
+      "title": "No meal plans yet",
+      "description": "Start planning your meals by creating your first weekly meal plan."
+    },
+    "archive": {
+      "empty": {
+        "title": "No archived plans",
+        "description": "Archived meal plans will appear here."
+      }
+    },
+    "currentWeek": {
+      "title": "Current Week Summary",
+      "mealsPlanned": "Meals Planned",
+      "withRecipes": "With Recipes",
+      "uniqueRecipes": "Unique Recipes"
+    },
+    "analysis": {
+      "byMealType": "By Meal Type",
+      "mostPlanned": "Most Planned Recipes",
+      "noData": "No data available",
+      "empty": {
+        "title": "No data to analyze",
+        "description": "Create meal plans to see analytics."
+      }
+    },
+    "history": {
+      "period": "Period",
+      "months3": "Last 3 months",
+      "months6": "Last 6 months",
+      "months12": "Last 12 months",
+      "totalPlans": "Total Plans",
+      "totalMeals": "Total Meals",
+      "periodMonths": "Period (months)",
+      "monthlyBreakdown": "Monthly Breakdown",
+      "plans": "plans",
+      "meals": "meals",
+      "uniqueRecipes": "{count} unique recipes",
+      "empty": {
+        "title": "No history data",
+        "description": "Your meal planning history will appear here."
+      }
+    },
+    "form": {
+      "createTitle": "Create Meal Plan",
+      "editTitle": "Edit Meal Plan",
+      "namePlaceholder": "e.g., Week of Dec 15, 2024",
+      "selectDate": "Select date",
+      "templateDescription": "Save as a template to reuse later",
+      "createButton": "Create Plan"
+    },
+    "mealForm": {
+      "addTitle": "Add Meal",
+      "editTitle": "Edit Meal",
+      "searchRecipes": "Search recipes...",
+      "customMealPlaceholder": "e.g., Leftover pasta, Eating out",
+      "notesPlaceholder": "Add notes...",
+      "leftoverDescription": "Mark if this is a leftover meal",
+      "addButton": "Add Meal"
+    },
+    "repeat": {
+      "title": "Repeat Meal Plan",
+      "description": "Create a copy of this meal plan for a new week.",
+      "source": "Source Plan",
+      "newStartDate": "New Start Date",
+      "button": "Create Copy"
+    },
+    "generateShoppingList": {
+      "title": "Generate Shopping List",
+      "description": "Create a shopping list from this meal plan's recipes.",
+      "mealPlan": "Meal Plan",
+      "selectList": "Add to shopping list",
+      "createNew": "Create new shopping list",
+      "newListName": "List Name",
+      "listNamePlaceholder": "Enter list name...",
+      "items": "items",
+      "noLists": "No existing shopping lists",
+      "selectOrCreate": "Please select a list or create a new one",
+      "enterListName": "Please enter a list name",
+      "generating": "Generating...",
+      "generateButton": "Generate List",
+      "success": "{count} items added to shopping list",
+      "error": "Failed to generate shopping list"
+    },
+    "actions": {
+      "view": "View Plan",
+      "repeat": "Repeat Plan",
+      "generateShoppingList": "Generate Shopping List"
+    },
+    "messages": {
+      "planCreated": "Meal plan created successfully",
+      "planUpdated": "Meal plan updated successfully",
+      "planDeleted": "Meal plan deleted successfully",
+      "planRepeated": "Meal plan copied successfully",
+      "mealAdded": "Meal added successfully",
+      "mealUpdated": "Meal updated successfully",
+      "mealDeleted": "Meal deleted successfully",
+      "createError": "Failed to create meal plan",
+      "updateError": "Failed to update meal plan",
+      "deleteError": "Failed to delete meal plan",
+      "repeatError": "Failed to repeat meal plan",
+      "mealAddError": "Failed to add meal",
+      "mealUpdateError": "Failed to update meal",
+      "mealDeleteError": "Failed to delete meal",
+      "planArchived": "Meal plan archived successfully",
+      "planUnarchived": "Meal plan unarchived successfully",
+      "archiveError": "Failed to archive meal plan",
+      "unarchiveError": "Failed to unarchive meal plan",
+      "plansArchived": "{count} plans archived",
+      "plansUnarchived": "{count} plans unarchived",
+      "plansDeleted": "{count} plans deleted",
+      "bulkActionError": "Failed to perform action"
+    },
+    "import": {
+      "title": "Import Meal Plan",
+      "description": "Import meal plans from text, voice, or image."
     }
   }
 }
