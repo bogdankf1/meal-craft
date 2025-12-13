@@ -2402,5 +2402,137 @@
       "errorEstimating": "Failed to estimate nutrition",
       "enterFoodFirst": "Please enter a food name first"
     }
+  },
+  "learning": {
+    "title": "Learning & Skills",
+    "description": "Track your cooking skills, learn new techniques, and follow learning paths",
+    "tabs": {
+      "overview": "My Skills",
+      "library": "Library",
+      "learning": "Learning Paths",
+      "analytics": "Analytics"
+    },
+    "categories": {
+      "knife_skills": "Knife Skills",
+      "cooking_methods": "Cooking Methods",
+      "baking": "Baking",
+      "sauces": "Sauces",
+      "preservation": "Preservation",
+      "plating": "Plating",
+      "temperature_control": "Temperature Control",
+      "prep_techniques": "Prep Techniques",
+      "flavor_development": "Flavor Development",
+      "equipment_handling": "Equipment Handling",
+      "other": "Other",
+      "fundamentals": "Fundamentals",
+      "specialty": "Specialty",
+      "cuisine_specific": "Cuisine Specific",
+      "advanced_techniques": "Advanced Techniques"
+    },
+    "difficulties": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "mastered": "Mastered"
+    },
+    "statuses": {
+      "want_to_learn": "Want to Learn",
+      "learning": "Learning",
+      "practicing": "Practicing",
+      "mastered": "Mastered",
+      "not_started": "Not Started",
+      "in_progress": "In Progress",
+      "completed": "Completed"
+    },
+    "stats": {
+      "totalSkills": "Total Skills",
+      "mastered": "Mastered",
+      "learning": "Learning",
+      "practiceHours": "Practice Hours"
+    },
+    "streak": {
+      "current": "{days} day streak!",
+      "longest": "Longest streak: {days} days"
+    },
+    "filters": {
+      "searchSkills": "Search skills...",
+      "searchLibrary": "Search skill library...",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "difficulty": "Difficulty",
+      "allDifficulties": "All Difficulties"
+    },
+    "card": {
+      "progress": "Progress",
+      "practiced": "{count} times practiced",
+      "total": "total",
+      "remove": "Remove"
+    },
+    "library": {
+      "added": "Added",
+      "addToMySkills": "Add to My Skills",
+      "estimatedHours": "~{hours}h to learn"
+    },
+    "paths": {
+      "activePaths": "Your Active Paths",
+      "availablePaths": "Available Learning Paths",
+      "progress": "Progress",
+      "skillsCompleted": "skills completed",
+      "skills": "skills",
+      "skillsInPath": "Skills in this path",
+      "estimatedHours": "~{hours}h",
+      "featured": "Featured",
+      "startPath": "Start Path",
+      "addAllSkills": "Add All Skills to My List"
+    },
+    "analytics": {
+      "period": "Period",
+      "months3": "Last 3 months",
+      "months6": "Last 6 months",
+      "months12": "Last 12 months",
+      "skillsAdded": "Skills Added",
+      "skillsMastered": "Skills Mastered",
+      "practiceSessions": "Practice Sessions",
+      "avgPracticeHours": "Avg Practice",
+      "perMonth": "per month",
+      "byCategory": "By Category",
+      "byStatus": "By Status",
+      "byProficiency": "By Proficiency",
+      "recentPractice": "Recent Practice",
+      "noData": "No data available",
+      "empty": {
+        "title": "No Analytics Data",
+        "description": "Start adding skills to see your learning analytics."
+      }
+    },
+    "empty": {
+      "mySkills": {
+        "title": "No Skills Added Yet",
+        "description": "Browse the skill library to add skills to your learning list."
+      },
+      "library": {
+        "title": "No Skills Found",
+        "description": "No skills match your search criteria."
+      },
+      "paths": {
+        "title": "No Learning Paths Available",
+        "description": "Learning paths will be added soon."
+      }
+    },
+    "messages": {
+      "skillAdded": "Skill added to your list",
+      "skillRemoved": "Skill removed from your list",
+      "statusUpdated": "Status updated successfully",
+      "pathStarted": "Learning path started!",
+      "skillsAddedToList": "{count} skills added to your list",
+      "allSkillsAlreadyAdded": "All skills are already in your list",
+      "errorAddingSkill": "Failed to add skill",
+      "errorRemovingSkill": "Failed to remove skill",
+      "errorUpdatingStatus": "Failed to update status",
+      "errorStartingPath": "Failed to start learning path",
+      "errorAddingSkills": "Failed to add skills"
+    }
   }
 }

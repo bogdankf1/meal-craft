@@ -2402,5 +2402,170 @@
       "errorEstimating": "Не вдалося оцінити харчову цінність",
       "enterFoodFirst": "Спочатку введіть назву їжі"
     }
+  },
+  "learning": {
+    "title": "Навчання та навички",
+    "description": "Відстежуйте свій кулінарний прогрес, вивчайте нові техніки та розвивайте майстерність",
+    "tabs": {
+      "overview": "Огляд",
+      "library": "Бібліотека",
+      "learning": "Навчання",
+      "analytics": "Аналітика"
+    },
+    "categories": {
+      "knife_skills": "Робота з ножем",
+      "cooking_methods": "Методи приготування",
+      "baking": "Випічка",
+      "sauces": "Соуси",
+      "preservation": "Консервування",
+      "plating": "Сервірування",
+      "temperature_control": "Контроль температури",
+      "prep_techniques": "Техніки підготовки",
+      "flavor_development": "Розвиток смаку",
+      "equipment_handling": "Робота з обладнанням",
+      "other": "Інше",
+      "fundamentals": "Основи",
+      "specialty": "Спеціалізація",
+      "cuisine_specific": "Кухні світу",
+      "advanced_techniques": "Просунуті техніки"
+    },
+    "difficulties": {
+      "beginner": "Початківець",
+      "intermediate": "Середній",
+      "advanced": "Просунутий",
+      "expert": "Експерт"
+    },
+    "proficiencyLevels": {
+      "novice": "Новачок",
+      "beginner": "Початківець",
+      "intermediate": "Середній",
+      "advanced": "Просунутий",
+      "expert": "Експерт",
+      "master": "Майстер"
+    },
+    "statuses": {
+      "not_started": "Не розпочато",
+      "learning": "Вивчається",
+      "practicing": "Практикується",
+      "proficient": "Освоєно",
+      "mastered": "Опановано"
+    },
+    "pathStatuses": {
+      "not_started": "Не розпочато",
+      "in_progress": "В процесі",
+      "completed": "Завершено",
+      "paused": "Призупинено"
+    },
+    "stats": {
+      "totalSkills": "Всього навичок",
+      "inProgress": "В процесі",
+      "mastered": "Опановано",
+      "practiceHours": "Годин практики",
+      "activePaths": "Активних шляхів",
+      "completedPaths": "Завершених шляхів",
+      "thisMonth": "цього місяця"
+    },
+    "streak": {
+      "title": "Серія практики",
+      "days": "днів поспіль",
+      "keepGoing": "Продовжуйте!",
+      "startStreak": "Почніть серію сьогодні"
+    },
+    "filters": {
+      "search": "Пошук навичок...",
+      "category": "Категорія",
+      "difficulty": "Складність",
+      "status": "Статус",
+      "allCategories": "Всі категорії",
+      "allDifficulties": "Всі рівні",
+      "allStatuses": "Всі статуси",
+      "clear": "Очистити фільтри"
+    },
+    "card": {
+      "proficiency": "Рівень",
+      "practiceTime": "Час практики",
+      "hours": "год",
+      "lastPracticed": "Остання практика",
+      "never": "Ніколи",
+      "logPractice": "Записати практику",
+      "viewDetails": "Деталі",
+      "remove": "Видалити"
+    },
+    "library": {
+      "title": "Бібліотека навичок",
+      "description": "Досліджуйте та додавайте нові навички до свого списку",
+      "addSkill": "Додати навичку",
+      "addToMySkills": "Додати до моїх",
+      "alreadyAdded": "Вже додано",
+      "skillsCount": "{count} навичок",
+      "estimatedTime": "Орієнтовний час",
+      "prerequisites": "Передумови"
+    },
+    "paths": {
+      "title": "Навчальні шляхи",
+      "description": "Структуровані програми для розвитку кулінарних навичок",
+      "activePaths": "Ваші активні шляхи",
+      "availablePaths": "Доступні навчальні шляхи",
+      "startPath": "Розпочати шлях",
+      "continuePath": "Продовжити",
+      "progress": "Прогрес",
+      "skillsCompleted": "навичок завершено",
+      "skills": "навичок",
+      "skillsInPath": "Навички у цьому шляху",
+      "estimatedHours": "~{hours}год",
+      "featured": "Рекомендовано",
+      "completed": "завершено",
+      "estimatedDuration": "Орієнтовна тривалість",
+      "weeks": "тижнів",
+      "addAllSkills": "Додати всі навички до списку"
+    },
+    "practiceLog": {
+      "title": "Записати практику",
+      "skill": "Навичка",
+      "duration": "Тривалість (хвилин)",
+      "notes": "Нотатки",
+      "notesPlaceholder": "Що ви практикували? Що вдалося?",
+      "submit": "Зберегти",
+      "cancel": "Скасувати"
+    },
+    "analytics": {
+      "title": "Аналітика навчання",
+      "skillsByCategory": "Навички за категоріями",
+      "skillsByProficiency": "Навички за рівнем",
+      "practiceOverTime": "Практика за час",
+      "totalPracticeTime": "Загальний час практики",
+      "avgSessionLength": "Середня тривалість сесії",
+      "mostPracticed": "Найбільше практикується",
+      "recentActivity": "Остання активність",
+      "noActivity": "Немає активності"
+    },
+    "empty": {
+      "skills": {
+        "title": "У вас ще немає навичок",
+        "description": "Перейдіть до бібліотеки, щоб додати навички для відстеження"
+      },
+      "paths": {
+        "title": "Ви ще не розпочали жодного шляху",
+        "description": "Оберіть навчальний шлях, щоб почати структуроване навчання"
+      },
+      "analytics": {
+        "title": "Дані аналітики відсутні",
+        "description": "Почніть практикувати навички, щоб бачити статистику"
+      }
+    },
+    "messages": {
+      "skillAdded": "Навичку успішно додано",
+      "skillRemoved": "Навичку успішно видалено",
+      "practiceLogged": "Практику успішно записано",
+      "pathStarted": "Навчальний шлях розпочато",
+      "pathCompleted": "Вітаємо! Ви завершили навчальний шлях",
+      "skillsAddedToList": "{count} навичок додано до вашого списку",
+      "allSkillsAlreadyAdded": "Всі навички вже є у вашому списку",
+      "errorAddingSkill": "Не вдалося додати навичку",
+      "errorRemovingSkill": "Не вдалося видалити навичку",
+      "errorLoggingPractice": "Не вдалося записати практику",
+      "errorStartingPath": "Не вдалося розпочати навчальний шлях",
+      "errorAddingSkills": "Не вдалося додати навички"
+    }
   }
 }
