@@ -71,11 +71,15 @@ from app.models.nutrition import (
     HealthMetric,
 )
 
-# Learning
+# Learning & Skills
 from app.models.learning import (
-    Technique,
-    UserTechniqueProgress,
+    Skill,
+    UserSkill,
+    LearningPath,
+    UserLearningPath,
+    SkillPracticeLog,
     UserNote,
+    learning_path_skills,
 )
 
 # AI
@@ -135,10 +139,14 @@ __all__ = [
     "NutritionGoal",
     "NutritionLog",
     "HealthMetric",
-    # Learning
-    "Technique",
-    "UserTechniqueProgress",
+    # Learning & Skills
+    "Skill",
+    "UserSkill",
+    "LearningPath",
+    "UserLearningPath",
+    "SkillPracticeLog",
     "UserNote",
+    "learning_path_skills",
     # AI
     "TextParsingHistory",
     "CategoryCorrection",

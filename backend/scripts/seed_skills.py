@@ -1,0 +1,550 @@
+"""Seed script to populate the skills library with culinary skills."""
+
+import asyncio
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from sqlalchemy import select, func
+from app.core.database import async_session_maker
+from app.models.learning import Skill
+
+# Define skills for each category
+SKILLS_DATA = [
+    # ============ KNIFE SKILLS ============
+    {
+        "name": "Basic Knife Grip",
+        "description": "Learn the proper way to hold a chef's knife for safety and control. Master the pinch grip technique.",
+        "category": "knife_skills",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Grip the blade between thumb and forefinger at the bolster\n2. Wrap remaining fingers around the handle\n3. Keep your grip firm but not tight\n4. Practice rocking motion on a cutting board",
+        "tips": "Your thumb and forefinger should be on the blade itself, not the handle. This gives you maximum control.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Julienne Cut",
+        "description": "Create uniform matchstick-sized strips, typically 3mm x 3mm x 5cm. Essential for stir-fries and garnishes.",
+        "category": "knife_skills",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Square off the vegetable\n2. Cut into 5cm lengths\n3. Slice into 3mm thick planks\n4. Stack planks and cut into 3mm strips",
+        "tips": "Use a mandoline for perfect consistency. Keep fingers curled in claw grip.",
+        "related_cuisines": ["french", "asian"],
+    },
+    {
+        "name": "Brunoise Cut",
+        "description": "Fine 3mm cube dice, used for sauces, soups, and garnishes. Builds on julienne technique.",
+        "category": "knife_skills",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 5,
+        "instructions": "1. First create julienne strips\n2. Line up strips neatly\n3. Cut crosswise into 3mm cubes\n4. Practice for uniformity",
+        "tips": "The brunoise is simply julienne cut crosswise. Consistency matters more than speed.",
+        "related_cuisines": ["french"],
+    },
+    {
+        "name": "Chiffonade",
+        "description": "Thin ribbon cuts for leafy herbs and greens. Perfect for basil, mint, and lettuce garnishes.",
+        "category": "knife_skills",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 1,
+        "instructions": "1. Stack leaves neatly\n2. Roll tightly into a cylinder\n3. Slice thinly across the roll\n4. Separate ribbons gently",
+        "tips": "Use a very sharp knife to avoid bruising delicate herbs. Roll leaves with the grain.",
+        "related_cuisines": ["french", "italian"],
+    },
+    {
+        "name": "Tourne Cut",
+        "description": "Create 7-sided football-shaped vegetables. A classical French technique for elegant presentation.",
+        "category": "knife_skills",
+        "difficulty": "advanced",
+        "estimated_learning_hours": 10,
+        "instructions": "1. Cut vegetable into 5cm barrel shapes\n2. Hold at an angle\n3. Make 7 curved cuts rotating as you go\n4. Each cut should be equal",
+        "tips": "This is a benchmark of knife skills mastery. Practice with potatoes first as they're forgiving.",
+        "related_cuisines": ["french"],
+    },
+    {
+        "name": "Mincing",
+        "description": "Very fine, uniform cutting technique for garlic, herbs, and aromatics.",
+        "category": "knife_skills",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Rough chop the ingredient\n2. Keep knife tip on board\n3. Rock blade in arc motion\n4. Use other hand to guide",
+        "tips": "Sprinkle a pinch of salt on garlic when mincing to prevent it from sticking to your knife.",
+        "related_cuisines": ["all"],
+    },
+
+    # ============ COOKING METHODS ============
+    {
+        "name": "Sautéing",
+        "description": "High-heat cooking in a small amount of fat with constant motion. Foundation of stovetop cooking.",
+        "category": "cooking_methods",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 3,
+        "instructions": "1. Heat pan until very hot\n2. Add oil and let it shimmer\n3. Add ingredients in single layer\n4. Toss or stir frequently",
+        "tips": "Don't overcrowd the pan. Cook in batches if needed. Let the pan recover heat between batches.",
+        "related_cuisines": ["french", "italian", "asian"],
+    },
+    {
+        "name": "Braising",
+        "description": "Combination cooking method using both dry and wet heat. Transforms tough cuts into tender dishes.",
+        "category": "cooking_methods",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 6,
+        "instructions": "1. Sear meat on all sides\n2. Add aromatics and liquid (1/3 to 1/2 way up)\n3. Cover and cook low and slow\n4. Rest meat before slicing",
+        "tips": "The best braising cuts have lots of collagen (chuck, short ribs, shanks). Low temp is key - 150-160°C.",
+        "related_cuisines": ["french", "italian", "german"],
+    },
+    {
+        "name": "Poaching",
+        "description": "Gentle cooking in simmering liquid. Ideal for delicate proteins like eggs, fish, and chicken.",
+        "category": "cooking_methods",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Bring liquid to 70-80°C (barely simmering)\n2. Gently add protein\n3. Maintain temperature (no bubbles)\n4. Cook until just done",
+        "tips": "Add vinegar when poaching eggs to help whites set. Use flavorful liquid to add taste.",
+        "related_cuisines": ["french", "asian"],
+    },
+    {
+        "name": "Stir-Frying",
+        "description": "High-heat wok cooking with constant motion. Essential for authentic Asian cuisine.",
+        "category": "cooking_methods",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 5,
+        "instructions": "1. Heat wok until smoking\n2. Add oil, swirl to coat\n3. Add ingredients in order (longest cooking first)\n4. Keep everything moving",
+        "tips": "Prep everything before starting (mise en place). Once you start, there's no time to pause.",
+        "related_cuisines": ["chinese", "thai", "vietnamese"],
+    },
+    {
+        "name": "Deep Frying",
+        "description": "Submerging food in hot oil for crispy results. Master temperature control for perfect texture.",
+        "category": "cooking_methods",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Heat oil to 175-190°C\n2. Pat food completely dry\n3. Fry in small batches\n4. Drain on wire rack",
+        "tips": "Use a thermometer. Oil temperature drops when food is added - adjust heat accordingly.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Grilling",
+        "description": "Direct high-heat cooking over flame or coals. Creates distinctive char and smoky flavors.",
+        "category": "cooking_methods",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Preheat grill thoroughly\n2. Clean and oil grates\n3. Create hot and cool zones\n4. Don't move food too often",
+        "tips": "Only flip once for best grill marks. Let meat rest after grilling to redistribute juices.",
+        "related_cuisines": ["american", "korean", "argentinian"],
+    },
+    {
+        "name": "Roasting",
+        "description": "Dry-heat oven cooking for meats and vegetables. Develops deep flavors through caramelization.",
+        "category": "cooking_methods",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Preheat oven fully\n2. Season and oil food\n3. Use rack for air circulation\n4. Let meat rest after cooking",
+        "tips": "Start high (220°C) for browning, then reduce heat for even cooking. Use a meat thermometer.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Steaming",
+        "description": "Cooking with water vapor for healthy, gentle results. Preserves nutrients and natural flavors.",
+        "category": "cooking_methods",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Bring water to boil in steamer\n2. Place food in basket (not touching water)\n3. Cover tightly\n4. Don't overcook - check frequently",
+        "tips": "Add aromatics to the water for subtle flavor. Bamboo steamers work great for dumplings.",
+        "related_cuisines": ["chinese", "japanese", "thai"],
+    },
+    {
+        "name": "Sous Vide",
+        "description": "Precision temperature cooking in vacuum-sealed bags. Ultimate control for perfect doneness.",
+        "category": "cooking_methods",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 5,
+        "instructions": "1. Season and vacuum seal food\n2. Set water bath to target temp\n3. Cook for specified time\n4. Sear quickly for color (optional)",
+        "tips": "Proteins can't overcook if held at target temp. Great for meal prep - cook ahead and sear to serve.",
+        "related_cuisines": ["french", "modern"],
+    },
+
+    # ============ BAKING ============
+    {
+        "name": "Bread Kneading",
+        "description": "Develop gluten through proper dough manipulation. The foundation of bread making.",
+        "category": "baking",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Push dough away with heel of hand\n2. Fold dough back over itself\n3. Rotate 90 degrees\n4. Repeat 10-15 minutes until smooth",
+        "tips": "Dough is ready when it springs back when poked. Don't add too much flour - sticky is okay.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Laminated Dough",
+        "description": "Create flaky layers by folding butter into dough. Used for croissants, puff pastry, and Danish.",
+        "category": "baking",
+        "difficulty": "advanced",
+        "estimated_learning_hours": 15,
+        "instructions": "1. Encase cold butter block in dough\n2. Roll out evenly\n3. Fold in thirds (single fold)\n4. Chill, repeat 4-6 times",
+        "tips": "Keep everything cold. If butter breaks through, chill immediately. Patience is key.",
+        "related_cuisines": ["french"],
+    },
+    {
+        "name": "Tempering Chocolate",
+        "description": "Control chocolate crystallization for glossy finish and satisfying snap.",
+        "category": "baking",
+        "difficulty": "advanced",
+        "estimated_learning_hours": 8,
+        "instructions": "1. Melt chocolate to 50°C\n2. Cool to 27°C while stirring\n3. Reheat to 31-32°C (dark)\n4. Maintain temp while working",
+        "tips": "Use a marble slab for tabling method. Any water will seize the chocolate. Keep dry!",
+        "related_cuisines": ["french", "belgian"],
+    },
+    {
+        "name": "Pie Crust",
+        "description": "Create tender, flaky pastry for pies and tarts. Balance of fat, flour, and water.",
+        "category": "baking",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 5,
+        "instructions": "1. Cut cold butter into flour until pea-sized\n2. Add ice water gradually\n3. Mix just until it comes together\n4. Chill before rolling",
+        "tips": "Cold ingredients and minimal handling are key. Visible butter pieces create flakiness.",
+        "related_cuisines": ["american", "french"],
+    },
+    {
+        "name": "Meringue Making",
+        "description": "Whip egg whites to various stages for different applications. French, Swiss, and Italian methods.",
+        "category": "baking",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Ensure bowl and whisk are grease-free\n2. Add cream of tartar to whites\n3. Whip to soft peaks\n4. Add sugar gradually to stiff peaks",
+        "tips": "Room temperature eggs whip better. Copper bowls stabilize meringue. Don't overwhip.",
+        "related_cuisines": ["french"],
+    },
+    {
+        "name": "Sourdough Starter",
+        "description": "Create and maintain wild yeast culture for naturally leavened breads.",
+        "category": "baking",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 10,
+        "instructions": "1. Mix equal parts flour and water\n2. Cover loosely, leave at room temp\n3. Discard half and feed daily\n4. Ready when doubles in 4-8 hours",
+        "tips": "Use whole grain flour initially for more wild yeast. Consistent feeding schedule is important.",
+        "related_cuisines": ["all"],
+    },
+
+    # ============ SAUCES ============
+    {
+        "name": "Mother Sauces",
+        "description": "Master the five French mother sauces: béchamel, velouté, espagnole, hollandaise, and tomato.",
+        "category": "sauces",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 10,
+        "instructions": "Each sauce has unique technique. Start with béchamel (white sauce) and tomato, then advance to others.",
+        "tips": "Understanding roux thickness is crucial. Know your daughter sauces for each mother.",
+        "related_cuisines": ["french"],
+    },
+    {
+        "name": "Emulsification",
+        "description": "Combine oil and water-based ingredients into stable sauces like mayonnaise and vinaigrettes.",
+        "category": "sauces",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Start with emulsifier (egg, mustard)\n2. Add oil very slowly while whisking\n3. Stream becomes faster as sauce forms\n4. Season to taste",
+        "tips": "All ingredients should be room temperature. If it breaks, start fresh with new egg yolk.",
+        "related_cuisines": ["french", "mediterranean"],
+    },
+    {
+        "name": "Pan Sauce",
+        "description": "Create quick flavorful sauces from fond (browned bits) left after searing meat.",
+        "category": "sauces",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Remove protein, keep fond\n2. Deglaze with wine or stock\n3. Scrape up browned bits\n4. Reduce and finish with butter",
+        "tips": "The fond is flavor gold - don't wash that pan! Mount with cold butter for glossy finish.",
+        "related_cuisines": ["french", "american"],
+    },
+    {
+        "name": "Reduction",
+        "description": "Concentrate flavors by simmering liquids to evaporate water. Essential sauce technique.",
+        "category": "sauces",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Bring liquid to simmer\n2. Do not cover\n3. Stir occasionally\n4. Test consistency on cold plate",
+        "tips": "Reduction intensifies salt - season after reducing. Wide pan = faster reduction.",
+        "related_cuisines": ["french", "italian"],
+    },
+    {
+        "name": "Roux",
+        "description": "Cooked flour and fat mixture for thickening sauces and soups. White, blonde, and brown varieties.",
+        "category": "sauces",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Melt butter over medium heat\n2. Whisk in equal parts flour\n3. Cook while stirring constantly\n4. Color determines use and time",
+        "tips": "White roux thickens most, brown roux adds flavor but thickens less. Never stop stirring.",
+        "related_cuisines": ["french", "cajun"],
+    },
+
+    # ============ PRESERVATION ============
+    {
+        "name": "Pickling",
+        "description": "Preserve vegetables and fruits in acidic brine. Quick pickles to fermented varieties.",
+        "category": "preservation",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 3,
+        "instructions": "1. Prepare vegetables\n2. Heat brine (vinegar, water, salt, sugar)\n3. Pour over vegetables\n4. Seal and refrigerate",
+        "tips": "Quick pickles are ready in 24 hours. Use proper canning for shelf-stable pickles.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Fermentation",
+        "description": "Use beneficial bacteria to preserve and transform foods. Sauerkraut, kimchi, and more.",
+        "category": "preservation",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 8,
+        "instructions": "1. Salt vegetables (2-3% by weight)\n2. Pack tightly in jar\n3. Keep submerged in liquid\n4. Ferment at room temp 1-4 weeks",
+        "tips": "Salt creates environment for good bacteria. Mold on surface is usually fine - skim it off.",
+        "related_cuisines": ["korean", "german", "japanese"],
+    },
+    {
+        "name": "Curing",
+        "description": "Preserve proteins with salt, sugar, and spices. Gravlax, bacon, and cured meats.",
+        "category": "preservation",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 6,
+        "instructions": "1. Create cure mixture (salt, sugar, spices)\n2. Apply evenly to protein\n3. Refrigerate for specified time\n4. Rinse and dry before using",
+        "tips": "Use pink curing salt (Prague powder) for safety in some cures. Follow recipes carefully.",
+        "related_cuisines": ["scandinavian", "italian", "american"],
+    },
+    {
+        "name": "Jam Making",
+        "description": "Preserve fruits with sugar and pectin. Master proper set and canning techniques.",
+        "category": "preservation",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Combine fruit, sugar, pectin, acid\n2. Boil to 105°C\n3. Test set on cold plate\n4. Can in sterilized jars",
+        "tips": "Underripe fruit has more pectin. Skim foam for clear jam. Process in water bath for shelf stability.",
+        "related_cuisines": ["all"],
+    },
+
+    # ============ PLATING ============
+    {
+        "name": "Color Balance",
+        "description": "Create visually appealing plates using color theory and contrast.",
+        "category": "plating",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Choose a focal point protein\n2. Add complementary vegetable colors\n3. Use sauces for accent\n4. Consider plate color",
+        "tips": "Odd numbers of elements look more natural. White plates let food shine. Avoid color monotony.",
+        "related_cuisines": ["modern", "french"],
+    },
+    {
+        "name": "Sauce Plating",
+        "description": "Apply sauces artistically as base, accent, or drizzle. Dots, swooshes, and pools.",
+        "category": "plating",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 3,
+        "instructions": "1. Choose application method\n2. Use squeeze bottles for control\n3. Practice swoosh with spoon back\n4. Build design before adding protein",
+        "tips": "Warm plates keep sauce fluid longer. Cool sauce slightly before plating for control.",
+        "related_cuisines": ["modern", "french"],
+    },
+    {
+        "name": "Height and Dimension",
+        "description": "Create visual interest with layering and vertical elements on the plate.",
+        "category": "plating",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 3,
+        "instructions": "1. Start with base element\n2. Add height with stacking\n3. Use garnishes for vertical interest\n4. Keep it stable",
+        "tips": "Ring molds help create perfect stacks. Don't sacrifice eating experience for aesthetics.",
+        "related_cuisines": ["modern", "french", "japanese"],
+    },
+
+    # ============ TEMPERATURE CONTROL ============
+    {
+        "name": "Meat Doneness",
+        "description": "Cook proteins to perfect internal temperatures. Use thermometer and touch test.",
+        "category": "temperature_control",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 3,
+        "instructions": "Beef: Rare 52°C, Medium-Rare 57°C, Medium 63°C, Well 71°C\nPoultry: 74°C\nPork: 63°C (with rest)",
+        "tips": "Instant-read thermometer is essential. Account for carryover cooking during rest.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Sugar Stages",
+        "description": "Identify candy stages by temperature and behavior. Thread to hard crack.",
+        "category": "temperature_control",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "Thread: 110°C, Soft Ball: 115°C, Firm Ball: 120°C, Hard Ball: 130°C, Soft Crack: 140°C, Hard Crack: 150°C",
+        "tips": "Use candy thermometer. Have ice water ready for testing. Don't stir once boiling.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Oil Temperature",
+        "description": "Maintain proper frying temperatures for different foods and desired results.",
+        "category": "temperature_control",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "Light frying: 160-170°C\nStandard frying: 175-185°C\nHigh heat: 190-200°C\nNever exceed smoke point",
+        "tips": "Invest in a deep fry thermometer. Smaller batches maintain temperature better.",
+        "related_cuisines": ["all"],
+    },
+
+    # ============ PREP TECHNIQUES ============
+    {
+        "name": "Mise en Place",
+        "description": "Organize and prepare all ingredients before cooking. Essential professional habit.",
+        "category": "prep_techniques",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Read entire recipe first\n2. Gather all ingredients\n3. Prep and measure everything\n4. Arrange in order of use",
+        "tips": "Use small bowls for prepped ingredients. Clean as you go. This habit transforms your cooking.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Blanching",
+        "description": "Brief boiling followed by ice bath. Set color, remove skin, or par-cook vegetables.",
+        "category": "prep_techniques",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Boil large pot of salted water\n2. Prepare ice bath\n3. Cook briefly (30 sec - 3 min)\n4. Transfer immediately to ice bath",
+        "tips": "Salt the water like the sea. Don't overcrowd the pot. Dry vegetables well after blanching.",
+        "related_cuisines": ["french", "italian"],
+    },
+    {
+        "name": "Marinating",
+        "description": "Infuse proteins and vegetables with flavor through soaking in seasoned liquids.",
+        "category": "prep_techniques",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Combine acid, oil, aromatics\n2. Submerge food completely\n3. Refrigerate for specified time\n4. Pat dry before cooking",
+        "tips": "Acid marinades work fast - don't over-marinate delicate proteins. Save marinade for sauce.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Butterflying",
+        "description": "Split proteins for even cooking and stuffing. Chicken, shrimp, and steaks.",
+        "category": "prep_techniques",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 3,
+        "instructions": "1. Place protein flat\n2. Cut parallel to board, not all the way through\n3. Open like a book\n4. Pound to even thickness if needed",
+        "tips": "Sharp knife is essential. For chicken, follow backbone removal for spatchcocking.",
+        "related_cuisines": ["all"],
+    },
+
+    # ============ FLAVOR DEVELOPMENT ============
+    {
+        "name": "Seasoning",
+        "description": "Balance salt, acid, fat, and heat. The foundation of delicious food.",
+        "category": "flavor_development",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Season throughout cooking\n2. Taste constantly\n3. Add acid to brighten\n4. Fat carries flavor, heat adds interest",
+        "tips": "Underseasoned food is the #1 home cooking mistake. Season early and often. Finish with flaky salt.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Maillard Reaction",
+        "description": "Create deep flavors through high-heat browning. The science of deliciousness.",
+        "category": "flavor_development",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 3,
+        "instructions": "1. Dry surface of food thoroughly\n2. Heat pan/grill until very hot\n3. Don't move food too soon\n4. Brown all sides",
+        "tips": "Moisture is the enemy of browning. Pat dry! High heat, dry surface, patience = perfect crust.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Building Layers",
+        "description": "Develop complex flavors by adding ingredients at different stages of cooking.",
+        "category": "flavor_development",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Start with aromatic base\n2. Toast spices to bloom\n3. Build liquid layers\n4. Finish with fresh elements",
+        "tips": "Each layer adds depth. Raw garlic ≠ sautéed garlic ≠ roasted garlic. Use all three!",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Umami Enhancement",
+        "description": "Boost savory depth with ingredients high in glutamates. Natural MSG.",
+        "category": "flavor_development",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 3,
+        "instructions": "Add umami bombs: parmesan, miso, fish sauce, tomato paste, mushrooms, soy sauce, anchovies",
+        "tips": "A splash of fish sauce or soy improves almost any savory dish without being detectable.",
+        "related_cuisines": ["asian", "italian"],
+    },
+
+    # ============ EQUIPMENT HANDLING ============
+    {
+        "name": "Wok Control",
+        "description": "Master high-heat wok cooking with proper handling and heat management.",
+        "category": "equipment_handling",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 6,
+        "instructions": "1. Season wok properly\n2. Heat until smoking\n3. Learn tossing technique\n4. Control heat zones",
+        "tips": "Never wash with soap after seasoning. The wok should smoke before adding oil. Practice tossing with rice.",
+        "related_cuisines": ["chinese", "thai", "vietnamese"],
+    },
+    {
+        "name": "Cast Iron Care",
+        "description": "Season, maintain, and cook with cast iron for lifetime use.",
+        "category": "equipment_handling",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Season with thin oil layer at 250°C\n2. Repeat 3-4 times initially\n3. Clean with salt and oil\n4. Never soak in water",
+        "tips": "Cast iron improves with use. Don't fear rust - it's recoverable. Preheat slowly for even heat.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Knife Sharpening",
+        "description": "Maintain razor-sharp edges using whetstones and honing steels.",
+        "category": "equipment_handling",
+        "difficulty": "intermediate",
+        "estimated_learning_hours": 4,
+        "instructions": "1. Soak whetstone 10-15 min\n2. Hold knife at 15-20° angle\n3. Stroke edge-leading across stone\n4. Alternate sides equally",
+        "tips": "Honing steel maintains edge between sharpenings. Sharp knife is safer than dull. Practice on cheap knives first.",
+        "related_cuisines": ["all"],
+    },
+    {
+        "name": "Mandoline Use",
+        "description": "Create uniform slices quickly and safely. Essential for precision prep.",
+        "category": "equipment_handling",
+        "difficulty": "beginner",
+        "estimated_learning_hours": 2,
+        "instructions": "1. Always use guard\n2. Apply even pressure\n3. Keep fingers clear\n4. Use smooth, quick strokes",
+        "tips": "Cut-resistant gloves are worth the investment. Even pros cut themselves. Respect the blade.",
+        "related_cuisines": ["all"],
+    },
+]
+
+
+async def seed_skills():
+    """Seed the database with culinary skills."""
+    async with async_session_maker() as session:
+        # Check if skills already exist
+        result = await session.execute(select(func.count(Skill.id)))
+        count = result.scalar()
+
+        if count > 0:
+            print(f"Skills already exist ({count} found). Skipping seed.")
+            return
+
+        print(f"Seeding {len(SKILLS_DATA)} skills...")
+
+        for skill_data in SKILLS_DATA:
+            skill = Skill(
+                name=skill_data["name"],
+                description=skill_data.get("description"),
+                category=skill_data.get("category"),
+                difficulty=skill_data.get("difficulty"),
+                estimated_learning_hours=skill_data.get("estimated_learning_hours"),
+                instructions=skill_data.get("instructions"),
+                tips=skill_data.get("tips"),
+                related_cuisines=skill_data.get("related_cuisines"),
+                is_active=True,
+            )
+            session.add(skill)
+
+        await session.commit()
+        print(f"Successfully seeded {len(SKILLS_DATA)} skills!")
+
+
+if __name__ == "__main__":
+    asyncio.run(seed_skills())
