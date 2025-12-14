@@ -38,6 +38,7 @@ import {
   type ShoppingListItem,
 } from "@/lib/api/shopping-lists-api";
 import { ShoppingListItemForm } from "./shopping-list-item-form";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 interface ShoppingListDetailProps {
   listId: string;
@@ -66,6 +67,7 @@ export function ShoppingListDetail({ listId }: ShoppingListDetailProps) {
   const t = useTranslations("shoppingLists");
   const tGroceries = useTranslations("groceries");
   const tCommon = useTranslations("common");
+  const { formatPriceFromUAH } = useCurrency();
 
   const [itemFormOpen, setItemFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ShoppingListItem | null>(null);
@@ -243,7 +245,7 @@ export function ShoppingListDetail({ listId }: ShoppingListDetailProps) {
             <span>{progress}% {t("detail.complete")}</span>
             {list.estimated_cost && (
               <span>
-                {t("detail.estimatedCost")}: {list.estimated_cost.toFixed(2)} ₴
+                {t("detail.estimatedCost")}: {formatPriceFromUAH(list.estimated_cost)}
               </span>
             )}
           </div>

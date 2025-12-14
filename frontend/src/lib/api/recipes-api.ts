@@ -386,6 +386,129 @@ export interface AddToShoppingListRequest {
   exclude_ingredient_ids?: string[] | null;
 }
 
+// ============ AI Suggestion Types ============
+
+export type CuisineType =
+  | "italian"
+  | "mexican"
+  | "chinese"
+  | "japanese"
+  | "indian"
+  | "thai"
+  | "french"
+  | "american"
+  | "mediterranean"
+  | "korean"
+  | "vietnamese"
+  | "greek"
+  | "spanish"
+  | "middle_eastern"
+  | "ukrainian"
+  | "other";
+
+export const CUISINE_TYPES: { value: CuisineType; label: string }[] = [
+  { value: "italian", label: "Italian" },
+  { value: "mexican", label: "Mexican" },
+  { value: "chinese", label: "Chinese" },
+  { value: "japanese", label: "Japanese" },
+  { value: "indian", label: "Indian" },
+  { value: "thai", label: "Thai" },
+  { value: "french", label: "French" },
+  { value: "american", label: "American" },
+  { value: "mediterranean", label: "Mediterranean" },
+  { value: "korean", label: "Korean" },
+  { value: "vietnamese", label: "Vietnamese" },
+  { value: "greek", label: "Greek" },
+  { value: "spanish", label: "Spanish" },
+  { value: "middle_eastern", label: "Middle Eastern" },
+  { value: "ukrainian", label: "Ukrainian" },
+  { value: "other", label: "Other" },
+];
+
+export type MealType =
+  | "quick_easy"
+  | "healthy"
+  | "comfort_food"
+  | "vegetarian"
+  | "vegan"
+  | "low_carb"
+  | "high_protein"
+  | "budget_friendly"
+  | "gourmet"
+  | "kid_friendly"
+  | "one_pot"
+  | "meal_prep"
+  | "party_food"
+  | "soup_stew"
+  | "salad"
+  | "pasta"
+  | "rice_grain"
+  | "seafood"
+  | "meat"
+  | "baked_goods";
+
+export const MEAL_TYPES: { value: MealType; label: string }[] = [
+  { value: "quick_easy", label: "Quick & Easy" },
+  { value: "healthy", label: "Healthy" },
+  { value: "comfort_food", label: "Comfort Food" },
+  { value: "vegetarian", label: "Vegetarian" },
+  { value: "vegan", label: "Vegan" },
+  { value: "low_carb", label: "Low Carb" },
+  { value: "high_protein", label: "High Protein" },
+  { value: "budget_friendly", label: "Budget Friendly" },
+  { value: "gourmet", label: "Gourmet" },
+  { value: "kid_friendly", label: "Kid Friendly" },
+  { value: "one_pot", label: "One-Pot" },
+  { value: "meal_prep", label: "Meal Prep" },
+  { value: "party_food", label: "Party Food" },
+  { value: "soup_stew", label: "Soups & Stews" },
+  { value: "salad", label: "Salads" },
+  { value: "pasta", label: "Pasta" },
+  { value: "rice_grain", label: "Rice & Grains" },
+  { value: "seafood", label: "Seafood" },
+  { value: "meat", label: "Meat" },
+  { value: "baked_goods", label: "Baked Goods" },
+];
+
+export interface RecipeSuggestionRequest {
+  cuisine_type?: CuisineType | null;
+  meal_type?: MealType | null;
+  category?: RecipeCategory | null;
+  servings?: number;
+  max_prep_time?: number | null;
+  max_cook_time?: number | null;
+  difficulty?: RecipeDifficulty | null;
+  dietary_restrictions?: string[] | null;
+  include_ingredients?: string[] | null;
+  exclude_ingredients?: string[] | null;
+  count?: number;
+}
+
+export interface RecipeSuggestionItem {
+  name: string;
+  description: string;
+  category: string | null;
+  cuisine_type: string | null;
+  prep_time: number | null;
+  cook_time: number | null;
+  servings: number;
+  difficulty: string | null;
+  instructions: string;
+  ingredients: RecipeIngredientCreate[];
+  tags: string[] | null;
+  dietary_info: string[] | null;
+  estimated_calories: number | null;
+  tips: string | null;
+}
+
+export interface RecipeSuggestionResponse {
+  suggestions: RecipeSuggestionItem[];
+  total_count: number;
+  filters_applied: Record<string, unknown>;
+  success: boolean;
+  message: string | null;
+}
+
 // ============ API Definition ============
 
 export const recipesApi = baseApi.injectEndpoints({
@@ -730,6 +853,17 @@ export const recipesApi = baseApi.injectEndpoints({
       }),
     }),
 
+    // ============ AI Suggestions ============
+
+    // Get AI recipe suggestions
+    suggestRecipes: builder.mutation<RecipeSuggestionResponse, RecipeSuggestionRequest>({
+      query: (body) => ({
+        url: "/recipes/suggest",
+        method: "POST",
+        body,
+      }),
+    }),
+
     // ============ Nutrition Calculation ============
 
     // Calculate and save nutrition for a single recipe using AI
@@ -811,6 +945,8 @@ export const {
   useParseRecipeVoiceMutation,
   useParseRecipeImageMutation,
   useParseRecipeUrlMutation,
+  // AI Suggestions
+  useSuggestRecipesMutation,
   // Nutrition Calculation
   useRecalculateRecipeNutritionMutation,
   useBulkRecalculateNutritionMutation,

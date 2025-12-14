@@ -58,11 +58,13 @@ import {
   type ShoppingListSummary,
   type ShoppingListFilters,
 } from "@/lib/api/shopping-lists-api";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 export function ShoppingListsContent() {
   const t = useTranslations("shoppingLists");
   const tCommon = useTranslations("common");
   const tGroceries = useTranslations("groceries");
+  const { formatPriceFromUAH } = useCurrency();
 
   // State for active items
   const [filters, setFilters] = useState<ShoppingListFilters>({
@@ -152,10 +154,7 @@ export function ShoppingListsContent() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `${new Intl.NumberFormat("uk-UA", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)} ₴`;
+    return formatPriceFromUAH(amount);
   };
 
   const hasLists = (listsData?.total || 0) > 0;

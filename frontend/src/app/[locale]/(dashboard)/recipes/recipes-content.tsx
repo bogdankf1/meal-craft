@@ -19,6 +19,7 @@ import {
   Search,
   CalendarCheck,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -54,6 +55,7 @@ import {
   CollectionManager,
   AddToCollectionDialog,
   AddToShoppingListDialog,
+  AiRecipeSuggestionsDialog,
 } from "@/components/modules/recipes";
 import {
   useGetRecipesQuery,
@@ -103,6 +105,7 @@ export function RecipesContent() {
   const [selectedCollection, setSelectedCollection] = useState<RecipeCollection | null>(null);
   const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
   const [selectedRecipeForShoppingList, setSelectedRecipeForShoppingList] = useState<Recipe | null>(null);
+  const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter states
@@ -316,6 +319,10 @@ export function RecipesContent() {
                   <DropdownMenuItem onClick={handleAddClick}>
                     <Plus className="h-4 w-4 mr-2" />
                     {t("addSingle")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setAiSuggestionsOpen(true)}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {t("aiSuggestions.title")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigateToTab("import")}>
                     <Import className="h-4 w-4 mr-2" />
@@ -617,6 +624,16 @@ export function RecipesContent() {
           onSuccess={() => setSelectedRecipeForShoppingList(null)}
         />
       )}
+
+      {/* AI Recipe Suggestions Dialog */}
+      <AiRecipeSuggestionsDialog
+        open={aiSuggestionsOpen}
+        onOpenChange={setAiSuggestionsOpen}
+        onSuccess={() => {
+          // Refresh data after adding new recipes
+          setFilters((prev) => ({ ...prev }));
+        }}
+      />
     </div>
   );
 }

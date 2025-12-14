@@ -24,6 +24,7 @@ import {
   useCreateCheckoutSessionMutation,
   useGetSubscriptionStatusQuery,
 } from "@/lib/api/billing-api";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 interface TierFeature {
   name: string;
@@ -34,6 +35,7 @@ export default function PricingPage() {
   const t = useTranslations("pricing");
   const tCommon = useTranslations("common");
   const router = useRouter();
+  const { formatPriceFromUSD, currency } = useCurrency();
 
   const { data: tiers, isLoading: tiersLoading } = useGetTiersQuery();
   const { data: subscriptionStatus } = useGetSubscriptionStatusQuery();
@@ -236,7 +238,7 @@ export default function PricingPage() {
                   </CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold tracking-tight text-foreground">
-                      {tier.price_monthly} ₴
+                      {formatPriceFromUSD(tier.price_monthly ?? 0)}
                     </span>
                     <span className="text-muted-foreground">
                       {t("page.perMonth")}
@@ -291,7 +293,7 @@ export default function PricingPage() {
       </div>
 
       <div className="text-center mt-12 text-muted-foreground">
-        <p>{t("page.footer")}</p>
+        <p>{t("page.footer", { currency })}</p>
       </div>
 
       {/* Payment Method Modal */}

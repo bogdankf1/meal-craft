@@ -26,7 +26,9 @@
     "help": "Help Center",
     "settings": "Settings",
     "admin": "Admin Panel",
-    "pricing": "Pricing"
+    "pricing": "Pricing",
+    "login": "Log In",
+    "logout": "Log Out"
   },
   "auth": {
     "login": "Log In",
@@ -94,7 +96,7 @@
       "subtitle": "Start free and upgrade as you grow. All plans include a 14-day money-back guarantee.",
       "recommended": "RECOMMENDED",
       "perMonth": "/month",
-      "footer": "All prices in USD. Cancel anytime."
+      "footer": "All prices in {currency}. Cancel anytime."
     },
     "buttons": {
       "currentPlan": "Current Plan",
@@ -1549,15 +1551,43 @@
     "cuisines": {
       "italian": "Italian",
       "mexican": "Mexican",
-      "asian": "Asian",
-      "american": "American",
-      "french": "French",
-      "mediterranean": "Mediterranean",
-      "indian": "Indian",
-      "ukrainian": "Ukrainian",
-      "japanese": "Japanese",
       "chinese": "Chinese",
+      "japanese": "Japanese",
+      "indian": "Indian",
+      "thai": "Thai",
+      "french": "French",
+      "american": "American",
+      "mediterranean": "Mediterranean",
+      "korean": "Korean",
+      "vietnamese": "Vietnamese",
+      "greek": "Greek",
+      "spanish": "Spanish",
+      "middle_eastern": "Middle Eastern",
+      "ukrainian": "Ukrainian",
+      "asian": "Asian",
       "other": "Other"
+    },
+    "mealTypes": {
+      "quick_easy": "Quick & Easy",
+      "healthy": "Healthy",
+      "comfort_food": "Comfort Food",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "low_carb": "Low Carb",
+      "high_protein": "High Protein",
+      "budget_friendly": "Budget Friendly",
+      "gourmet": "Gourmet",
+      "kid_friendly": "Kid Friendly",
+      "one_pot": "One-Pot",
+      "meal_prep": "Meal Prep",
+      "party_food": "Party Food",
+      "soup_stew": "Soups & Stews",
+      "salad": "Salads",
+      "pasta": "Pasta",
+      "rice_grain": "Rice & Grains",
+      "seafood": "Seafood",
+      "meat": "Meat",
+      "baked_goods": "Baked Goods"
     },
     "units": {
       "pcs": "pcs",
@@ -1810,6 +1840,64 @@
     "confirmDelete": {
       "title": "Delete Recipe",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    },
+    "aiSuggestions": {
+      "title": "AI Recipe Suggestions",
+      "description": "Let AI suggest delicious recipes based on your preferences",
+      "generate": "Generate Recipes",
+      "regenerate": "Generate New",
+      "generating": "Generating...",
+      "saving": "Saving...",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "selected": "{count} selected",
+      "addSelected": "Add {count} Recipes",
+      "recipesSaved": "{count} recipes added successfully",
+      "errorGenerating": "Failed to generate suggestions",
+      "errorSaving": "Failed to save recipes",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details",
+      "ingredients": "Ingredients",
+      "instructions": "Instructions",
+      "tip": "Tip",
+      "emptyState": {
+        "title": "Ready to Discover",
+        "description": "Select your preferences above and click Generate to get personalized recipe suggestions"
+      },
+      "filters": {
+        "cuisine": "Cuisine",
+        "mealType": "Style",
+        "category": "Category",
+        "difficulty": "Difficulty",
+        "servings": "Servings",
+        "count": "Recipes",
+        "anyCuisine": "Any Cuisine",
+        "anyMealType": "Any Style",
+        "anyCategory": "Any Category",
+        "anyDifficulty": "Any Difficulty"
+      },
+      "mealTypes": {
+        "quick_easy": "Quick & Easy",
+        "healthy": "Healthy",
+        "comfort_food": "Comfort Food",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "low_carb": "Low Carb",
+        "high_protein": "High Protein",
+        "budget_friendly": "Budget Friendly",
+        "gourmet": "Gourmet",
+        "kid_friendly": "Kid Friendly",
+        "one_pot": "One-Pot",
+        "meal_prep": "Meal Prep",
+        "party_food": "Party Food",
+        "soup_stew": "Soups & Stews",
+        "salad": "Salads",
+        "pasta": "Pasta",
+        "rice_grain": "Rice & Grains",
+        "seafood": "Seafood",
+        "meat": "Meat",
+        "baked_goods": "Baked Goods"
+      }
     }
   },
   "restaurants": {
@@ -2549,12 +2637,6 @@
         "title": "Language",
         "description": "Choose your preferred language for the application",
         "placeholder": "Select language"
-      },
-      "currency": {
-        "title": "Currency",
-        "description": "Select your preferred currency for prices and budgeting",
-        "placeholder": "Select currency",
-        "hint": "This will be used for grocery prices, meal costs, and budget tracking"
       }
     },
     "appearance": {
@@ -2567,6 +2649,12 @@
         "darkDescription": "Easy on the eyes",
         "system": "System",
         "systemDescription": "Follows your device settings"
+      },
+      "currency": {
+        "title": "Currency",
+        "description": "Select your preferred currency for displaying prices",
+        "placeholder": "Select currency",
+        "hint": "Prices will be automatically converted to your selected currency"
       }
     },
     "notifications": {
@@ -2596,6 +2684,7 @@
     "messages": {
       "languageChanged": "Language updated successfully",
       "themeChanged": "Theme updated successfully",
+      "currencyChanged": "Currency updated successfully",
       "notificationsUpdated": "Notification preferences updated",
       "errorUpdatingNotifications": "Failed to update notification preferences"
     }

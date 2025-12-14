@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 export type PaymentMethod = "stripe" | "paypal" | "mono" | "payoneer" | "bank_transfer";
 
@@ -25,7 +26,6 @@ interface PaymentMethodModalProps {
   onConfirm: (method: PaymentMethod) => void;
   tierName: string;
   tierPrice: number;
-  currency?: string;
   isLoading?: boolean;
 }
 
@@ -35,10 +35,10 @@ export function PaymentMethodModal({
   onConfirm,
   tierName,
   tierPrice,
-  currency = "USD",
   isLoading = false,
 }: PaymentMethodModalProps) {
   const t = useTranslations("pricing.paymentModal");
+  const { formatPriceFromUSD, currency } = useCurrency();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("stripe");
 
   const handleConfirm = () => {
@@ -96,7 +96,7 @@ export function PaymentMethodModal({
         <DialogHeader>
           <DialogTitle className="text-2xl">{t("title")}</DialogTitle>
           <DialogDescription className="text-base pt-1">
-            {t("description", { tier: tierName, price: tierPrice, currency })}
+            {t("description", { tier: tierName, price: formatPriceFromUSD(tierPrice), currency })}
           </DialogDescription>
         </DialogHeader>
 

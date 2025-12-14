@@ -29,6 +29,7 @@ import {
   type ShoppingListSummary,
   type ShoppingListListResponse,
 } from "@/lib/api/shopping-lists-api";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 interface ShoppingListTableProps {
   data: ShoppingListListResponse | undefined;
@@ -62,6 +63,7 @@ export function ShoppingListTable({
 }: ShoppingListTableProps) {
   const t = useTranslations("shoppingLists");
   const tCommon = useTranslations("common");
+  const { formatPriceFromUAH } = useCurrency();
 
   const [deleteList, { isLoading: isDeleting }] = useDeleteShoppingListMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteShoppingListsMutation();
@@ -109,7 +111,7 @@ export function ShoppingListTable({
       key: "estimated_cost",
       header: t("table.estimatedCost"),
       render: (list) =>
-        list.estimated_cost !== null ? `${list.estimated_cost.toFixed(2)} ₴` : "-",
+        list.estimated_cost !== null ? formatPriceFromUAH(list.estimated_cost) : "-",
     },
     {
       key: "created_at",

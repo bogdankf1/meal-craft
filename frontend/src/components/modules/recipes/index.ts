@@ -7,3 +7,4 @@ export { RecordCookingDialog } from "./record-cooking-dialog";
 export { CollectionManager } from "./collection-manager";
 export { AddToCollectionDialog } from "./add-to-collection-dialog";
 export { AddToShoppingListDialog } from "./add-to-shopping-list-dialog";
+export { AiRecipeSuggestionsDialog } from "./ai-recipe-suggestions-dialog";

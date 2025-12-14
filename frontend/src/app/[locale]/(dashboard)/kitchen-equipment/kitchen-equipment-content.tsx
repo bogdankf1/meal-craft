@@ -65,10 +65,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 export function KitchenEquipmentContent() {
   const t = useTranslations("kitchenEquipment");
   const tCommon = useTranslations("common");
+  const { formatPriceFromUAH } = useCurrency();
 
   // State for active items
   const [filters, setFilters] = useState<EquipmentFilters>({
@@ -239,7 +241,7 @@ export function KitchenEquipmentContent() {
             />
             <StatsCard
               title={t("stats.totalValue")}
-              value={`$${Number(analytics?.total_value || 0).toFixed(2)}`}
+              value={formatPriceFromUAH(Number(analytics?.total_value || 0))}
               icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
             />
           </div>

@@ -33,6 +33,7 @@ import {
 import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 import { MarkAsWastedDialog } from "./mark-as-wasted-dialog";
 import { MoveToPantryDialog } from "./move-to-pantry-dialog";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 interface GroceryTableProps {
   data: GroceryListResponse | undefined;
@@ -88,6 +89,7 @@ export function GroceryTable({
   const t = useTranslations("groceries");
   const tCommon = useTranslations("common");
   const tShoppingLists = useTranslations("shoppingLists");
+  const { formatPriceFromUAH } = useCurrency();
 
   const [deleteGrocery, { isLoading: isDeleting }] = useDeleteGroceryMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteGroceriesMutation();
@@ -216,7 +218,7 @@ export function GroceryTable({
       key: "cost",
       header: t("table.cost"),
       render: (grocery) =>
-        grocery.cost !== null ? `${grocery.cost.toFixed(2)} ₴` : "-",
+        grocery.cost !== null ? formatPriceFromUAH(grocery.cost) : "-",
     },
     {
       key: "store",

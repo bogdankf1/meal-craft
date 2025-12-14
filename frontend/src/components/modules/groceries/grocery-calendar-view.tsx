@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { type Grocery } from "@/lib/api/groceries-api";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 interface GroceryCalendarViewProps {
   items: Grocery[];
@@ -37,6 +38,7 @@ export function GroceryCalendarView({
   onItemClick,
 }: GroceryCalendarViewProps) {
   const t = useTranslations("groceries");
+  const { formatPriceFromUAH } = useCurrency();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Group groceries by purchase date
@@ -111,12 +113,6 @@ export function GroceryCalendarView({
     return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   };
 
-  const formatCurrency = (amount: number) => {
-    return `${new Intl.NumberFormat("uk-UA", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)} ₴`;
-  };
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -212,7 +208,7 @@ export function GroceryCalendarView({
                           {/* Cost if any */}
                           {totalCost > 0 && (
                             <div className="text-xs text-muted-foreground text-center truncate">
-                              {formatCurrency(totalCost)}
+                              {formatPriceFromUAH(totalCost)}
                             </div>
                           )}
 
@@ -256,7 +252,7 @@ export function GroceryCalendarView({
                           {totalCost > 0 && (
                             <span className="flex items-center gap-1">
                               <DollarSign className="h-3 w-3" />
-                              {formatCurrency(totalCost)}
+                              {formatPriceFromUAH(totalCost)}
                             </span>
                           )}
                         </div>
@@ -293,7 +289,7 @@ export function GroceryCalendarView({
                               </div>
                               {grocery.cost && (
                                 <div className="text-sm font-medium shrink-0">
-                                  {formatCurrency(grocery.cost)}
+                                  {formatPriceFromUAH(grocery.cost)}
                                 </div>
                               )}
                             </div>

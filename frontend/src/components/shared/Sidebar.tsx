@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
@@ -35,15 +35,11 @@ import {
   Shield,
   ChevronLeft,
   Menu,
-  Sun,
-  Moon,
-  Monitor,
   LogOut,
   LogIn,
   X,
   CreditCard,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import { useGetMeQuery } from "@/lib/api/auth-api";
@@ -51,15 +47,6 @@ import { useGetMeQuery } from "@/lib/api/auth-api";
 // Extended session type that includes backend fields (matches auth.ts module augmentation)
 interface ExtendedSession extends Session {
   subscriptionTier?: string;
-}
-
-// Custom hook to safely detect client-side mounting without triggering ESLint warnings
-const emptySubscribe = () => () => {};
-const getSnapshot = () => true;
-const getServerSnapshot = () => false;
-
-function useIsMounted() {
-  return useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
 }
 
 interface NavItem {
@@ -124,15 +111,12 @@ export function Sidebar({ onClose }: SidebarProps) {
   const t = useTranslations("nav");
   const tTiers = useTranslations("tiers");
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const { data: session, status: sessionStatus } = useSession();
 
   // Fetch user data from backend (includes current subscription tier)
   const { data: userData } = useGetMeQuery(undefined, {
     skip: sessionStatus !== "authenticated",
   });
-
-  const mounted = useIsMounted();
 
   // Initialize state with values from localStorage (SSR-safe with lazy init)
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -161,14 +145,6 @@ export function Sidebar({ onClose }: SidebarProps) {
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
   };
-
-  const cycleTheme = () => {
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
-    else setTheme("light");
-  };
-
-  const ThemeIcon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
 
   // Get user initials
   const userInitials =
@@ -366,39 +342,20 @@ export function Sidebar({ onClose }: SidebarProps) {
               </Badge>
             </div>
           )}
-        </div>
-
-        {/* Theme and language toggles */}
-        <div
-          className={cn(
-            "flex items-center gap-2 mt-3",
-            isCollapsed && "flex-col"
-          )}
-        >
-          {mounted && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={cycleTheme}
-              title={theme}
-            >
-              <ThemeIcon className="h-5 w-5" />
-            </Button>
-          )}
-          {/* Login/Logout button */}
+          {/* Logout/Login button */}
           {session ? (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              title="Sign out"
+              className="shrink-0"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-4 w-4" />
             </Button>
           ) : (
             <Link href="/login">
-              <Button variant="ghost" size="icon" title="Sign in">
-                <LogIn className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="shrink-0">
+                <LogIn className="h-4 w-4" />
               </Button>
             </Link>
           )}
@@ -413,7 +370,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   const t = useTranslations("nav");
   const tTiers = useTranslations("tiers");
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const { data: session, status: sessionStatus } = useSession();
 
   // Fetch user data from backend (includes current subscription tier)
@@ -421,7 +377,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
     skip: sessionStatus !== "authenticated",
   });
 
-  const mounted = useIsMounted();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
     if (typeof window === "undefined") {
       return ["planning", "inventory", "tracking", "lifestyle", "tools"];
@@ -438,14 +393,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
   };
-
-  const cycleTheme = () => {
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
-    else setTheme("light");
-  };
-
-  const ThemeIcon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
 
   const userInitials =
     session?.user?.name
@@ -615,33 +562,20 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
                   {tTiers(tierKey)}
                 </Badge>
               </div>
-            </div>
-
-            {/* Theme and logout */}
-            <div className="flex items-center gap-2 mt-3">
-              {mounted && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={cycleTheme}
-                  title={theme}
-                >
-                  <ThemeIcon className="h-5 w-5" />
-                </Button>
-              )}
+              {/* Logout/Login button */}
               {session ? (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => signOut({ callbackUrl: "/login" })}
-                  title="Sign out"
+                  className="shrink-0"
                 >
-                  <LogOut className="h-5 w-5" />
+                  <LogOut className="h-4 w-4" />
                 </Button>
               ) : (
                 <Link href="/login" onClick={handleNavClick}>
-                  <Button variant="ghost" size="icon" title="Sign in">
-                    <LogIn className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="shrink-0">
+                    <LogIn className="h-4 w-4" />
                   </Button>
                 </Link>
               )}

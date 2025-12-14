@@ -35,6 +35,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/components/providers/currency-provider";
+import { type CurrencyCode } from "@/lib/currency";
 
 import {
   useGetUserSeasonalPreferencesQuery,
@@ -42,16 +44,6 @@ import {
   useGetSeasonalProduceQuery,
   SUPPORTED_COUNTRIES,
 } from "@/lib/api/seasonality-api";
-
-// Supported currencies
-const CURRENCIES = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "UAH", symbol: "₴", name: "Ukrainian Hryvnia" },
-  { code: "PLN", symbol: "zł", name: "Polish Zloty" },
-  { code: "BRL", symbol: "R$", name: "Brazilian Real" },
-];
 
 // Supported languages
 const LANGUAGES = [
@@ -66,6 +58,9 @@ export function SettingsContent() {
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
+
+  // Currency
+  const { currency, currencies, setCurrency } = useCurrency();
 
   // Seasonality preferences
   const { data: seasonalPreferences, isLoading: isLoadingSeasonalPrefs } = useGetUserSeasonalPreferencesQuery();
@@ -113,6 +108,11 @@ export function SettingsContent() {
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
     toast.success(t("messages.themeChanged"));
+  };
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrency(newCurrency as CurrencyCode);
+    toast.success(t("messages.currencyChanged"));
   };
 
   const handleCountryChange = async (countryCode: string) => {
@@ -164,42 +164,11 @@ export function SettingsContent() {
             </Select>
           </CardContent>
         </Card>
-
-        {/* Currency Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              {t("general.currency.title")}
-            </CardTitle>
-            <CardDescription>{t("general.currency.description")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select defaultValue="UAH">
-              <SelectTrigger className="w-full md:w-80">
-                <SelectValue placeholder={t("general.currency.placeholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((currency) => (
-                  <SelectItem key={currency.code} value={currency.code}>
-                    <span className="flex items-center gap-2">
-                      <span className="font-mono">{currency.symbol}</span>
-                      <span>{currency.name}</span>
-                      <span className="text-muted-foreground">({currency.code})</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground mt-2">
-              {t("general.currency.hint")}
-            </p>
-          </CardContent>
-        </Card>
       </TabsContent>
 
       {/* Appearance Tab */}
       <TabsContent value="appearance" className="space-y-6">
+        {/* Theme Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -271,6 +240,38 @@ export function SettingsContent() {
                 </div>
               </Label>
             </RadioGroup>
+          </CardContent>
+        </Card>
+
+        {/* Currency Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              {t("appearance.currency.title")}
+            </CardTitle>
+            <CardDescription>{t("appearance.currency.description")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={currency} onValueChange={handleCurrencyChange}>
+              <SelectTrigger className="w-full md:w-80">
+                <SelectValue placeholder={t("appearance.currency.placeholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {currencies.map((curr) => (
+                  <SelectItem key={curr.code} value={curr.code}>
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono w-6">{curr.symbol}</span>
+                      <span>{curr.name}</span>
+                      <span className="text-muted-foreground">({curr.code})</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t("appearance.currency.hint")}
+            </p>
           </CardContent>
         </Card>
       </TabsContent>

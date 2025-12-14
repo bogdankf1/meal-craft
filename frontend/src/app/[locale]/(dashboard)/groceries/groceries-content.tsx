@@ -78,10 +78,12 @@ import {
 } from "@/lib/api/groceries-api";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
+import { useCurrency } from "@/components/providers/currency-provider";
 
 export function GroceriesContent() {
   const t = useTranslations("groceries");
   const tCommon = useTranslations("common");
+  const { formatPriceFromUAH } = useCurrency();
 
   // State for active items
   const [filters, setFilters] = useState<GroceryFilters>({
@@ -175,10 +177,7 @@ export function GroceriesContent() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `${new Intl.NumberFormat("uk-UA", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)} ₴`;
+    return formatPriceFromUAH(amount);
   };
 
   const hasGroceries = (groceriesData?.total || 0) > 0;
