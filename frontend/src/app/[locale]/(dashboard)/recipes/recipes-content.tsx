@@ -56,6 +56,7 @@ import {
   AddToCollectionDialog,
   AddToShoppingListDialog,
   AiRecipeSuggestionsDialog,
+  ViewRecipeDialog,
 } from "@/components/modules/recipes";
 import {
   useGetRecipesQuery,
@@ -106,6 +107,8 @@ export function RecipesContent() {
   const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
   const [selectedRecipeForShoppingList, setSelectedRecipeForShoppingList] = useState<Recipe | null>(null);
   const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedRecipeForView, setSelectedRecipeForView] = useState<RecipeListItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter states
@@ -177,6 +180,11 @@ export function RecipesContent() {
   const handleCookClick = (item: RecipeListItem) => {
     setSelectedRecipeForCooking(item);
     setCookingDialogOpen(true);
+  };
+
+  const handleViewClick = (item: RecipeListItem) => {
+    setSelectedRecipeForView(item);
+    setViewDialogOpen(true);
   };
 
   const handleAddToCollection = (items: RecipeListItem[]) => {
@@ -341,6 +349,7 @@ export function RecipesContent() {
               page={filters.page || 1}
               onPageChange={handlePageChange}
               onEdit={handleEditClick}
+              onView={handleViewClick}
               onCook={handleCookClick}
               onAddToShoppingList={handleAddToShoppingList}
               onAddToCollection={handleAddToCollection}
@@ -414,6 +423,7 @@ export function RecipesContent() {
                   page={1}
                   onPageChange={() => {}}
                   onEdit={handleEditClick}
+                  onView={handleViewClick}
                   onCook={handleCookClick}
                   onAddToShoppingList={handleAddToShoppingList}
                   onAddToCollection={handleAddToCollection}
@@ -444,6 +454,7 @@ export function RecipesContent() {
               page={archiveFilters.page || 1}
               onPageChange={handleArchivePageChange}
               onEdit={handleEditClick}
+              onView={handleViewClick}
               onAddToShoppingList={handleAddToShoppingList}
               onAddToCollection={handleAddToCollection}
               isArchiveView
@@ -633,6 +644,13 @@ export function RecipesContent() {
           // Refresh data after adding new recipes
           setFilters((prev) => ({ ...prev }));
         }}
+      />
+
+      {/* View Recipe Dialog */}
+      <ViewRecipeDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        recipe={selectedRecipeForView}
       />
     </div>
   );

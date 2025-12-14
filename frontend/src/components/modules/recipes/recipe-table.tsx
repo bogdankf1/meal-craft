@@ -17,6 +17,7 @@ import {
   CalendarCheck,
   Copy,
   FolderPlus,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -45,6 +46,7 @@ interface RecipeTableProps {
   page: number;
   onPageChange: (page: number) => void;
   onEdit: (item: RecipeListItem) => void;
+  onView?: (item: RecipeListItem) => void;
   onCook?: (item: RecipeListItem) => void;
   onAddToShoppingList?: (item: RecipeListItem) => void;
   onAddToCollection?: (items: RecipeListItem[]) => void;
@@ -119,6 +121,7 @@ export function RecipeTable({
   page,
   onPageChange,
   onEdit,
+  onView,
   onCook,
   onAddToShoppingList,
   onAddToCollection,
@@ -312,6 +315,15 @@ export function RecipeTable({
 
   // Define row actions
   const rowActions: RowAction<RecipeListItem>[] = [
+    ...(onView
+      ? [
+          {
+            label: t("viewRecipe.view"),
+            icon: <Eye className="h-4 w-4 mr-2" />,
+            onClick: onView,
+          },
+        ]
+      : []),
     {
       label: tCommon("edit"),
       icon: <Pencil className="h-4 w-4 mr-2" />,

@@ -1724,6 +1724,27 @@
       "notesPlaceholder": "Як вийшло? Якісь модифікації?",
       "record": "Записати"
     },
+    "servings": "порцій",
+    "ingredients": "Інгредієнти",
+    "instructions": "Інструкції",
+    "tags": "Теги",
+    "notes": "Примітки",
+    "cookedTimes": "Приготовано {count} разів",
+    "viewRecipe": {
+      "available": "в наявності",
+      "inPantry": "В коморі",
+      "inGroceries": "В продуктах",
+      "noIngredients": "Інгредієнти не вказані",
+      "noInstructions": "Інструкції не надані",
+      "nutrition": "Харчова цінність",
+      "calories": "Калорії",
+      "protein": "Білки",
+      "carbs": "Вуглеводи",
+      "fat": "Жири",
+      "source": "Джерело",
+      "added": "Додано",
+      "view": "Переглянути рецепт"
+    },
     "collections": {
       "title": "Колекції",
       "create": "Створити колекцію",
@@ -1792,7 +1813,9 @@
       "success": "{count, plural, one {# інгредієнт додано} few {# інгредієнти додано} many {# інгредієнтів додано} other {# інгредієнтів додано}} до списку покупок",
       "error": "Не вдалося додати інгредієнти до списку покупок",
       "adding": "Додавання...",
-      "addButton": "Додати до списку"
+      "addButton": "Додати до списку",
+      "missing": "Відсутнє",
+      "needMore": "Потрібно ще {count}"
     },
     "import": {
       "review": {

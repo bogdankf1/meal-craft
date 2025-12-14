@@ -1724,6 +1724,27 @@
       "notesPlaceholder": "How did it turn out? Any modifications?",
       "record": "Record Cooking"
     },
+    "servings": "servings",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "tags": "Tags",
+    "notes": "Notes",
+    "cookedTimes": "Cooked {count} times",
+    "viewRecipe": {
+      "available": "available",
+      "inPantry": "In Pantry",
+      "inGroceries": "In Groceries",
+      "noIngredients": "No ingredients listed",
+      "noInstructions": "No instructions provided",
+      "nutrition": "Nutrition",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "source": "Source",
+      "added": "Added",
+      "view": "View Recipe"
+    },
     "collections": {
       "title": "Collections",
       "create": "Create Collection",
@@ -1792,7 +1813,9 @@
       "success": "{count, plural, one {# ingredient} other {# ingredients}} added to shopping list",
       "error": "Failed to add ingredients to shopping list",
       "adding": "Adding...",
-      "addButton": "Add to List"
+      "addButton": "Add to List",
+      "missing": "Missing",
+      "needMore": "Need {count} more"
     },
     "import": {
       "review": {
