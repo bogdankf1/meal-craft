@@ -13,6 +13,10 @@ import {
   Loader2,
   RefreshCw,
   UtensilsCrossed,
+  Wrench,
+  GraduationCap,
+  Leaf,
+  Sun,
 } from "lucide-react";
 
 import {
@@ -140,6 +144,11 @@ export function AiRecipeSuggestionsDialog({
         ingredients: suggestion.ingredients,
         tags: suggestion.tags,
         is_favorite: false,
+        // Include integration fields from AI suggestions
+        required_equipment: suggestion.required_equipment,
+        techniques: suggestion.techniques,
+        seasonal_info: suggestion.seasonal_info,
+        best_season_months: suggestion.best_season_months,
       };
     });
 
@@ -174,6 +183,25 @@ export function AiRecipeSuggestionsDialog({
       default:
         return "";
     }
+  };
+
+  // Month names for seasonality
+  const MONTH_NAMES = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  const formatMonthRange = (months: number[] | null): string => {
+    if (!months || months.length === 0) return "";
+    const sorted = [...months].sort((a, b) => a - b);
+    if (sorted.length === 1) return MONTH_NAMES[sorted[0] - 1];
+    return sorted.map(m => MONTH_NAMES[m - 1]).join(", ");
+  };
+
+  const isInSeason = (months: number[] | null): boolean => {
+    if (!months || months.length === 0) return false;
+    const currentMonth = new Date().getMonth() + 1;
+    return months.includes(currentMonth);
   };
 
   return (
@@ -483,6 +511,79 @@ export function AiRecipeSuggestionsDialog({
                               {recipe.instructions}
                             </p>
                           </div>
+
+                          {/* Required Equipment */}
+                          {recipe.required_equipment && recipe.required_equipment.length > 0 && (
+                            <div>
+                              <h4 className="font-medium mb-1 flex items-center gap-1">
+                                <Wrench className="h-3 w-3" />
+                                {t("equipment")} ({recipe.required_equipment.length})
+                              </h4>
+                              <div className="flex flex-wrap gap-1">
+                                {recipe.required_equipment.map((eq, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {eq.equipment_name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Techniques */}
+                          {recipe.techniques && recipe.techniques.length > 0 && (
+                            <div>
+                              <h4 className="font-medium mb-1 flex items-center gap-1">
+                                <GraduationCap className="h-3 w-3" />
+                                {t("techniques")} ({recipe.techniques.length})
+                              </h4>
+                              <div className="flex flex-wrap gap-1">
+                                {recipe.techniques.map((tech, i) => (
+                                  <Badge
+                                    key={i}
+                                    variant="secondary"
+                                    className={cn(
+                                      "text-xs",
+                                      tech.difficulty === "beginner"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                        : tech.difficulty === "intermediate"
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                        : tech.difficulty === "advanced"
+                                        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                        : ""
+                                    )}
+                                  >
+                                    {tech.skill_name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Seasonality */}
+                          {recipe.best_season_months && recipe.best_season_months.length > 0 && (
+                            <div
+                              className={cn(
+                                "rounded p-2 flex items-center gap-2",
+                                isInSeason(recipe.best_season_months)
+                                  ? "bg-green-50 dark:bg-green-950/30"
+                                  : "bg-amber-50 dark:bg-amber-950/30"
+                              )}
+                            >
+                              {isInSeason(recipe.best_season_months) ? (
+                                <Sun className="h-3 w-3 text-green-600" />
+                              ) : (
+                                <Leaf className="h-3 w-3 text-amber-600" />
+                              )}
+                              <p className="text-xs">
+                                <strong>
+                                  {isInSeason(recipe.best_season_months)
+                                    ? t("inSeason")
+                                    : t("bestSeason")}
+                                </strong>{" "}
+                                {formatMonthRange(recipe.best_season_months)}
+                              </p>
+                            </div>
+                          )}
 
                           {/* Tips */}
                           {recipe.tips && (

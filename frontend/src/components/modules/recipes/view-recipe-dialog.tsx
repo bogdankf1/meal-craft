@@ -16,6 +16,13 @@ import {
   Check,
   ShoppingCart,
   Package,
+  Wrench,
+  AlertCircle,
+  GraduationCap,
+  Leaf,
+  Sun,
+  Lightbulb,
+  X,
 } from "lucide-react";
 
 import {
@@ -34,6 +41,9 @@ import {
 } from "@/lib/api/recipes-api";
 import { useGetPantryItemsQuery } from "@/lib/api/pantry-api";
 import { useGetGroceriesQuery } from "@/lib/api/groceries-api";
+import { useGetKitchenEquipmentQuery, type KitchenEquipment } from "@/lib/api/kitchen-equipment-api";
+import { useGetUserSkillsQuery, type UserSkill } from "@/lib/api/learning-api";
+import type { RecipeEquipment, RecipeTechnique, RecipeSeasonalIngredient } from "@/lib/api/recipes-api";
 
 interface ViewRecipeDialogProps {
   open: boolean;
@@ -142,6 +152,205 @@ function findMatchingItem(
   return items.some((item) => ingredientsMatch(ingredientName, item.item_name));
 }
 
+// Check if equipment name matches any item in the user's kitchen equipment
+function findMatchingEquipment(
+  equipmentName: string,
+  userEquipment: KitchenEquipment[]
+): KitchenEquipment | null {
+  const normalizedEquipmentName = normalizeText(equipmentName);
+  const equipmentWords = getSignificantWords(equipmentName);
+
+  for (const item of userEquipment) {
+    const normalizedItemName = normalizeText(item.name);
+    const itemWords = getSignificantWords(item.name);
+
+    // Exact match
+    if (normalizedEquipmentName === normalizedItemName) {
+      return item;
+    }
+
+    // All words from recipe equipment appear in user's equipment
+    if (equipmentWords.length > 0 && itemWords.length > 0) {
+      const allEquipmentWordsInItem = equipmentWords.every((eqWord) =>
+        itemWords.some(
+          (itemWord) =>
+            itemWord === eqWord ||
+            itemWord === eqWord + "s" ||
+            itemWord === eqWord + "es" ||
+            eqWord === itemWord + "s" ||
+            eqWord === itemWord + "es"
+        )
+      );
+
+      if (allEquipmentWordsInItem) {
+        return item;
+      }
+
+      // Also check reverse: all words from user's equipment appear in recipe equipment
+      const allItemWordsInEquipment = itemWords.every((itemWord) =>
+        equipmentWords.some(
+          (eqWord) =>
+            eqWord === itemWord ||
+            eqWord === itemWord + "s" ||
+            eqWord === itemWord + "es" ||
+            itemWord === eqWord + "s" ||
+            itemWord === eqWord + "es"
+        )
+      );
+
+      if (allItemWordsInEquipment) {
+        return item;
+      }
+    }
+  }
+
+  return null;
+}
+
+// Check if technique/skill name matches any user skill
+function findMatchingSkill(
+  techniqueName: string,
+  userSkills: UserSkill[]
+): UserSkill | null {
+  const normalizedTechniqueName = normalizeText(techniqueName);
+  const techniqueWords = getSignificantWords(techniqueName);
+
+  for (const userSkill of userSkills) {
+    if (!userSkill.skill) continue;
+
+    const normalizedSkillName = normalizeText(userSkill.skill.name);
+    const skillWords = getSignificantWords(userSkill.skill.name);
+
+    // Exact match
+    if (normalizedTechniqueName === normalizedSkillName) {
+      return userSkill;
+    }
+
+    // All words from technique appear in user's skill
+    if (techniqueWords.length > 0 && skillWords.length > 0) {
+      const allTechniqueWordsInSkill = techniqueWords.every((techWord) =>
+        skillWords.some(
+          (skillWord) =>
+            skillWord === techWord ||
+            skillWord === techWord + "s" ||
+            skillWord === techWord + "ing" ||
+            techWord === skillWord + "s" ||
+            techWord === skillWord + "ing"
+        )
+      );
+
+      if (allTechniqueWordsInSkill) {
+        return userSkill;
+      }
+
+      // Also check reverse
+      const allSkillWordsInTechnique = skillWords.every((skillWord) =>
+        techniqueWords.some(
+          (techWord) =>
+            techWord === skillWord ||
+            techWord === skillWord + "s" ||
+            techWord === skillWord + "ing" ||
+            skillWord === techWord + "s" ||
+            skillWord === techWord + "ing"
+        )
+      );
+
+      if (allSkillWordsInTechnique) {
+        return userSkill;
+      }
+    }
+  }
+
+  return null;
+}
+
+// Month names for seasonality display
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+// Get month name from 1-indexed month number
+function getMonthName(month: number): string {
+  if (month >= 1 && month <= 12) {
+    return MONTH_NAMES[month - 1];
+  }
+  return "";
+}
+
+// Get short month name
+function getShortMonthName(month: number): string {
+  return getMonthName(month).slice(0, 3);
+}
+
+// Check if current month is in peak season
+function isInPeakSeason(peakMonths: number[] | null | undefined): boolean {
+  if (!peakMonths || peakMonths.length === 0) return false;
+  const currentMonth = new Date().getMonth() + 1; // 1-indexed
+  return peakMonths.includes(currentMonth);
+}
+
+// Format month range (e.g., "June - August")
+function formatMonthRange(months: number[] | null | undefined): string {
+  if (!months || months.length === 0) return "";
+  if (months.length === 1) return getMonthName(months[0]);
+
+  // Sort months
+  const sorted = [...months].sort((a, b) => a - b);
+
+  // Check if consecutive
+  let isConsecutive = true;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] !== sorted[i - 1] + 1) {
+      isConsecutive = false;
+      break;
+    }
+  }
+
+  if (isConsecutive) {
+    return `${getMonthName(sorted[0])} - ${getMonthName(sorted[sorted.length - 1])}`;
+  }
+
+  // Non-consecutive, list all
+  return sorted.map(getShortMonthName).join(", ");
+}
+
+// Parse plain text instructions into steps
+// Handles formats like "Step 1: ...", "1. ...", "1) ...", or newline-separated
+function parseInstructionsToSteps(instructions: string): string[] {
+  if (!instructions) return [];
+
+  // Try to split by "Step X:" pattern
+  const stepPattern = /Step\s*\d+\s*[:.]\s*/gi;
+  if (stepPattern.test(instructions)) {
+    return instructions
+      .split(/Step\s*\d+\s*[:.]\s*/gi)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+
+  // Try to split by numbered patterns like "1. " or "1) "
+  const numberedPattern = /^\d+[.)]\s*/;
+  const lines = instructions.split(/\n+/);
+  if (lines.some((line) => numberedPattern.test(line.trim()))) {
+    return lines
+      .map((line) => line.trim().replace(numberedPattern, ""))
+      .filter((s) => s.length > 0);
+  }
+
+  // Try to split by sentences ending with periods (for run-on instructions)
+  // Look for patterns like ". Step" or ". Then" or just split by ". " followed by capital
+  const sentenceSteps = instructions.split(/\.\s+(?=[A-Z])/).map((s) => s.trim());
+  if (sentenceSteps.length > 1) {
+    return sentenceSteps
+      .map((s) => (s.endsWith(".") ? s : s + "."))
+      .filter((s) => s.length > 1);
+  }
+
+  // Fallback: return as single step
+  return [instructions];
+}
+
 export function ViewRecipeDialog({
   open,
   onOpenChange,
@@ -164,6 +373,18 @@ export function ViewRecipeDialog({
 
   // Fetch grocery items for ingredient matching (max 100 per API limit)
   const { data: groceriesData } = useGetGroceriesQuery(
+    { page: 1, per_page: 100 },
+    { skip: !open }
+  );
+
+  // Fetch kitchen equipment for equipment matching
+  const { data: equipmentData } = useGetKitchenEquipmentQuery(
+    { page: 1, per_page: 100 },
+    { skip: !open }
+  );
+
+  // Fetch user skills for technique matching
+  const { data: userSkillsData } = useGetUserSkillsQuery(
     { page: 1, per_page: 100 },
     { skip: !open }
   );
@@ -193,6 +414,57 @@ export function ViewRecipeDialog({
 
   const availableCount = ingredientAvailability.size;
   const totalIngredients = fullRecipe?.ingredients?.length || 0;
+
+  // Compute which equipment is available
+  const requiredEquipment = fullRecipe?.required_equipment;
+  const userEquipment = equipmentData?.items || [];
+
+  const equipmentAvailability = useMemo(() => {
+    if (!requiredEquipment || requiredEquipment.length === 0) {
+      return new Map<string, { available: boolean; userItem: KitchenEquipment | null }>();
+    }
+
+    const availability = new Map<string, { available: boolean; userItem: KitchenEquipment | null }>();
+
+    for (const eq of requiredEquipment) {
+      const matchedItem = findMatchingEquipment(eq.equipment_name, userEquipment);
+      availability.set(eq.equipment_name, {
+        available: matchedItem !== null,
+        userItem: matchedItem,
+      });
+    }
+
+    return availability;
+  }, [requiredEquipment, userEquipment]);
+
+  const availableEquipmentCount = Array.from(equipmentAvailability.values()).filter(v => v.available).length;
+  const totalEquipment = requiredEquipment?.length || 0;
+
+  // Compute which techniques/skills user knows
+  const recipeTechniques = fullRecipe?.techniques;
+  const userSkills = userSkillsData?.items || [];
+
+  const techniqueAvailability = useMemo(() => {
+    if (!recipeTechniques || recipeTechniques.length === 0) {
+      return new Map<string, { known: boolean; userSkill: UserSkill | null; proficiency: string | null }>();
+    }
+
+    const availability = new Map<string, { known: boolean; userSkill: UserSkill | null; proficiency: string | null }>();
+
+    for (const tech of recipeTechniques) {
+      const matchedSkill = findMatchingSkill(tech.skill_name, userSkills);
+      availability.set(tech.skill_name, {
+        known: matchedSkill !== null,
+        userSkill: matchedSkill,
+        proficiency: matchedSkill?.proficiency_level || null,
+      });
+    }
+
+    return availability;
+  }, [recipeTechniques, userSkills]);
+
+  const knownTechniquesCount = Array.from(techniqueAvailability.values()).filter(v => v.known).length;
+  const totalTechniques = recipeTechniques?.length || 0;
 
   const getDifficultyColor = (difficulty: string | null) => {
     switch (difficulty) {
@@ -282,8 +554,8 @@ export function ViewRecipeDialog({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
-          <div className="py-4 space-y-6">
+        <ScrollArea className="flex-1 min-h-0 overflow-auto">
+          <div className="py-4 px-6 space-y-6">
             {/* Ingredients Section */}
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -407,9 +679,28 @@ export function ViewRecipeDialog({
                   ))}
                 </ol>
               ) : fullRecipe?.instructions ? (
-                <div className="text-sm whitespace-pre-wrap">
-                  {fullRecipe.instructions}
-                </div>
+                (() => {
+                  const steps = parseInstructionsToSteps(fullRecipe.instructions);
+                  if (steps.length > 1) {
+                    return (
+                      <ol className="space-y-3">
+                        {steps.map((step, index) => (
+                          <li key={index} className="flex gap-3">
+                            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <p className="flex-1 pt-0.5 text-sm">{step}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    );
+                  }
+                  return (
+                    <div className="text-sm whitespace-pre-wrap">
+                      {fullRecipe.instructions}
+                    </div>
+                  );
+                })()
               ) : (
                 <p className="text-sm text-muted-foreground">
                   {t("viewRecipe.noInstructions")}
@@ -467,6 +758,306 @@ export function ViewRecipeDialog({
                       </div>
                     )}
                   </div>
+                </div>
+              </>
+            )}
+
+            {/* Kitchen Equipment Section */}
+            {fullRecipe?.required_equipment && fullRecipe.required_equipment.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Wrench className="h-5 w-5" />
+                      {t("viewRecipe.requiredEquipment")}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        ({totalEquipment})
+                      </span>
+                    </h3>
+                    {totalEquipment > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "text-xs",
+                          availableEquipmentCount === totalEquipment
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                            : availableEquipmentCount > 0
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                            : ""
+                        )}
+                      >
+                        {availableEquipmentCount === totalEquipment ? (
+                          <Check className="h-3 w-3 mr-1" />
+                        ) : availableEquipmentCount < totalEquipment ? (
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                        ) : null}
+                        {availableEquipmentCount}/{totalEquipment} {t("viewRecipe.available")}
+                      </Badge>
+                    )}
+                  </div>
+                  <ul className="space-y-2">
+                    {fullRecipe.required_equipment.map((eq, index) => {
+                      const availability = equipmentAvailability.get(eq.equipment_name);
+                      const isAvailable = availability?.available ?? false;
+                      return (
+                        <li
+                          key={index}
+                          className={cn(
+                            "flex items-center justify-between py-1.5 px-3 rounded-md text-sm",
+                            isAvailable
+                              ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                              : "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
+                          )}
+                        >
+                          <span className="flex items-center gap-2">
+                            {isAvailable ? (
+                              <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <X className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            )}
+                            <span className={cn(
+                              isAvailable
+                                ? "text-green-700 dark:text-green-300"
+                                : "text-red-700 dark:text-red-300"
+                            )}>
+                              {eq.equipment_name}
+                              {!eq.is_required && (
+                                <span className="text-muted-foreground ml-1">
+                                  ({t("viewRecipe.optional")})
+                                </span>
+                              )}
+                            </span>
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {eq.category && (
+                              <Badge variant="outline" className="text-xs">
+                                {eq.category}
+                              </Badge>
+                            )}
+                            {!isAvailable && eq.substitute_note && (
+                              <span className="text-xs text-muted-foreground italic">
+                                {eq.substitute_note}
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </>
+            )}
+
+            {/* Techniques Section */}
+            {fullRecipe?.techniques && fullRecipe.techniques.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" />
+                      {t("viewRecipe.techniques")}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        ({totalTechniques})
+                      </span>
+                    </h3>
+                    {totalTechniques > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "text-xs",
+                          knownTechniquesCount === totalTechniques
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                            : knownTechniquesCount > 0
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                            : ""
+                        )}
+                      >
+                        {knownTechniquesCount === totalTechniques ? (
+                          <Check className="h-3 w-3 mr-1" />
+                        ) : knownTechniquesCount < totalTechniques ? (
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                        ) : null}
+                        {knownTechniquesCount}/{totalTechniques} {t("viewRecipe.known")}
+                      </Badge>
+                    )}
+                  </div>
+                  <ul className="space-y-2">
+                    {fullRecipe.techniques.map((tech, index) => {
+                      const availability = techniqueAvailability.get(tech.skill_name);
+                      const isKnown = availability?.known ?? false;
+                      const proficiency = availability?.proficiency;
+                      return (
+                        <li
+                          key={index}
+                          className={cn(
+                            "flex items-start justify-between py-2 px-3 rounded-md text-sm",
+                            isKnown
+                              ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                              : "bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"
+                          )}
+                        >
+                          <div className="flex items-start gap-2">
+                            {isKnown ? (
+                              <Check className="h-4 w-4 mt-0.5 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <Lightbulb className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-400" />
+                            )}
+                            <div>
+                              <span
+                                className={cn(
+                                  "font-medium",
+                                  isKnown
+                                    ? "text-green-700 dark:text-green-300"
+                                    : "text-amber-700 dark:text-amber-300"
+                                )}
+                              >
+                                {tech.skill_name}
+                              </span>
+                              {tech.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {tech.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isKnown && proficiency && (
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-xs border-green-300 text-green-700 dark:border-green-700 dark:text-green-300"
+                                )}
+                              >
+                                {proficiency}
+                              </Badge>
+                            )}
+                            {!isKnown && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300"
+                              >
+                                {t("viewRecipe.toLearn")}
+                              </Badge>
+                            )}
+                            {tech.difficulty && (
+                              <Badge
+                                className={cn(
+                                  "text-xs",
+                                  tech.difficulty === "beginner"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                    : tech.difficulty === "intermediate"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                )}
+                              >
+                                {tech.difficulty}
+                              </Badge>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </>
+            )}
+
+            {/* Seasonality Section */}
+            {((fullRecipe?.seasonal_info && fullRecipe.seasonal_info.length > 0) ||
+              (fullRecipe?.best_season_months && fullRecipe.best_season_months.length > 0)) && (
+              <>
+                <Separator />
+                <div>
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                    <Leaf className="h-5 w-5" />
+                    {t("viewRecipe.seasonality")}
+                  </h3>
+
+                  {/* Best Season Banner */}
+                  {fullRecipe.best_season_months && fullRecipe.best_season_months.length > 0 && (
+                    <div
+                      className={cn(
+                        "mb-4 p-3 rounded-lg flex items-center gap-3",
+                        isInPeakSeason(fullRecipe.best_season_months)
+                          ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                          : "bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"
+                      )}
+                    >
+                      <Sun
+                        className={cn(
+                          "h-5 w-5",
+                          isInPeakSeason(fullRecipe.best_season_months)
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        )}
+                      />
+                      <div>
+                        <p
+                          className={cn(
+                            "text-sm font-medium",
+                            isInPeakSeason(fullRecipe.best_season_months)
+                              ? "text-green-700 dark:text-green-300"
+                              : "text-amber-700 dark:text-amber-300"
+                          )}
+                        >
+                          {isInPeakSeason(fullRecipe.best_season_months)
+                            ? t("viewRecipe.inSeason")
+                            : t("viewRecipe.bestMadeIn")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatMonthRange(fullRecipe.best_season_months)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Seasonal Ingredients */}
+                  {fullRecipe.seasonal_info && fullRecipe.seasonal_info.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        {t("viewRecipe.seasonalIngredients")}
+                      </p>
+                      {fullRecipe.seasonal_info.map((item, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-start justify-between py-2 px-3 rounded-md text-sm",
+                            isInPeakSeason(item.peak_months)
+                              ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
+                              : "bg-muted/50"
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isInPeakSeason(item.peak_months) && (
+                              <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            )}
+                            <span
+                              className={cn(
+                                isInPeakSeason(item.peak_months) &&
+                                  "text-green-700 dark:text-green-300"
+                              )}
+                            >
+                              {item.ingredient_name}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            {item.peak_months && item.peak_months.length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {t("viewRecipe.peakSeason")}: {formatMonthRange(item.peak_months)}
+                              </p>
+                            )}
+                            {item.substitute_out_of_season && !isInPeakSeason(item.peak_months) && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                                {t("viewRecipe.substitute")}: {item.substitute_out_of_season}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}

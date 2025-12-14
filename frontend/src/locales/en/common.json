@@ -1743,7 +1743,18 @@
       "fat": "Fat",
       "source": "Source",
       "added": "Added",
-      "view": "View Recipe"
+      "view": "View Recipe",
+      "requiredEquipment": "Required Equipment",
+      "optional": "optional",
+      "techniques": "Techniques & Skills",
+      "known": "known",
+      "toLearn": "To Learn",
+      "seasonality": "Seasonality",
+      "inSeason": "In Season Now!",
+      "bestMadeIn": "Best made in",
+      "seasonalIngredients": "Seasonal ingredients used in this recipe:",
+      "peakSeason": "Peak",
+      "substitute": "Substitute"
     },
     "collections": {
       "title": "Collections",
@@ -1883,6 +1894,10 @@
       "ingredients": "Ingredients",
       "instructions": "Instructions",
       "tip": "Tip",
+      "equipment": "Equipment",
+      "techniques": "Techniques",
+      "inSeason": "In Season!",
+      "bestSeason": "Best in:",
       "emptyState": {
         "title": "Ready to Discover",
         "description": "Select your preferences above and click Generate to get personalized recipe suggestions"

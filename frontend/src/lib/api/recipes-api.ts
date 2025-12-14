@@ -69,6 +69,29 @@ export interface InstructionStep {
   tip?: string | null;
 }
 
+// ============ Integration Types (Equipment, Techniques, Seasonality) ============
+
+export interface RecipeEquipment {
+  equipment_name: string;
+  category?: string | null;
+  is_required: boolean;
+  substitute_note?: string | null;
+}
+
+export interface RecipeTechnique {
+  skill_name: string;
+  category?: string | null;
+  difficulty?: string | null;
+  description?: string | null;
+}
+
+export interface RecipeSeasonalIngredient {
+  ingredient_name: string;
+  peak_months?: number[] | null;
+  available_months?: number[] | null;
+  substitute_out_of_season?: string | null;
+}
+
 // ============ Nutrition Types ============
 
 export interface RecipeNutrition {
@@ -123,6 +146,11 @@ export interface Recipe {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  // Integration fields
+  required_equipment: RecipeEquipment[] | null;
+  techniques: RecipeTechnique[] | null;
+  seasonal_info: RecipeSeasonalIngredient[] | null;
+  best_season_months: number[] | null;
   // Computed fields
   total_time: number | null;
   last_cooked: string | null;
@@ -199,6 +227,11 @@ export interface CreateRecipeInput {
   is_favorite?: boolean;
   ingredients: RecipeIngredientCreate[];
   nutrition?: RecipeNutritionCreate | null;
+  // Integration fields
+  required_equipment?: RecipeEquipment[] | null;
+  techniques?: RecipeTechnique[] | null;
+  seasonal_info?: RecipeSeasonalIngredient[] | null;
+  best_season_months?: number[] | null;
 }
 
 export interface UpdateRecipeInput {
@@ -220,6 +253,11 @@ export interface UpdateRecipeInput {
   is_favorite?: boolean;
   is_archived?: boolean;
   rating?: number | null;
+  // Integration fields
+  required_equipment?: RecipeEquipment[] | null;
+  techniques?: RecipeTechnique[] | null;
+  seasonal_info?: RecipeSeasonalIngredient[] | null;
+  best_season_months?: number[] | null;
 }
 
 // ============ Scaled Recipe Types ============
@@ -499,6 +537,11 @@ export interface RecipeSuggestionItem {
   dietary_info: string[] | null;
   estimated_calories: number | null;
   tips: string | null;
+  // Integration fields
+  required_equipment: RecipeEquipment[] | null;
+  techniques: RecipeTechnique[] | null;
+  seasonal_info: RecipeSeasonalIngredient[] | null;
+  best_season_months: number[] | null;
 }
 
 export interface RecipeSuggestionResponse {
