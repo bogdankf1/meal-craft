@@ -65,3 +65,4 @@ class User(Base):
     kitchen_equipment = relationship("KitchenEquipment", back_populates="user")
     cooking_history = relationship("CookingHistory", backref="user")
     recipe_collections = relationship("RecipeCollection", backref="user")
+    seasonal_preferences = relationship("UserSeasonalPreference", back_populates="user", uselist=False)

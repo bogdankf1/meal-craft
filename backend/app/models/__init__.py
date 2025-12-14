@@ -89,6 +89,13 @@ from app.models.ai import (
     AIInsight,
 )
 
+# Seasonality
+from app.models.seasonality import (
+    SeasonalProduce,
+    LocalSpecialty,
+    UserSeasonalPreference,
+)
+
 __all__ = [
     # User
     "User",
@@ -151,4 +158,8 @@ __all__ = [
     "TextParsingHistory",
     "CategoryCorrection",
     "AIInsight",
+    # Seasonality
+    "SeasonalProduce",
+    "LocalSpecialty",
+    "UserSeasonalPreference",
 ]
