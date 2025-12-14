@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 
@@ -8,6 +8,40 @@ import type { Session } from "next-auth";
 interface ExtendedSession extends Session {
   backendAccessToken?: string;
   backendRefreshToken?: string;
+}
+
+// Module-level tracking to avoid duplicate writes (persists across renders)
+let lastSyncedToken: string | null = null;
+
+/**
+ * Sync tokens to localStorage immediately (called during render and in effect).
+ * This ensures tokens are available before any API calls.
+ */
+function syncTokensToStorage(session: ExtendedSession | null, status: string) {
+  if (typeof window === "undefined") return;
+
+  if (status === "authenticated" && session) {
+    // Sync access token if changed
+    if (
+      session.backendAccessToken &&
+      session.backendAccessToken !== lastSyncedToken
+    ) {
+      localStorage.setItem("auth_token", session.backendAccessToken);
+      lastSyncedToken = session.backendAccessToken;
+    }
+
+    // Sync refresh token
+    if (session.backendRefreshToken) {
+      localStorage.setItem("refresh_token", session.backendRefreshToken);
+    }
+  } else if (status === "unauthenticated") {
+    // Clear tokens on logout
+    if (lastSyncedToken !== null) {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("refresh_token");
+      lastSyncedToken = null;
+    }
+  }
 }
 
 /**
@@ -18,39 +52,21 @@ interface ExtendedSession extends Session {
  */
 export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  const lastSyncedToken = useRef<string | null>(null);
 
-  // Sync token to localStorage when session changes
+  // Sync tokens in effect (standard React pattern)
   useEffect(() => {
-    if (status === "loading") {
-      return;
-    }
-
-    if (status === "authenticated" && session) {
-      const extendedSession = session as ExtendedSession;
-
-      // Only update if token changed to avoid unnecessary writes
-      if (extendedSession.backendAccessToken && extendedSession.backendAccessToken !== lastSyncedToken.current) {
-        localStorage.setItem("auth_token", extendedSession.backendAccessToken);
-        lastSyncedToken.current = extendedSession.backendAccessToken;
-      }
-
-      // Also store refresh token for potential token refresh
-      if (extendedSession.backendRefreshToken) {
-        localStorage.setItem("refresh_token", extendedSession.backendRefreshToken);
-      }
-    } else if (status === "unauthenticated") {
-      // Clear tokens on logout
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("refresh_token");
-      lastSyncedToken.current = null;
-    }
+    if (status === "loading") return;
+    syncTokensToStorage(session as ExtendedSession | null, status);
   }, [session, status]);
 
   // Show nothing while loading session
   if (status === "loading") {
     return null;
   }
+
+  // Also sync immediately on first render after loading completes
+  // This handles the initial auth state before the effect runs
+  syncTokensToStorage(session as ExtendedSession | null, status);
 
   return <>{children}</>;
 }
