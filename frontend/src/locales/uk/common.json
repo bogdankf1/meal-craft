@@ -17,7 +17,7 @@
     "restaurants": "Ресторани та доставка",
     "nutrition": "Харчування",
     "lifestyle": "Спосіб життя",
-    "seasonality": "Сезонність та сталий розвиток",
+    "seasonality": "Сезонність",
     "learning": "Навчання та навички",
     "health": "Здоров'я",
     "tools": "Інструменти",
@@ -2566,6 +2566,152 @@
       "errorLoggingPractice": "Не вдалося записати практику",
       "errorStartingPath": "Не вдалося розпочати навчальний шлях",
       "errorAddingSkills": "Не вдалося додати навички"
+    }
+  },
+  "seasonality": {
+    "title": "Сезонність",
+    "description": "Дізнайтеся, що зараз у сезоні у вашому регіоні та досліджуйте місцеві спеціалітети",
+    "tabs": {
+      "thisMonth": "Цей місяць",
+      "calendar": "Сезонний календар",
+      "specialties": "Місцеві спеціалітети",
+      "preferences": "Мої налаштування"
+    },
+    "stats": {
+      "inSeason": "У сезоні",
+      "itemsAvailable": "продуктів доступно",
+      "peakSeason": "Пік сезону",
+      "atTheirBest": "найкращі зараз",
+      "favorites": "Обране",
+      "savedItems": "збережено",
+      "localSpecialties": "Місцеві спеціалітети"
+    },
+    "thisMonth": {
+      "showing": "Показано продукти за {month}",
+      "weeklyPicks": "Вибір тижня",
+      "getRecommendations": "Отримати рекомендації AI",
+      "aiRecommendations": "Рекомендації AI",
+      "seasonIs": "Зараз {season}",
+      "recipeIdeas": "Ідеї рецептів",
+      "whatToBuy": "Що купити цього тижня",
+      "try": "Спробуйте",
+      "addAllToList": "Додати все до списку"
+    },
+    "calendar": {
+      "title": "Сезонний календар",
+      "description": "Плануйте страви відповідно до сезону в {country}",
+      "now": "Зараз",
+      "items": "продуктів",
+      "peak": "Пік",
+      "comingSoon": "Скоро з'явиться",
+      "endingSoon": "Скоро закінчиться",
+      "inSeasonIn": "У сезоні в {month}",
+      "noDataForMonth": "Немає даних про сезонність для цього місяця",
+      "noData": "Немає даних календаря",
+      "noDataDescription": "У нас ще немає даних сезонного календаря для вашого регіону. Згенеруйте персоналізовані дані за допомогою AI.",
+      "generateWithAI": "Згенерувати календар з AI"
+    },
+    "specialties": {
+      "title": "Місцеві спеціалітети {country}",
+      "description": "Відкрийте унікальні інгредієнти, страви та продукти вашого регіону",
+      "culturalInfo": "Культурне значення",
+      "howToUse": "Як використовувати",
+      "relatedDishes": "Традиційні страви",
+      "noData": "Місцеві спеціалітети не знайдено",
+      "noDataDescription": "У нас ще немає даних про місцеві спеціалітети для вашого регіону. Відкрийте унікальні продукти за допомогою AI.",
+      "discoverWithAI": "Відкрити спеціалітети з AI"
+    },
+    "preferences": {
+      "title": "Мої налаштування",
+      "description": "Налаштуйте ваш досвід сезонності",
+      "selectCountry": "Ваша країна",
+      "countryHint": "Ми покажемо сезонні продукти для вашого регіону",
+      "notifications": "Сезонні сповіщення",
+      "notificationsHint": "Отримуйте сповіщення, коли улюблені продукти в сезоні",
+      "yourFavorites": "Ваше обране",
+      "favoritesCount": "У вас {count} улюблених продуктів",
+      "noFavorites": "Ви ще не додали жодного продукту в обране"
+    },
+    "filters": {
+      "search": "Пошук продуктів...",
+      "category": "Категорія",
+      "allCategories": "Всі категорії",
+      "inSeasonOnly": "Тільки у сезоні",
+      "favoritesOnly": "Тільки обране"
+    },
+    "categories": {
+      "vegetables": "Овочі",
+      "fruits": "Фрукти",
+      "herbs": "Трави",
+      "seafood": "Морепродукти",
+      "mushrooms": "Гриби",
+      "nuts": "Горіхи",
+      "grains": "Крупи"
+    },
+    "specialtyTypes": {
+      "ingredient": "Інгредієнт",
+      "dish": "Страва",
+      "technique": "Техніка",
+      "product": "Продукт"
+    },
+    "badges": {
+      "peak": "Пік сезону",
+      "inSeason": "У сезоні",
+      "featured": "Рекомендовано"
+    },
+    "empty": {
+      "produce": {
+        "title": "Продукти не знайдено",
+        "description": "Спробуйте змінити фільтри або поверніться пізніше"
+      },
+      "specialties": {
+        "title": "Спеціалітети не знайдено",
+        "description": "Місцеві спеціалітети будуть додані найближчим часом"
+      },
+      "favorites": {
+        "title": "Обраного ще немає",
+        "description": "Натисніть на серце, щоб додати продукти до обраного"
+      }
+    },
+    "dialog": {
+      "addToShoppingList": "Додати до списку покупок",
+      "selectList": "Додати {count} продуктів до списку покупок",
+      "selectListPlaceholder": "Оберіть список",
+      "chooseList": "Оберіть список, до якого додати продукти:",
+      "addingItems": "Додаємо...",
+      "addItems": "Додати продукти",
+      "noLists": "Активних списків покупок не знайдено. Створіть новий.",
+      "itemsToAdd": "Продукти для додавання",
+      "cancel": "Скасувати",
+      "add": "Додати"
+    },
+    "messages": {
+      "countryUpdated": "Країну успішно оновлено",
+      "addedToFavorites": "Додано до обраного",
+      "removedFromFavorites": "Видалено з обраного",
+      "errorUpdatingPreferences": "Не вдалося оновити налаштування",
+      "errorUpdatingFavorites": "Не вдалося оновити обране",
+      "errorGettingRecommendations": "Не вдалося отримати рекомендації",
+      "errorGettingWeeklyPicks": "Не вдалося отримати вибір тижня",
+      "addedToShoppingList": "Продукти додано до списку покупок",
+      "errorAddingToShoppingList": "Не вдалося додати продукти до списку покупок",
+      "savedToProduce": "Збережено до сезонних продуктів",
+      "removedFromProduce": "Видалено з сезонних продуктів",
+      "savedAndFavorited": "Збережено до продуктів та додано в обране",
+      "errorSavingProduce": "Не вдалося зберегти продукт"
+    },
+    "actions": {
+      "save": "Зберегти до продуктів",
+      "unsave": "Видалити з продуктів",
+      "addToFavorites": "Додати в обране",
+      "removeFromFavorites": "Видалити з обраного",
+      "addToList": "Додати до списку"
+    },
+    "details": {
+      "description": "Опис",
+      "storageTips": "Поради зі зберігання",
+      "nutrition": "Поживна цінність",
+      "culinaryUses": "Кулінарне використання"
     }
   }
 }

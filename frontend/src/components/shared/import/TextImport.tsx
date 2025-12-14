@@ -14,6 +14,7 @@ interface TextImportProps<T extends ParsedItem> {
   exampleText?: string;
   minLength?: number;
   maxLength?: number;
+  initialText?: string;
 }
 
 export function TextImport<T extends ParsedItem>({
@@ -22,9 +23,10 @@ export function TextImport<T extends ParsedItem>({
   exampleText,
   minLength = 3,
   maxLength = 10000,
+  initialText = "",
 }: TextImportProps<T>) {
   const t = useTranslations("import");
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const { setParsedItems, setStep, isProcessing, setIsProcessing } = useImportWizard<T>();
 
   const handleParse = async () => {

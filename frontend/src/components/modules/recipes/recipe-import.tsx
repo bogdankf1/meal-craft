@@ -59,9 +59,10 @@ export interface ParsedRecipeItem extends ParsedItem {
 interface RecipeImportProps {
   onComplete?: () => void;
   onViewItems?: () => void;
+  initialAiQuery?: string; // Pre-fill AI text import with this query
 }
 
-export function RecipeImport({ onComplete, onViewItems }: RecipeImportProps) {
+export function RecipeImport({ onComplete, onViewItems, initialAiQuery }: RecipeImportProps) {
   const t = useTranslations("import");
   const tRecipes = useTranslations("recipes");
 
@@ -299,8 +300,14 @@ export function RecipeImport({ onComplete, onViewItems }: RecipeImportProps) {
   // Example text for the text import
   const exampleText = t("text.recipeExample");
 
+  // Determine initial step based on whether we have an AI query
+  const hasInitialQuery = Boolean(initialAiQuery);
+
   return (
-    <ImportWizardProvider<ParsedRecipeItem>>
+    <ImportWizardProvider<ParsedRecipeItem>
+      initialMethod={hasInitialQuery ? "text" : undefined}
+      initialStep={hasInitialQuery ? "input" : "method"}
+    >
       <ImportWizard showSteps>
         {/* Step 1: Select import method */}
         <ImportStepContent step="method">
@@ -315,6 +322,7 @@ export function RecipeImport({ onComplete, onViewItems }: RecipeImportProps) {
             onParseUrl={handleParseUrl}
             onParseImage={handleParseImage}
             exampleText={exampleText}
+            initialAiQuery={initialAiQuery}
           />
         </ImportStepContent>
 
@@ -347,12 +355,14 @@ function ImportInputContent({
   onParseUrl,
   onParseImage,
   exampleText,
+  initialAiQuery,
 }: {
   onParseText: (text: string) => Promise<ParsedRecipeItem[]>;
   onTranscribeAndParse: (blob: Blob) => Promise<ParsedRecipeItem[]>;
   onParseUrl: (url: string) => Promise<ParsedRecipeItem[]>;
   onParseImage: (file: File, importType: PhotoImportType) => Promise<ParsedRecipeItem[]>;
   exampleText: string;
+  initialAiQuery?: string;
 }) {
   const { selectedMethod } = useImportWizard<ParsedRecipeItem>();
   const t = useTranslations("import");
@@ -364,6 +374,7 @@ function ImportInputContent({
           onParse={onParseText}
           placeholder={t("text.recipePlaceholder")}
           exampleText={exampleText}
+          initialText={initialAiQuery}
         />
       );
 

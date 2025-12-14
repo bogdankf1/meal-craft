@@ -108,13 +108,17 @@ function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
 interface ImportWizardProviderProps<T extends ParsedItem> {
   children: ReactNode;
   onComplete?: (items: T[]) => void;
+  initialMethod?: string;
+  initialStep?: ImportStep;
 }
 
 export function ImportWizardProvider<T extends ParsedItem>({
   children,
+  initialMethod,
+  initialStep,
 }: ImportWizardProviderProps<T>) {
-  const [step, setStep] = useState<ImportStep>("method");
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [step, setStep] = useState<ImportStep>(initialStep || "method");
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(initialMethod || null);
   const [parsedItems, setParsedItems] = useState<T[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 

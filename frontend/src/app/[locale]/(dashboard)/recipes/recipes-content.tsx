@@ -350,7 +350,10 @@ export function RecipesContent() {
 
         {/* Import Tab */}
         <TabsContent value="import">
-          <RecipeImport onViewItems={() => navigateToTab("overview")} />
+          <RecipeImport
+            onViewItems={() => navigateToTab("overview")}
+            initialAiQuery={searchParams.get("aiImport") || undefined}
+          />
         </TabsContent>
 
         {/* Collections Tab */}

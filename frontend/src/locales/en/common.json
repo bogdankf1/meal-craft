@@ -17,7 +17,7 @@
     "restaurants": "Restaurants & Takeout",
     "nutrition": "Nutrition",
     "lifestyle": "Lifestyle",
-    "seasonality": "Seasonality & Sustainability",
+    "seasonality": "Seasonality",
     "learning": "Learning & Skills",
     "health": "Health Integrations",
     "tools": "Tools",
@@ -2533,6 +2533,152 @@
       "errorUpdatingStatus": "Failed to update status",
       "errorStartingPath": "Failed to start learning path",
       "errorAddingSkills": "Failed to add skills"
+    }
+  },
+  "seasonality": {
+    "title": "Seasonality",
+    "description": "Discover what's in season in your region and explore local specialties",
+    "tabs": {
+      "thisMonth": "This Month",
+      "calendar": "Seasonal Calendar",
+      "specialties": "Local Specialties",
+      "preferences": "My Preferences"
+    },
+    "stats": {
+      "inSeason": "In Season",
+      "itemsAvailable": "items available now",
+      "peakSeason": "Peak Season",
+      "atTheirBest": "at their best",
+      "favorites": "Favorites",
+      "savedItems": "saved items",
+      "localSpecialties": "Local Specialties"
+    },
+    "thisMonth": {
+      "showing": "Showing produce for {month}",
+      "weeklyPicks": "Weekly Picks",
+      "getRecommendations": "Get AI Recommendations",
+      "aiRecommendations": "AI Recommendations",
+      "seasonIs": "It's {season} season",
+      "recipeIdeas": "Recipe ideas",
+      "whatToBuy": "What to Buy This Week",
+      "try": "Try",
+      "addAllToList": "Add All to List"
+    },
+    "calendar": {
+      "title": "Seasonal Calendar",
+      "description": "Plan your meals around what's in season in {country}",
+      "now": "Now",
+      "items": "items",
+      "peak": "Peak",
+      "comingSoon": "Coming soon",
+      "endingSoon": "Ending soon",
+      "inSeasonIn": "In Season in {month}",
+      "noDataForMonth": "No seasonal data available for this month",
+      "noData": "No Calendar Data Available",
+      "noDataDescription": "We don't have seasonal calendar data for your region yet. Generate personalized data using AI.",
+      "generateWithAI": "Generate Calendar with AI"
+    },
+    "specialties": {
+      "title": "Local Specialties of {country}",
+      "description": "Discover unique ingredients, dishes, and products from your region",
+      "culturalInfo": "Cultural significance",
+      "howToUse": "How to use",
+      "relatedDishes": "Traditional dishes",
+      "noData": "No Local Specialties Found",
+      "noDataDescription": "We don't have local specialty data for your region yet. Discover unique products using AI.",
+      "discoverWithAI": "Discover Specialties with AI"
+    },
+    "preferences": {
+      "title": "My Preferences",
+      "description": "Customize your seasonality experience",
+      "selectCountry": "Your Country",
+      "countryHint": "We'll show seasonal produce specific to your location",
+      "notifications": "Seasonal Notifications",
+      "notificationsHint": "Get notified when your favorites come into season",
+      "yourFavorites": "Your Favorites",
+      "favoritesCount": "You have {count} favorite items",
+      "noFavorites": "You haven't added any favorites yet"
+    },
+    "filters": {
+      "search": "Search produce...",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "inSeasonOnly": "In season only",
+      "favoritesOnly": "Favorites only"
+    },
+    "categories": {
+      "vegetables": "Vegetables",
+      "fruits": "Fruits",
+      "herbs": "Herbs",
+      "seafood": "Seafood",
+      "mushrooms": "Mushrooms",
+      "nuts": "Nuts",
+      "grains": "Grains"
+    },
+    "specialtyTypes": {
+      "ingredient": "Ingredient",
+      "dish": "Dish",
+      "technique": "Technique",
+      "product": "Product"
+    },
+    "badges": {
+      "peak": "Peak Season",
+      "inSeason": "In Season",
+      "featured": "Featured"
+    },
+    "empty": {
+      "produce": {
+        "title": "No Produce Found",
+        "description": "Try adjusting your filters or check back later"
+      },
+      "specialties": {
+        "title": "No Specialties Found",
+        "description": "Local specialties will be added soon"
+      },
+      "favorites": {
+        "title": "No Favorites Yet",
+        "description": "Click the heart icon on items to add them to your favorites"
+      }
+    },
+    "dialog": {
+      "addToShoppingList": "Add to Shopping List",
+      "selectList": "Add {count} items to your shopping list",
+      "selectListPlaceholder": "Select a list",
+      "chooseList": "Choose which list to add items to:",
+      "addingItems": "Adding...",
+      "addItems": "Add Items",
+      "noLists": "No active shopping lists found. Create one first.",
+      "itemsToAdd": "Items to add",
+      "cancel": "Cancel",
+      "add": "Add"
+    },
+    "messages": {
+      "countryUpdated": "Country updated successfully",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites",
+      "errorUpdatingPreferences": "Failed to update preferences",
+      "errorUpdatingFavorites": "Failed to update favorites",
+      "errorGettingRecommendations": "Failed to get recommendations",
+      "errorGettingWeeklyPicks": "Failed to get weekly picks",
+      "addedToShoppingList": "Items added to shopping list",
+      "errorAddingToShoppingList": "Failed to add items to shopping list",
+      "savedToProduce": "Saved to your seasonal produce",
+      "removedFromProduce": "Removed from seasonal produce",
+      "savedAndFavorited": "Saved to produce and added to favorites",
+      "errorSavingProduce": "Failed to save produce"
+    },
+    "actions": {
+      "save": "Save to produce",
+      "unsave": "Remove from produce",
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites",
+      "addToList": "Add to List"
+    },
+    "details": {
+      "description": "Description",
+      "storageTips": "Storage Tips",
+      "nutrition": "Nutrition Highlights",
+      "culinaryUses": "Culinary Uses"
     }
   }
 }

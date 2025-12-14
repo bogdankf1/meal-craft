@@ -38,6 +38,7 @@ export const baseApi = createApi({
     "PracticeLogs",
     "Subscription",
     "Tiers",
+    "Seasonality",
   ],
   endpoints: () => ({}),
 });
