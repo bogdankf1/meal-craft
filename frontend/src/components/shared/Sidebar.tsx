@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useTransition, useSyncExternalStore } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import { useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,7 @@ import {
   Dumbbell,
   Leaf,
   GraduationCap,
-  Heart,
+  // Heart, // Unused - health integrations hidden
   Download,
   RefreshCw,
   HelpCircle,
@@ -103,7 +102,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/seasonality", label: "seasonality", icon: Leaf },
       { href: "/learning", label: "learning", icon: GraduationCap },
-      { href: "/health", label: "health", icon: Heart },
+      // { href: "/health", label: "health", icon: Heart }, // Hidden until web-compatible health integrations are available
     ],
   },
   {
@@ -125,8 +124,6 @@ export function Sidebar({ onClose }: SidebarProps) {
   const t = useTranslations("nav");
   const tTiers = useTranslations("tiers");
   const pathname = usePathname();
-  const router = useRouter();
-  const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
   const { data: session, status: sessionStatus } = useSession();
 
@@ -142,7 +139,6 @@ export function Sidebar({ onClose }: SidebarProps) {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("sidebar-collapsed") === "true";
   });
-  const [isPending, startTransition] = useTransition();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
     if (typeof window === "undefined") {
       return ["planning", "inventory", "tracking", "lifestyle", "tools"];
@@ -164,13 +160,6 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
-  };
-
-  const switchLocale = (newLocale: string) => {
-    Cookies.set("NEXT_LOCALE", newLocale, { expires: 365 });
-    startTransition(() => {
-      router.refresh();
-    });
   };
 
   const cycleTheme = () => {
@@ -396,26 +385,6 @@ export function Sidebar({ onClose }: SidebarProps) {
               <ThemeIcon className="h-5 w-5" />
             </Button>
           )}
-          <div className="flex gap-1">
-            <Button
-              variant={currentLocale === "uk" ? "secondary" : "ghost"}
-              size="sm"
-              className="px-2 text-xs"
-              onClick={() => switchLocale("uk")}
-              disabled={isPending}
-            >
-              UA
-            </Button>
-            <Button
-              variant={currentLocale === "en" ? "secondary" : "ghost"}
-              size="sm"
-              className="px-2 text-xs"
-              onClick={() => switchLocale("en")}
-              disabled={isPending}
-            >
-              EN
-            </Button>
-          </div>
           {/* Login/Logout button */}
           {session ? (
             <Button
@@ -444,8 +413,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   const t = useTranslations("nav");
   const tTiers = useTranslations("tiers");
   const pathname = usePathname();
-  const router = useRouter();
-  const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
   const { data: session, status: sessionStatus } = useSession();
 
@@ -455,7 +422,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   });
 
   const mounted = useIsMounted();
-  const [isPending, startTransition] = useTransition();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
     if (typeof window === "undefined") {
       return ["planning", "inventory", "tracking", "lifestyle", "tools"];
@@ -471,13 +437,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
 
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
-  };
-
-  const switchLocale = (newLocale: string) => {
-    Cookies.set("NEXT_LOCALE", newLocale, { expires: 365 });
-    startTransition(() => {
-      router.refresh();
-    });
   };
 
   const cycleTheme = () => {
@@ -658,7 +617,7 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
               </div>
             </div>
 
-            {/* Theme, language, and logout */}
+            {/* Theme and logout */}
             <div className="flex items-center gap-2 mt-3">
               {mounted && (
                 <Button
@@ -670,26 +629,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
                   <ThemeIcon className="h-5 w-5" />
                 </Button>
               )}
-              <div className="flex gap-1">
-                <Button
-                  variant={currentLocale === "uk" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="px-2 text-xs"
-                  onClick={() => switchLocale("uk")}
-                  disabled={isPending}
-                >
-                  UA
-                </Button>
-                <Button
-                  variant={currentLocale === "en" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="px-2 text-xs"
-                  onClick={() => switchLocale("en")}
-                  disabled={isPending}
-                >
-                  EN
-                </Button>
-              </div>
               {session ? (
                 <Button
                   variant="ghost"

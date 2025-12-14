@@ -2535,6 +2535,71 @@
       "errorAddingSkills": "Failed to add skills"
     }
   },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your account preferences and application settings",
+    "tabs": {
+      "general": "General",
+      "appearance": "Appearance",
+      "notifications": "Notifications",
+      "seasonality": "Seasonality"
+    },
+    "general": {
+      "language": {
+        "title": "Language",
+        "description": "Choose your preferred language for the application",
+        "placeholder": "Select language"
+      },
+      "currency": {
+        "title": "Currency",
+        "description": "Select your preferred currency for prices and budgeting",
+        "placeholder": "Select currency",
+        "hint": "This will be used for grocery prices, meal costs, and budget tracking"
+      }
+    },
+    "appearance": {
+      "theme": {
+        "title": "Theme",
+        "description": "Customize the look and feel of the application",
+        "light": "Light",
+        "lightDescription": "Clean and bright interface",
+        "dark": "Dark",
+        "darkDescription": "Easy on the eyes",
+        "system": "System",
+        "systemDescription": "Follows your device settings"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Configure how and when you receive notifications",
+      "email": {
+        "title": "Email Notifications",
+        "description": "Receive important updates via email"
+      },
+      "push": {
+        "title": "Push Notifications",
+        "description": "Get real-time notifications in your browser"
+      },
+      "weeklyDigest": {
+        "title": "Weekly Digest",
+        "description": "Receive a weekly summary of your meal plans and shopping lists"
+      },
+      "mealReminders": {
+        "title": "Meal Reminders",
+        "description": "Get reminded about upcoming meals to prepare"
+      },
+      "shoppingReminders": {
+        "title": "Shopping List Reminders",
+        "description": "Get reminded when you have items on your shopping list"
+      }
+    },
+    "messages": {
+      "languageChanged": "Language updated successfully",
+      "themeChanged": "Theme updated successfully",
+      "notificationsUpdated": "Notification preferences updated",
+      "errorUpdatingNotifications": "Failed to update notification preferences"
+    }
+  },
   "seasonality": {
     "title": "Seasonality",
     "description": "Discover what's in season in your region and explore local specialties",

@@ -7,7 +7,6 @@ import {
   Leaf,
   Calendar,
   MapPin,
-  Settings,
   Search,
   Star,
   Sparkles,
@@ -50,7 +49,6 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useGetUserSeasonalPreferencesQuery,
-  useUpdateUserSeasonalPreferencesMutation,
   useGetSeasonalProduceQuery,
   useGetLocalSpecialtiesQuery,
   useGetSeasonalCalendarQuery,
@@ -140,7 +138,6 @@ export function SeasonalityContent() {
   const [getWeeklyPicks, { data: weeklyPicks, isLoading: isLoadingPicks, reset: resetWeeklyPicks }] = useGetWeeklyPicksMutation();
 
   // Mutations
-  const [updatePreferences] = useUpdateUserSeasonalPreferencesMutation();
   const [addFavorite] = useAddFavoriteProduceMutation();
   const [removeFavorite] = useRemoveFavoriteProduceMutation();
   const [saveRecommendation, { isLoading: isSavingRecommendation }] = useSaveRecommendationAsProduceMutation();
@@ -168,24 +165,7 @@ export function SeasonalityContent() {
       label: t("tabs.specialties"),
       icon: <MapPin className="h-4 w-4" />,
     },
-    {
-      value: "preferences",
-      label: t("tabs.preferences"),
-      icon: <Settings className="h-4 w-4" />,
-    },
   ];
-
-  const handleCountryChange = async (countryCode: string) => {
-    try {
-      await updatePreferences({ country_code: countryCode }).unwrap();
-      // Clear AI recommendations when country changes
-      resetRecommendations();
-      resetWeeklyPicks();
-      toast.success(t("messages.countryUpdated"));
-    } catch {
-      toast.error(t("messages.errorUpdatingPreferences"));
-    }
-  };
 
   const handleToggleFavorite = async (produce: SeasonalProduce) => {
     try {
@@ -761,69 +741,6 @@ export function SeasonalityContent() {
           </Card>
         </TabsContent>
 
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("preferences.title")}</CardTitle>
-              <CardDescription>{t("preferences.description")}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Country Selection */}
-              <div className="space-y-2">
-                <Label>{t("preferences.selectCountry")}</Label>
-                <Select value={selectedCountry} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="w-full md:w-80">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SUPPORTED_COUNTRIES.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        <span className="flex items-center gap-2">
-                          <span>{country.flag}</span>
-                          <span>{country.name}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  {t("preferences.countryHint")}
-                </p>
-              </div>
-
-              {/* Notifications */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>{t("preferences.notifications")}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t("preferences.notificationsHint")}
-                  </p>
-                </div>
-                <Switch
-                  checked={preferences?.notification_enabled || false}
-                  onCheckedChange={(checked) =>
-                    updatePreferences({ notification_enabled: checked })
-                  }
-                />
-              </div>
-
-              {/* Favorites Summary */}
-              <div className="space-y-2">
-                <Label>{t("preferences.yourFavorites")}</Label>
-                {favoritesCount > 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("preferences.favoritesCount", { count: favoritesCount })}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {t("preferences.noFavorites")}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </ModuleTabs>
 
       {/* Shopping List Dialog */}
