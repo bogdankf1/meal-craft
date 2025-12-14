@@ -220,8 +220,10 @@ class PantryAnalytics(BaseModel):
     items_by_category: dict = Field(..., description="Breakdown by category")
     expiring_soon: int = Field(..., description="Items expiring within 7 days")
     expired: int = Field(..., description="Items already expired")
-    low_stock: int = Field(..., description="Items below minimum quantity")
+    low_stock_items: int = Field(..., description="Items below minimum quantity")
     recently_added: List[PantryItemResponse] = Field(..., description="Recently added items")
+    expiring_items: List[PantryItemResponse] = Field(default_factory=list, description="Items expiring soon")
+    low_stock_list: List[PantryItemResponse] = Field(default_factory=list, description="Items below minimum quantity")
 
 
 class WasteAnalytics(BaseModel):

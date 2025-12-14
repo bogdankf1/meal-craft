@@ -192,24 +192,31 @@ async def get_pantry_analytics(
         cat = item.category or "other"
         items_by_category[cat] = items_by_category.get(cat, 0) + 1
 
-    # Expiring soon / expired
+    # Expiring soon / expired / expiring items list
     expiring_soon = 0
     expired = 0
+    expiring_items_list = []
     for item in items:
         if item.expiry_date:
             if item.expiry_date < today:
                 expired += 1
             elif item.expiry_date <= week_from_now:
                 expiring_soon += 1
+                expiring_items_list.append(item)
 
-    # Low stock
-    low_stock = sum(
-        1 for item in items
-        if item.minimum_quantity and item.quantity and item.quantity <= item.minimum_quantity
-    )
+    # Low stock items and count
+    low_stock_items_list = [
+        item for item in items
+        if item.minimum_quantity and item.quantity is not None and item.quantity < item.minimum_quantity
+    ]
+    low_stock_count = len(low_stock_items_list)
 
     # Recently added (top 5)
     recently_added = [PantryItemResponse.model_validate(item) for item in items[:5]]
+
+    # Convert lists to response models
+    expiring_items = [PantryItemResponse.model_validate(item) for item in expiring_items_list[:10]]
+    low_stock_list = [PantryItemResponse.model_validate(item) for item in low_stock_items_list[:10]]
 
     return PantryAnalytics(
         total_items=total_items,
@@ -217,8 +224,10 @@ async def get_pantry_analytics(
         items_by_category=items_by_category,
         expiring_soon=expiring_soon,
         expired=expired,
-        low_stock=low_stock,
+        low_stock_items=low_stock_count,
         recently_added=recently_added,
+        expiring_items=expiring_items,
+        low_stock_list=low_stock_list,
     )
 
 
