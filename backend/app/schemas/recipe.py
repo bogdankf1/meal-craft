@@ -460,3 +460,91 @@ class AddToShoppingListRequest(BaseModel):
     servings: Optional[int] = None  # If different from recipe default
     shopping_list_id: Optional[UUID] = None  # Create new if not provided
     exclude_ingredient_ids: Optional[List[UUID]] = None  # Ingredients to skip
+
+
+# ============ AI Recipe Suggestion Schemas ============
+
+class CuisineType(str, Enum):
+    """Cuisine type enum."""
+    ITALIAN = "italian"
+    MEXICAN = "mexican"
+    CHINESE = "chinese"
+    JAPANESE = "japanese"
+    INDIAN = "indian"
+    THAI = "thai"
+    FRENCH = "french"
+    AMERICAN = "american"
+    MEDITERRANEAN = "mediterranean"
+    KOREAN = "korean"
+    VIETNAMESE = "vietnamese"
+    GREEK = "greek"
+    SPANISH = "spanish"
+    MIDDLE_EASTERN = "middle_eastern"
+    UKRAINIAN = "ukrainian"
+    OTHER = "other"
+
+
+class MealType(str, Enum):
+    """Meal/food type enum."""
+    QUICK_EASY = "quick_easy"
+    HEALTHY = "healthy"
+    COMFORT_FOOD = "comfort_food"
+    VEGETARIAN = "vegetarian"
+    VEGAN = "vegan"
+    LOW_CARB = "low_carb"
+    HIGH_PROTEIN = "high_protein"
+    BUDGET_FRIENDLY = "budget_friendly"
+    GOURMET = "gourmet"
+    KID_FRIENDLY = "kid_friendly"
+    ONE_POT = "one_pot"
+    MEAL_PREP = "meal_prep"
+    PARTY_FOOD = "party_food"
+    SOUP_STEW = "soup_stew"
+    SALAD = "salad"
+    PASTA = "pasta"
+    RICE_GRAIN = "rice_grain"
+    SEAFOOD = "seafood"
+    MEAT = "meat"
+    BAKED_GOODS = "baked_goods"
+
+
+class RecipeSuggestionRequest(BaseModel):
+    """Request for AI recipe suggestions."""
+    cuisine_type: Optional[CuisineType] = Field(None, description="Type of cuisine")
+    meal_type: Optional[MealType] = Field(None, description="Type of meal/food")
+    category: Optional[RecipeCategory] = Field(None, description="Recipe category (breakfast, lunch, etc.)")
+    servings: int = Field(default=4, ge=1, le=20, description="Number of servings")
+    max_prep_time: Optional[int] = Field(None, ge=5, le=180, description="Maximum prep time in minutes")
+    max_cook_time: Optional[int] = Field(None, ge=5, le=480, description="Maximum cook time in minutes")
+    difficulty: Optional[RecipeDifficulty] = Field(None, description="Recipe difficulty level")
+    dietary_restrictions: Optional[List[str]] = Field(None, description="Dietary restrictions to consider")
+    include_ingredients: Optional[List[str]] = Field(None, description="Ingredients to include")
+    exclude_ingredients: Optional[List[str]] = Field(None, description="Ingredients to exclude")
+    count: int = Field(default=6, ge=1, le=12, description="Number of suggestions to generate")
+
+
+class RecipeSuggestionItem(BaseModel):
+    """A single recipe suggestion from AI."""
+    name: str
+    description: str
+    category: Optional[str] = None
+    cuisine_type: Optional[str] = None
+    prep_time: Optional[int] = None
+    cook_time: Optional[int] = None
+    servings: int = 4
+    difficulty: Optional[str] = None
+    instructions: str
+    ingredients: List[RecipeIngredientCreate]
+    tags: Optional[List[str]] = None
+    dietary_info: Optional[List[str]] = None
+    estimated_calories: Optional[int] = None
+    tips: Optional[str] = None
+
+
+class RecipeSuggestionResponse(BaseModel):
+    """Response containing AI recipe suggestions."""
+    suggestions: List[RecipeSuggestionItem]
+    total_count: int
+    filters_applied: dict
+    success: bool
+    message: Optional[str] = None

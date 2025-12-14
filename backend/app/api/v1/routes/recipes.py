@@ -55,6 +55,9 @@ from app.schemas.recipe import (
     ParseRecipeUrlRequest,
     ParseRecipeResponse,
     AddToShoppingListRequest,
+    RecipeSuggestionRequest,
+    RecipeSuggestionItem,
+    RecipeSuggestionResponse,
 )
 from app.services.ai_service import ai_service
 
@@ -1470,6 +1473,90 @@ async def get_recipe_analytics(
         avg_cook_time=float(avg_row.avg_cook) if avg_row.avg_cook else None,
         total_times_cooked=avg_row.total_cooked or 0,
     )
+
+
+# ============ AI Suggestions ============
+
+@router.post("/suggest", response_model=RecipeSuggestionResponse)
+async def suggest_recipes(
+    data: RecipeSuggestionRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generate AI-powered recipe suggestions based on user preferences.
+
+    Allows filtering by cuisine type, meal type, category, difficulty,
+    dietary restrictions, and more.
+    """
+    try:
+        suggestions = await ai_service.suggest_recipes(
+            cuisine_type=data.cuisine_type.value if data.cuisine_type else None,
+            meal_type=data.meal_type.value if data.meal_type else None,
+            category=data.category.value if data.category else None,
+            servings=data.servings,
+            max_prep_time=data.max_prep_time,
+            max_cook_time=data.max_cook_time,
+            difficulty=data.difficulty.value if data.difficulty else None,
+            dietary_restrictions=data.dietary_restrictions,
+            include_ingredients=data.include_ingredients,
+            exclude_ingredients=data.exclude_ingredients,
+            count=data.count,
+        )
+
+        # Convert to response models
+        suggestion_items = []
+        for s in suggestions:
+            # Ensure ingredients are properly formatted
+            ingredients = []
+            for ing in s.get("ingredients", []):
+                ingredients.append({
+                    "ingredient_name": ing.get("ingredient_name", ""),
+                    "quantity": ing.get("quantity"),
+                    "unit": ing.get("unit"),
+                    "category": ing.get("category"),
+                })
+
+            suggestion_items.append(RecipeSuggestionItem(
+                name=s.get("name", "Untitled Recipe"),
+                description=s.get("description", ""),
+                category=s.get("category"),
+                cuisine_type=s.get("cuisine_type"),
+                prep_time=s.get("prep_time"),
+                cook_time=s.get("cook_time"),
+                servings=s.get("servings", data.servings),
+                difficulty=s.get("difficulty"),
+                instructions=s.get("instructions", ""),
+                ingredients=ingredients,
+                tags=s.get("tags"),
+                dietary_info=s.get("dietary_info"),
+                estimated_calories=s.get("estimated_calories"),
+                tips=s.get("tips"),
+            ))
+
+        filters_applied = {
+            "cuisine_type": data.cuisine_type.value if data.cuisine_type else None,
+            "meal_type": data.meal_type.value if data.meal_type else None,
+            "category": data.category.value if data.category else None,
+            "servings": data.servings,
+            "difficulty": data.difficulty.value if data.difficulty else None,
+        }
+
+        return RecipeSuggestionResponse(
+            suggestions=suggestion_items,
+            total_count=len(suggestion_items),
+            filters_applied=filters_applied,
+            success=True,
+            message=f"Generated {len(suggestion_items)} recipe suggestions",
+        )
+
+    except Exception as e:
+        print(f"[Recipes] Error generating suggestions: {e}")
+        import traceback
+        print(f"[Recipes] Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate recipe suggestions: {str(e)}",
+        )
 
 
 # ============ Import/Parse ============
