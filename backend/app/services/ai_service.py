@@ -2785,6 +2785,9 @@ For each recipe, provide:
 7. Relevant tags (e.g., "gluten-free", "one-pot", "30-minute meal")
 8. Estimated calories per serving
 9. Any helpful tips
+10. Required kitchen equipment (e.g., "Stand Mixer", "Food Processor", "Dutch Oven")
+11. Cooking techniques used (e.g., "Julienne", "Blanching", "Braising")
+12. Seasonal information for key ingredients (which months they're in peak season)
 
 Return ONLY a valid JSON array with {count} recipe objects. Each object must have these exact fields:
 {{
@@ -2803,8 +2806,24 @@ Return ONLY a valid JSON array with {count} recipe objects. Each object must hav
   "tags": ["tag1", "tag2"],
   "dietary_info": ["vegetarian", "gluten-free"],
   "estimated_calories": 350,
-  "tips": "Helpful cooking tip"
+  "tips": "Helpful cooking tip",
+  "required_equipment": [
+    {{"equipment_name": "Stand Mixer", "category": "appliances", "is_required": true, "substitute_note": "Can use hand mixer"}}
+  ],
+  "techniques": [
+    {{"skill_name": "Julienne", "category": "knife_skills", "difficulty": "intermediate", "description": "Cut into thin matchstick strips"}}
+  ],
+  "seasonal_info": [
+    {{"ingredient_name": "tomatoes", "peak_months": [6, 7, 8], "substitute_out_of_season": "canned tomatoes"}}
+  ],
+  "best_season_months": [6, 7, 8]
 }}
+
+Notes for integration fields:
+- required_equipment: List kitchen tools needed. Categories: cookware, bakeware, appliances, knives_cutting, utensils, small_tools, specialty
+- techniques: List cooking techniques used. Categories: knife_skills, cooking_methods, baking, preparation. Difficulty: beginner, intermediate, advanced
+- seasonal_info: Only include for 1-3 key seasonal ingredients. Peak months are 1-12 (January=1, December=12)
+- best_season_months: Overall best months to make this recipe based on ingredient seasonality
 
 Make the recipes varied, interesting, and practical. Use common ingredients when possible.
 

@@ -304,6 +304,11 @@ async def get_recipe(
         ingredients=recipe.ingredients,
         nutrition=recipe.nutrition,
         collection_ids=[c.id for c in recipe.collections],
+        # Integration fields
+        required_equipment=recipe.required_equipment,
+        techniques=recipe.techniques,
+        seasonal_info=recipe.seasonal_info,
+        best_season_months=recipe.best_season_months,
     )
 
 
@@ -338,6 +343,11 @@ async def create_recipes(
             notes=recipe_data.notes,
             is_favorite=recipe_data.is_favorite,
             is_ai_generated=False,
+            # Integration fields
+            required_equipment=[eq.model_dump() for eq in recipe_data.required_equipment] if recipe_data.required_equipment else None,
+            techniques=[tech.model_dump() for tech in recipe_data.techniques] if recipe_data.techniques else None,
+            seasonal_info=[si.model_dump() for si in recipe_data.seasonal_info] if recipe_data.seasonal_info else None,
+            best_season_months=recipe_data.best_season_months,
         )
         db.add(recipe)
         await db.flush()
@@ -1516,6 +1526,42 @@ async def suggest_recipes(
                     "category": ing.get("category"),
                 })
 
+            # Parse required equipment
+            required_equipment = None
+            if s.get("required_equipment"):
+                required_equipment = []
+                for eq in s.get("required_equipment", []):
+                    required_equipment.append({
+                        "equipment_name": eq.get("equipment_name", ""),
+                        "category": eq.get("category"),
+                        "is_required": eq.get("is_required", True),
+                        "substitute_note": eq.get("substitute_note"),
+                    })
+
+            # Parse techniques
+            techniques = None
+            if s.get("techniques"):
+                techniques = []
+                for tech in s.get("techniques", []):
+                    techniques.append({
+                        "skill_name": tech.get("skill_name", ""),
+                        "category": tech.get("category"),
+                        "difficulty": tech.get("difficulty"),
+                        "description": tech.get("description"),
+                    })
+
+            # Parse seasonal info
+            seasonal_info = None
+            if s.get("seasonal_info"):
+                seasonal_info = []
+                for sea in s.get("seasonal_info", []):
+                    seasonal_info.append({
+                        "ingredient_name": sea.get("ingredient_name", ""),
+                        "peak_months": sea.get("peak_months"),
+                        "available_months": sea.get("available_months"),
+                        "substitute_out_of_season": sea.get("substitute_out_of_season"),
+                    })
+
             suggestion_items.append(RecipeSuggestionItem(
                 name=s.get("name", "Untitled Recipe"),
                 description=s.get("description", ""),
@@ -1531,6 +1577,10 @@ async def suggest_recipes(
                 dietary_info=s.get("dietary_info"),
                 estimated_calories=s.get("estimated_calories"),
                 tips=s.get("tips"),
+                required_equipment=required_equipment,
+                techniques=techniques,
+                seasonal_info=seasonal_info,
+                best_season_months=s.get("best_season_months"),
             ))
 
         filters_applied = {

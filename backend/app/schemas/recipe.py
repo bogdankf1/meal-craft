@@ -29,6 +29,32 @@ class RecipeDifficulty(str, Enum):
     HARD = "hard"
 
 
+# ============ Integration Schemas (Equipment, Techniques, Seasonality) ============
+
+class RecipeEquipment(BaseModel):
+    """Equipment required for a recipe."""
+    equipment_name: str = Field(..., min_length=1, max_length=255)
+    category: Optional[str] = None  # cookware, appliances, etc.
+    is_required: bool = True  # Required vs optional
+    substitute_note: Optional[str] = None  # "Can use hand mixer instead"
+
+
+class RecipeTechnique(BaseModel):
+    """Cooking technique/skill used in a recipe."""
+    skill_name: str = Field(..., min_length=1, max_length=255)
+    category: Optional[str] = None  # knife_skills, cooking_methods, etc.
+    difficulty: Optional[str] = None  # beginner, intermediate, advanced
+    description: Optional[str] = None  # Brief description of how it's used
+
+
+class RecipeSeasonalIngredient(BaseModel):
+    """Seasonal information for a recipe ingredient."""
+    ingredient_name: str = Field(..., min_length=1, max_length=255)
+    peak_months: Optional[List[int]] = None  # [6, 7, 8] for summer
+    available_months: Optional[List[int]] = None  # [5, 6, 7, 8, 9]
+    substitute_out_of_season: Optional[str] = None  # "Use canned tomatoes"
+
+
 # ============ Ingredient Schemas ============
 
 class RecipeIngredientCreate(BaseModel):
@@ -126,6 +152,11 @@ class RecipeCreate(BaseModel):
     ingredients: List[RecipeIngredientCreate] = Field(..., min_length=1)
     # Nutrition (optional)
     nutrition: Optional[RecipeNutritionCreate] = None
+    # Integration fields (optional)
+    required_equipment: Optional[List[RecipeEquipment]] = None
+    techniques: Optional[List[RecipeTechnique]] = None
+    seasonal_info: Optional[List[RecipeSeasonalIngredient]] = None
+    best_season_months: Optional[List[int]] = Field(None, description="Best months to make this recipe (1-12)")
 
 
 class RecipeBatchCreate(BaseModel):
@@ -153,6 +184,11 @@ class RecipeUpdate(BaseModel):
     is_favorite: Optional[bool] = None
     is_archived: Optional[bool] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
+    # Integration fields
+    required_equipment: Optional[List[RecipeEquipment]] = None
+    techniques: Optional[List[RecipeTechnique]] = None
+    seasonal_info: Optional[List[RecipeSeasonalIngredient]] = None
+    best_season_months: Optional[List[int]] = None
 
 
 class RecipeUpdateIngredients(BaseModel):
@@ -197,6 +233,11 @@ class RecipeResponse(BaseModel):
     ingredients: List[RecipeIngredientResponse] = []
     nutrition: Optional[RecipeNutritionResponse] = None
     collection_ids: List[UUID] = []
+    # Integration fields
+    required_equipment: Optional[List[RecipeEquipment]] = None
+    techniques: Optional[List[RecipeTechnique]] = None
+    seasonal_info: Optional[List[RecipeSeasonalIngredient]] = None
+    best_season_months: Optional[List[int]] = None
 
     class Config:
         from_attributes = True
@@ -539,6 +580,11 @@ class RecipeSuggestionItem(BaseModel):
     dietary_info: Optional[List[str]] = None
     estimated_calories: Optional[int] = None
     tips: Optional[str] = None
+    # Integration fields for equipment, techniques, and seasonality
+    required_equipment: Optional[List[RecipeEquipment]] = None
+    techniques: Optional[List[RecipeTechnique]] = None
+    seasonal_info: Optional[List[RecipeSeasonalIngredient]] = None
+    best_season_months: Optional[List[int]] = None
 
 
 class RecipeSuggestionResponse(BaseModel):

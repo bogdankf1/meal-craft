@@ -76,6 +76,16 @@ class Recipe(Base):
     # Notes for tips, variations, etc.
     notes = Column(Text, nullable=True)
 
+    # Integration fields stored as JSONB for flexibility
+    # Equipment: [{equipment_name: "Stand Mixer", category: "appliances", is_required: true, substitute_note: "Can use hand mixer"}]
+    required_equipment = Column(JSONB, nullable=True)
+    # Skills/Techniques: [{skill_name: "Julienne", category: "knife_skills", difficulty: "intermediate"}]
+    techniques = Column(JSONB, nullable=True)
+    # Seasonality: [{ingredient_name: "tomatoes", peak_months: [6,7,8], available_months: [5,6,7,8,9]}]
+    seasonal_info = Column(JSONB, nullable=True)
+    # Best months to make this recipe (derived from seasonal_info or set manually)
+    best_season_months = Column(ARRAY(Integer), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
