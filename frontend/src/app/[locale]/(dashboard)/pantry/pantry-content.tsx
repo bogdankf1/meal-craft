@@ -64,7 +64,9 @@ import {
   PantryFiltersBar,
   PantryImport,
   PantryCalendarView,
+  PantryInsights,
 } from "@/components/modules/pantry";
+import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 import {
   useGetPantryItemsQuery,
   useGetPantryAnalyticsQuery,
@@ -104,6 +106,10 @@ export function PantryContent() {
   const [historyMonths, setHistoryMonths] = useState(3);
   const [currentView, setCurrentView] = useState<string>("table");
   const [archiveView, setArchiveView] = useState<string>("table");
+  const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
+  const [itemsToAddToShoppingList, setItemsToAddToShoppingList] = useState<
+    { name: string; quantity?: number | null; unit?: string | null; category?: string | null }[]
+  >([]);
 
   // View options for the overview tab
   const viewOptions: ViewOption[] = [
@@ -272,6 +278,21 @@ export function PantryContent() {
                 variant={analytics?.expired ? "danger" : "default"}
               />
             </div>
+
+            {/* Insights Section - Seasonality & Low Stock */}
+            <PantryInsights
+              pantryItems={pantryData?.items || []}
+              analytics={analytics}
+              onAddToShoppingList={(itemName, quantity, unit) => {
+                setItemsToAddToShoppingList([
+                  { name: itemName, quantity, unit },
+                ]);
+                setShoppingListDialogOpen(true);
+              }}
+              onNavigateToSeasonality={() => {
+                router.push(pathname.replace("/pantry", "/seasonality"));
+              }}
+            />
 
             {/* Filters and Actions - Two line layout for better responsiveness */}
             <div className="space-y-3">
@@ -908,6 +929,12 @@ export function PantryContent() {
       <PantryBulkForm
         open={bulkFormOpen}
         onOpenChange={setBulkFormOpen}
+      />
+
+      <AddToShoppingListDialog
+        open={shoppingListDialogOpen}
+        onOpenChange={setShoppingListDialogOpen}
+        items={itemsToAddToShoppingList}
       />
     </>
   );

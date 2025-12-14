@@ -1138,6 +1138,7 @@
       "pasta": "Pasta & Noodles",
       "cereals": "Cereals",
       "baking": "Baking Supplies",
+      "pantry": "Pantry Staples",
       "other": "Other"
     },
     "addItem": "Add Item",
@@ -1298,6 +1299,22 @@
     "confirmDelete": {
       "title": "Delete Pantry Item",
       "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
+    },
+    "insights": {
+      "inSeason": {
+        "title": "In Peak Season",
+        "subtitle": "These items are at their best right now!",
+        "peakSeason": "Peak Season",
+        "viewAll": "View Seasonality",
+        "tip": "Use these ingredients now for the best flavor and nutrition"
+      },
+      "lowStock": {
+        "title": "Running Low",
+        "subtitle": "Consider restocking these items",
+        "minQuantity": "min",
+        "addToList": "Add to List",
+        "tip": "Add these to your shopping list before you run out"
+      }
     }
   },
   "kitchenEquipment": {
