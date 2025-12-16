@@ -67,6 +67,7 @@ import {
   GroceryFiltersBar,
   GroceryImport,
   GroceryCalendarView,
+  GroceryInsights,
 } from "@/components/modules/groceries";
 import {
   useGetGroceriesQuery,
@@ -277,6 +278,17 @@ export function GroceriesContent() {
                 variant="success"
               />
             </div>
+
+            {/* Insights Section - Seasonality & Meal Planner */}
+            <GroceryInsights
+              groceryItems={groceriesData?.items || []}
+              onNavigateToSeasonality={() => {
+                router.push(pathname.replace("/groceries", "/seasonality"));
+              }}
+              onNavigateToMealPlanner={() => {
+                router.push(pathname.replace("/groceries", "/meal-planner"));
+              }}
+            />
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">

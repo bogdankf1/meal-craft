@@ -458,6 +458,25 @@
       "success": "Item moved to pantry",
       "bulkSuccess": "{count, plural, one {# item} other {# items}} moved to pantry",
       "error": "Failed to move to pantry"
+    },
+    "insights": {
+      "outOfSeason": {
+        "title": "Out of Season",
+        "subtitle": "These items may cost more",
+        "mayCostMore": "Not in Season",
+        "viewSeasonality": "View Calendar",
+        "tip": "Consider seasonal alternatives to save money"
+      },
+      "mealPlanner": {
+        "title": "This Week's Meals",
+        "subtitle": "Buy ingredients for planned meals",
+        "mealsPlanned": "{count, plural, one {# meal} other {# meals}} planned",
+        "recipesCount": "{count, plural, one {# recipe} other {# recipes}}",
+        "thisWeek": "This Week",
+        "generateShoppingList": "Generate Shopping List",
+        "viewPlanner": "View Planner",
+        "tip": "Generate a shopping list from your meal plan"
+      }
     }
   },
   "import": {
