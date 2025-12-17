@@ -1,15 +1,30 @@
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExportContent } from "./export-content";
+
+function ExportLoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-64 rounded-lg" />
+      <Skeleton className="h-32 rounded-lg" />
+    </div>
+  );
+}
 
 export default async function ExportPage() {
-  const t = await getTranslations("nav");
+  const t = await getTranslations("export");
 
   return (
     <div>
-      <PageHeader title={t("export")} description="Export your data in various formats." />
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
-        This module will be implemented in Phase 2+
-      </div>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+      />
+      <Suspense fallback={<ExportLoadingSkeleton />}>
+        <ExportContent />
+      </Suspense>
     </div>
   );
 }

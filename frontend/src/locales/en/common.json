@@ -3022,5 +3022,77 @@
         "tip": "These recipes feature ingredients currently at peak season"
       }
     }
+  },
+  "export": {
+    "title": "Export Data",
+    "description": "Export your meal planning data in various formats",
+    "card": {
+      "title": "Export Configuration",
+      "description": "Select the data type and format you want to export"
+    },
+    "labels": {
+      "dataType": "Data Type",
+      "exportFormat": "Export Format",
+      "month": "Month",
+      "year": "Year"
+    },
+    "placeholders": {
+      "selectDataType": "Select data type",
+      "selectFormat": "Select format",
+      "selectMonth": "Select month",
+      "selectYear": "Select year"
+    },
+    "entryTypes": {
+      "groceries": "Groceries",
+      "pantry": "Pantry Items",
+      "shopping_lists": "Shopping Lists",
+      "recipes": "Recipes",
+      "meal_plans": "Meal Plans",
+      "kitchen_equipment": "Kitchen Equipment",
+      "restaurants": "Restaurants",
+      "restaurant_meals": "Restaurant Meals",
+      "nutrition_logs": "Nutrition Logs",
+      "nutrition_goals": "Nutrition Goals",
+      "health_metrics": "Health Metrics",
+      "user_skills": "Skills & Techniques",
+      "cooking_history": "Cooking History",
+      "recipe_collections": "Recipe Collections"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "formats": {
+      "csv": "CSV (Comma Separated Values)"
+    },
+    "buttons": {
+      "export": "Export Data",
+      "exporting": "Exporting..."
+    },
+    "messages": {
+      "successTitle": "Export successful",
+      "successDescription": "Downloaded {filename}",
+      "errorAccessDenied": "Access denied",
+      "errorAccessDeniedDescription": "You don't have permission to export data",
+      "errorFailed": "Export failed",
+      "errorFailedDescription": "An error occurred while exporting data. Please try again."
+    },
+    "info": {
+      "title": "About Exports",
+      "point1": "Exports include all data for the selected type, including archived items",
+      "point2": "Date filtering is available for time-based data like groceries, meals, and cooking history",
+      "point3": "CSV files can be opened in Excel, Google Sheets, or any spreadsheet application",
+      "point4": "Exports do not include images or attachments"
+    }
   }
 }
