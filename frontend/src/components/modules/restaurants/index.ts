@@ -6,3 +6,4 @@ export { RestaurantMealCalendarView } from "./restaurant-meal-calendar";
 export { RestaurantMealImport } from "./restaurant-meal-import";
 export { RestaurantMealAnalytics } from "./restaurant-meal-analytics";
 export { RestaurantMealHistory } from "./restaurant-meal-history";
+export { RestaurantsInsights } from "./restaurants-insights";

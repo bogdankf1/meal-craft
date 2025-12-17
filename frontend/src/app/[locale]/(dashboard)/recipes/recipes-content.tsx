@@ -57,7 +57,9 @@ import {
   AddToShoppingListDialog,
   AiRecipeSuggestionsDialog,
   ViewRecipeDialog,
+  RecipeInsights,
 } from "@/components/modules/recipes";
+import { AddToShoppingListDialog as SimpleShoppingListDialog } from "@/components/modules/shopping-lists";
 import {
   useGetRecipesQuery,
   useGetRecipeQuery,
@@ -109,6 +111,8 @@ export function RecipesContent() {
   const [selectedCollection, setSelectedCollection] = useState<RecipeCollection | null>(null);
   const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
   const [selectedRecipeForShoppingList, setSelectedRecipeForShoppingList] = useState<Recipe | null>(null);
+  const [simpleShoppingListDialogOpen, setSimpleShoppingListDialogOpen] = useState(false);
+  const [simpleShoppingListItems, setSimpleShoppingListItems] = useState<{ name: string; category?: string }[]>([]);
   const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedRecipeForView, setSelectedRecipeForView] = useState<RecipeListItem | null>(null);
@@ -201,6 +205,11 @@ export function RecipesContent() {
     }
   };
 
+  const handleSimpleAddToShoppingList = (items: { name: string; category?: string }[]) => {
+    setSimpleShoppingListItems(items);
+    setSimpleShoppingListDialogOpen(true);
+  };
+
   const handleSelectCollection = (collection: RecipeCollection) => {
     setSelectedCollection(collection);
   };
@@ -289,6 +298,27 @@ export function RecipesContent() {
               icon={<Clock className="h-4 w-4 text-muted-foreground" />}
             />
           </div>
+
+          {/* Cross-module Insights */}
+          {recipesData?.items && recipesData.items.length > 0 && (
+            <div className="mb-6">
+              <RecipeInsights
+                recipes={recipesData.items}
+                onNavigateToPantry={() => router.push("/pantry")}
+                onNavigateToShoppingLists={() => router.push("/shopping-lists")}
+                onNavigateToLearning={() => router.push("/learning")}
+                onPantryClick={(ingredientName) => {
+                  const encodedSearch = encodeURIComponent(ingredientName);
+                  router.push(`/pantry?search=${encodedSearch}`);
+                }}
+                onAddToShoppingList={handleSimpleAddToShoppingList}
+                onSkillClick={(skillName) => {
+                  const encodedSearch = encodeURIComponent(skillName);
+                  router.push(`/learning?tab=library&search=${encodedSearch}`);
+                }}
+              />
+            </div>
+          )}
 
           {/* Filters Row */}
           <div className="flex flex-col gap-4 mb-6">
@@ -634,6 +664,17 @@ export function RecipesContent() {
           onSuccess={() => setSelectedRecipeForShoppingList(null)}
         />
       )}
+
+      {/* Simple Shopping List Dialog for missing ingredients */}
+      <SimpleShoppingListDialog
+        open={simpleShoppingListDialogOpen}
+        onOpenChange={(open) => {
+          setSimpleShoppingListDialogOpen(open);
+          if (!open) setSimpleShoppingListItems([]);
+        }}
+        items={simpleShoppingListItems}
+        onSuccess={() => setSimpleShoppingListItems([])}
+      />
 
       {/* AI Recipe Suggestions Dialog */}
       <AiRecipeSuggestionsDialog

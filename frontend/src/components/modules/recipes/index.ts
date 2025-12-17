@@ -9,3 +9,4 @@ export { AddToCollectionDialog } from "./add-to-collection-dialog";
 export { AddToShoppingListDialog } from "./add-to-shopping-list-dialog";
 export { AiRecipeSuggestionsDialog } from "./ai-recipe-suggestions-dialog";
 export { ViewRecipeDialog } from "./view-recipe-dialog";
+export { RecipeInsights } from "./recipe-insights";

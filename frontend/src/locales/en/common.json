@@ -2002,6 +2002,30 @@
         "meat": "Meat",
         "baked_goods": "Baked Goods"
       }
+    },
+    "insights": {
+      "pantry": {
+        "title": "Ready to Cook",
+        "subtitle": "Recipes with your pantry ingredients",
+        "viewAll": "Pantry",
+        "canMake": "can make",
+        "tip": "These recipes use ingredients you already have"
+      },
+      "shopping": {
+        "title": "Stock Up",
+        "subtitle": "Common missing ingredients",
+        "viewAll": "Shopping Lists",
+        "usedIn": "in {count} recipes",
+        "tip": "Add these to your shopping list to expand your options"
+      },
+      "learning": {
+        "title": "Skills to Master",
+        "subtitle": "Techniques used in your recipes",
+        "viewAll": "Learning",
+        "inRecipes": "in {count} recipes",
+        "learnThis": "learn",
+        "tip": "Learn these skills to cook more of your recipes"
+      }
     }
   },
   "restaurants": {
@@ -2254,6 +2278,23 @@
     "empty": {
       "title": "No meals recorded yet",
       "description": "Start tracking your restaurant visits, takeout orders, and delivery meals."
+    },
+    "insights": {
+      "recipes": {
+        "title": "Recreate at Home",
+        "subtitle": "Similar recipes from your collection",
+        "viewAll": "Recipes",
+        "similar": "Try",
+        "tip": "Save money and cook your favorite restaurant dishes at home"
+      },
+      "learning": {
+        "title": "Learn the Techniques",
+        "subtitle": "Skills used in your favorite dishes",
+        "viewAll": "Learning",
+        "newSkill": "new skill to learn",
+        "usedIn": "Used in",
+        "tip": "Master these techniques to recreate restaurant-quality dishes"
+      }
     }
   },
   "mealPlanner": {

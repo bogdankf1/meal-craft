@@ -56,6 +56,7 @@ import {
   RestaurantMealFiltersBar,
   RestaurantMealCalendarView,
   RestaurantMealImport,
+  RestaurantsInsights,
 } from "@/components/modules/restaurants";
 import {
   useGetRestaurantMealsQuery,
@@ -253,6 +254,23 @@ export function RestaurantsContent() {
                 icon={<Heart className="h-5 w-5 text-red-500" />}
               />
             </div>
+
+            {/* Cross-module Insights */}
+            {mealsData?.items && mealsData.items.length > 0 && (
+              <RestaurantsInsights
+                meals={mealsData.items}
+                onNavigateToRecipes={() => router.push("/recipes")}
+                onNavigateToLearning={() => router.push("/learning")}
+                onRecipeClick={(recipeName) => {
+                  const encodedSearch = encodeURIComponent(recipeName);
+                  router.push(`/recipes?search=${encodedSearch}`);
+                }}
+                onSkillClick={(skillName) => {
+                  const encodedSearch = encodeURIComponent(skillName);
+                  router.push(`/learning?search=${encodedSearch}`);
+                }}
+              />
+            )}
 
             {/* Filters and Actions - Two line layout for better responsiveness */}
             <div className="space-y-3">
