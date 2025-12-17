@@ -96,6 +96,9 @@ from app.models.seasonality import (
     UserSeasonalPreference,
 )
 
+# Backups
+from app.models.backup import Backup
+
 __all__ = [
     # User
     "User",
@@ -162,4 +165,6 @@ __all__ = [
     "SeasonalProduce",
     "LocalSpecialty",
     "UserSeasonalPreference",
+    # Backups
+    "Backup",
 ]
