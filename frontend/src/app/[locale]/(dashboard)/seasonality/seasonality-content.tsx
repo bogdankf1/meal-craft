@@ -66,6 +66,7 @@ import {
   type SeasonalProduceFilters,
 } from "@/lib/api/seasonality-api";
 import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
+import { SeasonalityInsights } from "@/components/modules/seasonality";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -372,7 +373,7 @@ export function SeasonalityContent() {
         <TabsContent value="thisMonth" className="space-y-6">
           {/* Country & Month Selector */}
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="py-3">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{countryInfo?.flag}</span>
@@ -409,13 +410,37 @@ export function SeasonalityContent() {
             </CardContent>
           </Card>
 
+          {/* Cross-module Insights */}
+          {produceData?.items && produceData.items.length > 0 && (
+            <SeasonalityInsights
+              seasonalProduce={produceData.items}
+              currentMonth={currentMonth}
+              onNavigateToPantry={() => router.push("/pantry")}
+              onNavigateToGroceries={() => router.push("/groceries")}
+              onNavigateToRecipes={() => router.push("/recipes")}
+              onPantryClick={(ingredientName) => {
+                const encodedSearch = encodeURIComponent(ingredientName);
+                router.push(`/pantry?search=${encodedSearch}`);
+              }}
+              onGroceryClick={(itemName) => {
+                const encodedSearch = encodeURIComponent(itemName);
+                router.push(`/groceries?search=${encodedSearch}`);
+              }}
+              onRecipeClick={(recipeName) => {
+                const encodedSearch = encodeURIComponent(recipeName);
+                router.push(`/recipes?search=${encodedSearch}`);
+              }}
+              onAddToShoppingList={handleAddToShoppingList}
+            />
+          )}
+
           {/* AI Recommendations */}
           {recommendations && (
             <Card className="border-primary/20 bg-primary/5">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Sparkles className="h-4 w-4 text-primary" />
                     {t("thisMonth.aiRecommendations")}
                   </CardTitle>
                   <Button
@@ -429,11 +454,11 @@ export function SeasonalityContent() {
                     {t("thisMonth.addAllToList")}
                   </Button>
                 </div>
-                <CardDescription>
+                <CardDescription className="text-sm">
                   {t("thisMonth.seasonIs", { season: recommendations.season })} - {recommendations.seasonal_tip}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {recommendations.recommendations.map((rec, idx) => (
                     <RecommendationCard
@@ -456,11 +481,11 @@ export function SeasonalityContent() {
 
           {/* Weekly Picks */}
           {weeklyPicks && (
-            <Card className="border-green-200 bg-green-50/50">
-              <CardHeader>
+            <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <ShoppingBag className="h-5 w-5 text-green-600" />
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ShoppingBag className="h-4 w-4 text-green-600" />
                     {t("thisMonth.whatToBuy")} - {weeklyPicks.week_of}
                   </CardTitle>
                   <Button
@@ -472,9 +497,9 @@ export function SeasonalityContent() {
                     {t("thisMonth.addAllToList")}
                   </Button>
                 </div>
-                <CardDescription>{weeklyPicks.market_tip}</CardDescription>
+                <CardDescription className="text-sm">{weeklyPicks.market_tip}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {weeklyPicks.picks.map((pick, idx) => (
                     <WeeklyPickCard

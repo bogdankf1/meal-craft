@@ -62,12 +62,14 @@ import {
 } from "@/lib/api/learning-api";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { LearningInsights } from "@/components/modules/learning";
 
 export function LearningContent() {
   const t = useTranslations("learning");
   const tCommon = useTranslations("common");
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // State for user skills (Overview tab)
   const [userSkillFilters, setUserSkillFilters] = useState<UserSkillFilters>({
@@ -308,6 +310,30 @@ export function LearningContent() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Cross-module Insights */}
+          {userSkillsData?.items && userSkillsData.items.length > 0 && (
+            <div className="mb-6">
+              <LearningInsights
+                userSkills={userSkillsData.items}
+                onNavigateToEquipment={() => router.push("/kitchen-equipment")}
+                onNavigateToRecipes={() => router.push("/recipes")}
+                onNavigateToPantry={() => router.push("/pantry")}
+                onEquipmentClick={(equipmentName) => {
+                  const encodedSearch = encodeURIComponent(equipmentName);
+                  router.push(`/kitchen-equipment?search=${encodedSearch}`);
+                }}
+                onRecipeClick={(recipeName) => {
+                  const encodedSearch = encodeURIComponent(recipeName);
+                  router.push(`/recipes?search=${encodedSearch}`);
+                }}
+                onPantryClick={(ingredientName) => {
+                  const encodedSearch = encodeURIComponent(ingredientName);
+                  router.push(`/pantry?search=${encodedSearch}`);
+                }}
+              />
+            </div>
           )}
 
           {/* Filters Row */}

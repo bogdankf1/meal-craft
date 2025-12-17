@@ -2725,6 +2725,26 @@
       "errorUpdatingStatus": "Failed to update status",
       "errorStartingPath": "Failed to start learning path",
       "errorAddingSkills": "Failed to add skills"
+    },
+    "insights": {
+      "equipment": {
+        "title": "Equipment You Need",
+        "subtitle": "To practice your skills",
+        "viewAll": "Equipment",
+        "tip": "Green items are equipment you already own"
+      },
+      "recipes": {
+        "title": "Practice Recipes",
+        "subtitle": "Sorted by difficulty",
+        "viewAll": "Recipes",
+        "tip": "Start with easy recipes and progress to harder ones"
+      },
+      "pantry": {
+        "title": "Practice Ingredients",
+        "subtitle": "From your pantry",
+        "viewAll": "Pantry",
+        "tip": "You have these ingredients to practice with"
+      }
     }
   },
   "settings": {
@@ -2937,6 +2957,29 @@
       "storageTips": "Storage Tips",
       "nutrition": "Nutrition Highlights",
       "culinaryUses": "Culinary Uses"
+    },
+    "insights": {
+      "pantry": {
+        "title": "Peak Season in Your Pantry",
+        "subtitle": "Ingredients at their best right now",
+        "viewAll": "Pantry",
+        "peakNow": "peak season now!",
+        "tryRecipe": "Try",
+        "tip": "Use these ingredients while they're at peak flavor and nutrition"
+      },
+      "groceries": {
+        "title": "What's In Season",
+        "subtitle": "Best picks for {season}",
+        "viewAll": "Groceries",
+        "tip": "Seasonal produce is fresher, tastier, and often more affordable"
+      },
+      "recipes": {
+        "title": "Seasonal Recipes",
+        "subtitle": "Cook with what's fresh now",
+        "viewAll": "Recipes",
+        "uses": "Uses",
+        "tip": "These recipes feature ingredients currently at peak season"
+      }
     }
   }
 }
