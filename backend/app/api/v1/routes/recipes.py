@@ -184,6 +184,7 @@ async def get_recipes(
             created_at=recipe.created_at,
             ingredient_count=len(recipe.ingredients),
             tags=recipe.tags,
+            required_equipment=recipe.required_equipment,
         ))
 
     return RecipeListResponse(
@@ -1032,6 +1033,7 @@ async def get_collection_with_recipes(
             created_at=r.created_at,
             ingredient_count=len(r.ingredients),
             tags=r.tags,
+            required_equipment=r.required_equipment,
         )
         for r in collection.recipes
         if not r.is_archived
@@ -1423,6 +1425,7 @@ async def get_recipe_analytics(
             created_at=r.created_at,
             ingredient_count=len(r.ingredients),
             tags=r.tags,
+            required_equipment=r.required_equipment,
         )
         for r in recent_result.scalars().all()
     ]

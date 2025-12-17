@@ -263,6 +263,7 @@ class RecipeListItem(BaseModel):
     created_at: datetime
     ingredient_count: int = 0
     tags: Optional[List[str]] = None
+    required_equipment: Optional[List[RecipeEquipment]] = None
 
     class Config:
         from_attributes = True
