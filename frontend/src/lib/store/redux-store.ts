@@ -6,7 +6,13 @@ export const store = configureStore({
     [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(baseApi.middleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore Blob responses from export download mutations
+        ignoredActions: ["api/executeMutation/fulfilled"],
+        ignoredPaths: ["api.mutations"],
+      },
+    }).concat(baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

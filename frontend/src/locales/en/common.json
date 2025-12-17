@@ -3094,5 +3094,86 @@
       "point3": "CSV files can be opened in Excel, Google Sheets, or any spreadsheet application",
       "point4": "Exports do not include images or attachments"
     }
+  },
+  "backups": {
+    "title": "Data Backups",
+    "description": "Create and restore snapshots of your meal planning data",
+    "create": {
+      "title": "Create New Backup",
+      "description": "Select a module to backup all its data",
+      "label": "Module",
+      "placeholder": "Select module",
+      "button": "Create Backup",
+      "creating": "Creating..."
+    },
+    "list": {
+      "title": "Your Backups",
+      "description": "Manage your existing backups",
+      "loading": "Loading backups...",
+      "empty": "No backups found. Create your first backup above.",
+      "table": {
+        "date": "Date",
+        "module": "Module",
+        "items": "Items",
+        "actions": "Actions"
+      },
+      "itemCount": "{count} items",
+      "actions": {
+        "restore": "Restore",
+        "delete": "Delete"
+      }
+    },
+    "modules": {
+      "groceries": "Groceries",
+      "pantry": "Pantry Items",
+      "shopping_lists": "Shopping Lists",
+      "recipes": "Recipes",
+      "meal_plans": "Meal Plans",
+      "kitchen_equipment": "Kitchen Equipment",
+      "restaurants": "Restaurants",
+      "restaurant_meals": "Restaurant Meals",
+      "nutrition_logs": "Nutrition Logs",
+      "nutrition_goals": "Nutrition Goals",
+      "health_metrics": "Health Metrics",
+      "user_skills": "Skills & Techniques",
+      "cooking_history": "Cooking History",
+      "recipe_collections": "Recipe Collections"
+    },
+    "dialogs": {
+      "restore": {
+        "title": "Restore Backup?",
+        "description": "This will delete all current {module} data and replace it with the backup. This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Restore",
+        "restoring": "Restoring..."
+      },
+      "delete": {
+        "title": "Delete Backup?",
+        "description": "This backup will be permanently deleted. This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete",
+        "deleting": "Deleting..."
+      }
+    },
+    "messages": {
+      "createSuccess": "Backup created",
+      "createSuccessDescription": "Backed up {count} {module} items",
+      "createError": "Failed to create backup",
+      "restoreSuccess": "Backup restored",
+      "restoreSuccessDescription": "Restored {count} items",
+      "restoreError": "Failed to restore backup",
+      "deleteSuccess": "Backup deleted",
+      "deleteError": "Failed to delete backup",
+      "errorGeneric": "An error occurred. Please try again."
+    },
+    "info": {
+      "title": "Important Information",
+      "warning": "Warning:",
+      "point1": "Backups capture a snapshot of your data at the time of creation",
+      "point2": "Restoring a backup will DELETE all current data for that module and replace it with the backup data",
+      "point3": "Backups include related data (e.g., recipe ingredients, meal plan meals)",
+      "point4": "Archived items are not included in backups",
+      "point5": "Backups do not include images or external files"
+    }
   }
 }

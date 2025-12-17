@@ -123,6 +123,7 @@ export const baseApi = createApi({
     "Subscription",
     "Tiers",
     "Seasonality",
+    "Backup",
   ],
   endpoints: () => ({}),
 });
