@@ -1553,6 +1553,36 @@
         "addMore": "Import More",
         "viewItems": "View Equipment"
       }
+    },
+    "insights": {
+      "recipes": {
+        "title": "Recipes You Can Make",
+        "subtitle": "Based on your equipment",
+        "uses": "Uses: {equipment}",
+        "canMake": "Ready",
+        "viewAll": "All Recipes",
+        "tip": "Add more equipment to unlock additional recipes"
+      },
+      "learning": {
+        "title": "Equipment Skills",
+        "subtitle": "Learn techniques for your equipment",
+        "forEquipment": "For your {equipment}",
+        "viewAll": "View Skills",
+        "levels": {
+          "beginner": "Beginner",
+          "intermediate": "Intermediate",
+          "advanced": "Advanced",
+          "expert": "Expert"
+        },
+        "tip": "Master techniques specific to your equipment"
+      },
+      "wishlist": {
+        "title": "Equipment Wishlist",
+        "subtitle": "Unlock more recipes",
+        "unlocksRecipes": "{count, plural, one {Unlocks # recipe} other {Unlocks # recipes}}",
+        "addToList": "Add to List",
+        "tip": "Add missing equipment to your shopping list"
+      }
     }
   },
   "recipes": {

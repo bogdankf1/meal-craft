@@ -75,6 +75,9 @@ import {
 export function RecipesContent() {
   const t = useTranslations("recipes");
   const tCommon = useTranslations("common");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // State for active items
   const [filters, setFilters] = useState<RecipeFilterType>({
@@ -109,7 +112,7 @@ export function RecipesContent() {
   const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedRecipeForView, setSelectedRecipeForView] = useState<RecipeListItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
 
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -148,10 +151,6 @@ export function RecipesContent() {
 
   // Lazy query for fetching recipe details when adding to shopping list
   const [fetchRecipe] = useLazyGetRecipeQuery();
-
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const navigateToTab = (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());

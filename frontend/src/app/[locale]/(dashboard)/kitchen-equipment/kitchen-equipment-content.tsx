@@ -51,7 +51,9 @@ import {
   KitchenEquipmentFilters,
   KitchenEquipmentImport,
   RecordMaintenanceDialog,
+  KitchenEquipmentInsights,
 } from "@/components/modules/kitchen-equipment";
+import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 import {
   useGetKitchenEquipmentQuery,
   useGetKitchenEquipmentAnalyticsQuery,
@@ -96,6 +98,10 @@ export function KitchenEquipmentContent() {
   const [historyMonths, setHistoryMonths] = useState(3);
   const [maintenanceDialogOpen, setMaintenanceDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
+  const [itemsToAddToShoppingList, setItemsToAddToShoppingList] = useState<
+    { name: string; quantity?: number | null; unit?: string | null; category?: string | null }[]
+  >([]);
 
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -245,6 +251,31 @@ export function KitchenEquipmentContent() {
               icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
             />
           </div>
+
+          {/* Insights Section - Recipes & Learning Integration */}
+          {equipmentData?.items && equipmentData.items.length > 0 && (
+            <div className="mb-6">
+              <KitchenEquipmentInsights
+                equipmentItems={equipmentData.items}
+                onNavigateToRecipes={() => router.push("/recipes")}
+                onNavigateToLearning={() => router.push("/learning")}
+                onAddToWishlist={(equipment) => {
+                  setItemsToAddToShoppingList([{ name: equipment.name, category: equipment.category }]);
+                  setShoppingListDialogOpen(true);
+                }}
+                onRecipeClick={(recipeName) => {
+                  // Navigate to recipes page with search prefilled
+                  const encodedSearch = encodeURIComponent(recipeName);
+                  router.push(`/recipes?search=${encodedSearch}`);
+                }}
+                onSkillClick={(skillName) => {
+                  // Navigate to learning page with search prefilled
+                  const encodedSearch = encodeURIComponent(skillName);
+                  router.push(`/learning?search=${encodedSearch}`);
+                }}
+              />
+            </div>
+          )}
 
           {/* Filters Row */}
           <div className="flex flex-col gap-4 mb-6">
@@ -673,6 +704,17 @@ export function KitchenEquipmentContent() {
         onOpenChange={setBulkFormOpen}
         onSuccess={() => {
           setBulkFormOpen(false);
+        }}
+      />
+
+      {/* Add to Shopping List Dialog */}
+      <AddToShoppingListDialog
+        open={shoppingListDialogOpen}
+        onOpenChange={setShoppingListDialogOpen}
+        items={itemsToAddToShoppingList}
+        onSuccess={() => {
+          setShoppingListDialogOpen(false);
+          setItemsToAddToShoppingList([]);
         }}
       />
     </div>

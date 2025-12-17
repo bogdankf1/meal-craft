@@ -62,10 +62,12 @@ import {
 } from "@/lib/api/learning-api";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 export function LearningContent() {
   const t = useTranslations("learning");
   const tCommon = useTranslations("common");
+  const searchParams = useSearchParams();
 
   // State for user skills (Overview tab)
   const [userSkillFilters, setUserSkillFilters] = useState<UserSkillFilters>({
@@ -84,8 +86,9 @@ export function LearningContent() {
   });
 
   const [historyMonths, setHistoryMonths] = useState(3);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [librarySearchQuery, setLibrarySearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
+  const [librarySearchQuery, setLibrarySearchQuery] = useState(() => searchParams.get("search") || "");
+
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");

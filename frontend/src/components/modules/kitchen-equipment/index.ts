@@ -4,3 +4,4 @@ export { KitchenEquipmentTable } from "./kitchen-equipment-table";
 export { KitchenEquipmentFilters } from "./kitchen-equipment-filters";
 export { KitchenEquipmentImport } from "./kitchen-equipment-import";
 export { RecordMaintenanceDialog } from "./record-maintenance-dialog";
+export { KitchenEquipmentInsights } from "./kitchen-equipment-insights";

@@ -179,6 +179,7 @@ export interface RecipeListItem {
   created_at: string;
   ingredient_count: number;
   tags: string[] | null;
+  required_equipment: RecipeEquipment[] | null;
 }
 
 export interface RecipeListResponse {
