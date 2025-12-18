@@ -45,6 +45,83 @@
     "plus": "Plus",
     "pro": "Pro"
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Welcome back! Here's an overview of your meal planning journey.",
+    "noData": "Unable to load dashboard data. Please try again.",
+    "refresh": "Refresh",
+    "viewAll": "View All",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "stats": {
+      "mealsPlanned": "Meals This Week",
+      "pantryItems": "Pantry Items",
+      "recipes": "Recipes",
+      "budgetThisMonth": "Budget This Month",
+      "nutritionGoal": "Nutrition Goal",
+      "vsLastWeek": "vs last week",
+      "expiringSoon": "expiring soon",
+      "favorites": "favorites",
+      "avg": "Avg:",
+      "goalAdherence": "weekly adherence"
+    },
+    "upcomingMeals": {
+      "title": "Upcoming Meals",
+      "empty": "No meals planned for the next 7 days.",
+      "startPlanning": "Start Planning",
+      "unnamedMeal": "Unnamed Meal",
+      "leftover": "Leftover"
+    },
+    "expiring": {
+      "title": "Expiring Soon",
+      "empty": "No items expiring soon. Great job!",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "days": "days"
+    },
+    "activity": {
+      "title": "Recent Activity",
+      "empty": "No recent activity. Start by adding some groceries!"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "addGroceries": "Add Groceries",
+      "browseRecipes": "Browse Recipes",
+      "planMeals": "Plan Meals",
+      "trackNutrition": "Track Nutrition",
+      "managePantry": "Manage Pantry"
+    },
+    "waste": {
+      "title": "Waste Analytics",
+      "thisMonth": "This Month",
+      "items": "items",
+      "wasteRate": "Waste Rate",
+      "topReason": "Top Reason",
+      "costWasted": "Cost Wasted"
+    },
+    "skills": {
+      "title": "Skills Progress",
+      "empty": "No skills in progress yet.",
+      "startLearning": "Start Learning"
+    },
+    "seasonal": {
+      "title": "In Season Now",
+      "empty": "No seasonal data available.",
+      "peak": "Peak"
+    },
+    "equipment": {
+      "title": "Maintenance Alerts",
+      "due": "Due Soon",
+      "overdue": "overdue"
+    },
+    "nutrition": {
+      "title": "Today's Nutrition",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat"
+    }
+  },
   "common": {
     "all": "All",
     "save": "Save",

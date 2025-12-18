@@ -8,6 +8,7 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   icon?: React.ReactNode;
+  description?: string;
   trend?: {
     value: number | string;
     label: string;
@@ -29,6 +30,7 @@ export function StatsCard({
   title,
   value,
   icon,
+  description,
   trend,
   variant = "default",
   className,
@@ -40,6 +42,9 @@ export function StatsCard({
           <div className="space-y-0.5">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <p className="text-xl font-bold">{value}</p>
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
           </div>
           {icon && (
             <div className="p-1.5 rounded-lg bg-background/50">{icon}</div>
