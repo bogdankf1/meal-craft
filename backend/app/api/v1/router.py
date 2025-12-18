@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth, groceries, billing, ai, shopping_lists, pantry, kitchen_equipment, recipes, meal_plans, restaurants, nutrition, learning, seasonality
+from app.api.v1.routes import auth, groceries, billing, ai, shopping_lists, pantry, kitchen_equipment, recipes, meal_plans, restaurants, nutrition, learning, seasonality, currencies
 from app.api.v1.routes.exports import router as exports_router
 from app.api.v1.routes.backups import router as backups_router
+from app.api.v1.routes.admin import router as admin_router
 
 api_router = APIRouter()
 
@@ -45,11 +46,14 @@ api_router.include_router(learning.router, tags=["Learning"])
 # Seasonality (Phase 10 module)
 api_router.include_router(seasonality.router, tags=["Seasonality"])
 
+# Currencies (for user settings)
+api_router.include_router(currencies.router, tags=["Currencies"])
+
 # Exports
 api_router.include_router(exports_router)
 
 # Backups
 api_router.include_router(backups_router)
 
-# api_router.include_router(subscription.router, prefix="/subscription", tags=["Subscription"])
-# api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
+# Admin Panel
+api_router.include_router(admin_router)

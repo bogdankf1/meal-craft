@@ -99,6 +99,9 @@ from app.models.seasonality import (
 # Backups
 from app.models.backup import Backup
 
+# Currency
+from app.models.currency import Currency
+
 __all__ = [
     # User
     "User",
@@ -167,4 +170,6 @@ __all__ = [
     "UserSeasonalPreference",
     # Backups
     "Backup",
+    # Currency
+    "Currency",
 ]
