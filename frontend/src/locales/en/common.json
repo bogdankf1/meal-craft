@@ -3175,5 +3175,267 @@
       "point4": "Archived items are not included in backups",
       "point5": "Backups do not include images or external files"
     }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "tiers": "Tiers",
+      "currencies": "Currencies",
+      "analytics": "Analytics",
+      "support": "Support Center",
+      "backToDashboard": "Back to Dashboard"
+    },
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "description": "Overview of platform statistics and key metrics",
+      "stats": {
+        "totalUsers": "Total Users",
+        "activeUsers": "Active Users",
+        "newThisMonth": "New This Month",
+        "activeSubscriptions": "Active Subscriptions",
+        "mrr": "MRR",
+        "churnRate": "Churn Rate",
+        "ofTotal": "of total"
+      },
+      "charts": {
+        "userAcquisition": "User Acquisition",
+        "last30Days": "New users in the last 30 days",
+        "engagement": "User Engagement",
+        "engagementDescription": "Daily, weekly, and monthly active users"
+      },
+      "engagement": {
+        "dau": "Daily Active Users",
+        "dauDescription": "Users active today",
+        "wau": "Weekly Active Users",
+        "wauDescription": "Users active this week",
+        "mau": "Monthly Active Users",
+        "mauDescription": "Users active this month",
+        "retention": "30-Day Retention",
+        "retentionDescription": "Users retained after 30 days",
+        "avgSession": "Avg. Session Duration",
+        "avgSessionDescription": "Average time per session",
+        "minutes": "min"
+      }
+    },
+    "users": {
+      "title": "User Management",
+      "description": "View and manage all platform users",
+      "list": {
+        "title": "All Users",
+        "description": "Search, filter, and manage user accounts",
+        "empty": "No users found"
+      },
+      "filters": {
+        "searchPlaceholder": "Search by email or name...",
+        "role": "Role",
+        "tier": "Tier",
+        "allRoles": "All Roles",
+        "allTiers": "All Tiers"
+      },
+      "table": {
+        "email": "Email",
+        "name": "Name",
+        "role": "Role",
+        "tier": "Tier",
+        "status": "Status",
+        "joined": "Joined",
+        "actions": "Actions"
+      },
+      "roles": {
+        "user": "User",
+        "admin": "Admin"
+      },
+      "tiers": {
+        "free": "Free",
+        "plus": "Plus",
+        "pro": "Pro"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "pagination": {
+        "showing": "Showing {from} to {to} of {total} users"
+      },
+      "edit": {
+        "title": "Edit User",
+        "description": "Update settings for {email}",
+        "role": "Role",
+        "tier": "Subscription Tier",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "saving": "Saving..."
+      },
+      "suspend": {
+        "title": "Suspend User",
+        "description": "Are you sure you want to suspend {email}? They will not be able to access the platform.",
+        "cancel": "Cancel",
+        "confirm": "Suspend User",
+        "processing": "Processing..."
+      },
+      "unsuspend": {
+        "title": "Reactivate User",
+        "description": "Are you sure you want to reactivate {email}? They will regain access to the platform.",
+        "confirm": "Reactivate"
+      },
+      "messages": {
+        "updateSuccess": "User updated successfully",
+        "updateError": "Failed to update user",
+        "suspendSuccess": "User suspended successfully",
+        "unsuspendSuccess": "User reactivated successfully",
+        "suspendError": "Failed to update user status"
+      }
+    },
+    "tiers": {
+      "title": "Subscription Tiers",
+      "description": "Manage subscription plans and features",
+      "card": {
+        "priceLabel": "Monthly Price",
+        "free": "Free",
+        "month": "month",
+        "edit": "Edit",
+        "features": "Features"
+      },
+      "comparison": {
+        "title": "Feature Comparison",
+        "description": "Features available in each tier",
+        "feature": "Feature",
+        "unlimited": "Unlimited",
+        "limit": "Limit"
+      },
+      "edit": {
+        "title": "Edit Tier",
+        "description": "Update settings for {name} tier",
+        "displayName": "Display Name",
+        "priceMonthly": "Monthly Price ($)",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "saving": "Saving..."
+      },
+      "features": {
+        "title": "Manage Features",
+        "description": "Configure features for {name} tier",
+        "limit": "Limit",
+        "empty": "No features configured",
+        "close": "Close"
+      },
+      "messages": {
+        "updateSuccess": "Tier updated successfully",
+        "updateError": "Failed to update tier",
+        "featureUpdated": "Feature updated",
+        "featureError": "Failed to update feature"
+      }
+    },
+    "currencies": {
+      "title": "Currency Management",
+      "description": "Manage supported currencies and exchange rates",
+      "actions": {
+        "title": "Quick Actions",
+        "description": "Add new currencies to the system",
+        "add": "Add Currency"
+      },
+      "table": {
+        "title": "Currencies",
+        "description": "{count} currencies configured",
+        "code": "Code",
+        "name": "Name",
+        "symbol": "Symbol",
+        "example": "Example",
+        "exchangeRate": "Exchange Rate",
+        "status": "Status",
+        "actions": "Actions",
+        "empty": "No currencies found. Add your first currency to get started."
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "add": {
+        "title": "Add New Currency",
+        "description": "Add a new currency to the system"
+      },
+      "edit": {
+        "title": "Edit Currency",
+        "description": "Update currency details (code cannot be changed)"
+      },
+      "delete": {
+        "title": "Deactivate Currency?",
+        "description": "This will deactivate {code} ({name}). Users will not be able to select this currency for new transactions.",
+        "confirm": "Deactivate"
+      },
+      "form": {
+        "code": "Currency Code",
+        "codeHint": "ISO 4217 currency code (e.g., USD, EUR, UAH)",
+        "name": "Currency Name",
+        "symbol": "Symbol",
+        "position": "Symbol Position",
+        "positionBefore": "Before amount ($100)",
+        "positionAfter": "After amount (100 ₴)",
+        "decimals": "Decimal Places",
+        "exchangeRate": "Exchange Rate (to USD)",
+        "active": "Active",
+        "cancel": "Cancel",
+        "create": "Create Currency",
+        "creating": "Creating...",
+        "update": "Update Currency",
+        "updating": "Updating...",
+        "deleting": "Deactivating..."
+      },
+      "messages": {
+        "createSuccess": "Currency created successfully",
+        "createError": "Failed to create currency",
+        "updateSuccess": "Currency updated successfully",
+        "updateError": "Failed to update currency",
+        "deleteSuccess": "Currency deactivated successfully",
+        "deleteError": "Failed to deactivate currency"
+      }
+    },
+    "analytics": {
+      "title": "Platform Analytics",
+      "description": "Detailed analytics and insights",
+      "metrics": {
+        "totalUsers": "Total Users",
+        "activeUsers": "Active Users",
+        "mrr": "Monthly Revenue",
+        "churnRate": "Churn Rate",
+        "today": "today",
+        "ofTotal": "of total"
+      },
+      "charts": {
+        "acquisition30": "User Acquisition (30 Days)",
+        "acquisition30Desc": "New user signups over the last 30 days",
+        "acquisition90": "User Acquisition (90 Days)",
+        "acquisition90Desc": "New user signups over the last 90 days"
+      },
+      "engagement": {
+        "title": "Engagement Metrics",
+        "description": "User activity and retention",
+        "dau": "DAU",
+        "wau": "WAU",
+        "mau": "MAU",
+        "dauMauRatio": "DAU/MAU Ratio",
+        "retention30": "30-Day Retention"
+      },
+      "moduleUsage": {
+        "title": "Module Usage",
+        "description": "Usage statistics by module",
+        "module": "Module",
+        "items": "Total Items",
+        "users": "Active Users",
+        "thisWeek": "This Week"
+      }
+    },
+    "support": {
+      "title": "Support Center",
+      "description": "Manage user support requests",
+      "placeholder": {
+        "title": "Support Tickets",
+        "description": "View and respond to user support requests",
+        "message": "No support tickets yet.",
+        "comingSoon": "Support ticket system coming soon."
+      }
+    }
   }
 }

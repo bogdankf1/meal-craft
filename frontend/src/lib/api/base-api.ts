@@ -124,6 +124,12 @@ export const baseApi = createApi({
     "Tiers",
     "Seasonality",
     "Backup",
+    "AdminUsers",
+    "AdminTiers",
+    "AdminAnalytics",
+    "AdminFeatures",
+    "AdminCurrencies",
+    "Currencies",
   ],
   endpoints: () => ({}),
 });

@@ -299,7 +299,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         </div>
 
         {/* Admin link (if admin) */}
-        {session?.user && (
+        {userData?.role === "ADMIN" && (
           <>
             <Separator className="my-2" />
             <div className="px-3">
@@ -529,7 +529,7 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
             </div>
 
             {/* Admin link */}
-            {session?.user && (
+            {userData?.role === "ADMIN" && (
               <>
                 <Separator className="my-2" />
                 <div className="px-3">
