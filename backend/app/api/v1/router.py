@@ -4,6 +4,7 @@ from app.api.v1.routes import auth, groceries, billing, ai, shopping_lists, pant
 from app.api.v1.routes.exports import router as exports_router
 from app.api.v1.routes.backups import router as backups_router
 from app.api.v1.routes.admin import router as admin_router
+from app.api.v1.routes.support import router as support_router
 
 api_router = APIRouter()
 
@@ -57,3 +58,6 @@ api_router.include_router(backups_router)
 
 # Admin Panel
 api_router.include_router(admin_router)
+
+# Support / Help Center
+api_router.include_router(support_router)

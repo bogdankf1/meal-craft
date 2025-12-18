@@ -102,6 +102,9 @@ from app.models.backup import Backup
 # Currency
 from app.models.currency import Currency
 
+# Support
+from app.models.support import SupportTopic, SupportMessage, SupportTopicStatus
+
 __all__ = [
     # User
     "User",
@@ -172,4 +175,8 @@ __all__ = [
     "Backup",
     # Currency
     "Currency",
+    # Support
+    "SupportTopic",
+    "SupportMessage",
+    "SupportTopicStatus",
 ]
