@@ -3430,12 +3430,56 @@
     "support": {
       "title": "Support Center",
       "description": "Manage user support requests",
-      "placeholder": {
-        "title": "Support Tickets",
-        "description": "View and respond to user support requests",
-        "message": "No support tickets yet.",
-        "comingSoon": "Support ticket system coming soon."
-      }
+      "backToList": "Back to List",
+      "refresh": "Refresh",
+      "filterBy": "Filter by",
+      "filter": {
+        "all": "All Tickets"
+      },
+      "status": {
+        "open": "Open",
+        "inProgress": "In Progress",
+        "resolved": "Resolved"
+      },
+      "noTopics": "No Support Tickets",
+      "noTopicsDescription": "No support tickets found matching your filter.",
+      "message": "message",
+      "messages": "messages",
+      "lastActivity": "Last activity",
+      "createdAt": "Created",
+      "typeReply": "Type your reply...",
+      "pressCtrlEnter": "Press Ctrl+Enter to send",
+      "user": "User",
+      "supportTeam": "Support Team"
     }
+  },
+  "help": {
+    "title": "Help Center",
+    "description": "Get help and support from our team",
+    "backToTopics": "Back to Topics",
+    "refresh": "Refresh",
+    "newTopic": "New Topic",
+    "createTopic": "Create Support Topic",
+    "topicTitle": "Topic Title",
+    "topicTitlePlaceholder": "Brief description of your issue",
+    "messageLabel": "Message",
+    "message": "message",
+    "messages": "messages",
+    "messagePlaceholder": "Describe your issue in detail...",
+    "cancel": "Cancel",
+    "create": "Create",
+    "status": {
+      "open": "Open",
+      "inProgress": "In Progress",
+      "resolved": "Resolved"
+    },
+    "noTopics": "No Support Topics",
+    "noTopicsDescription": "You haven't created any support topics yet. Create one to get help from our team.",
+    "createFirstTopic": "Create Your First Topic",
+    "lastActivity": "Last activity",
+    "createdAt": "Created",
+    "typeMessage": "Type your message...",
+    "pressCtrlEnter": "Press Ctrl+Enter to send",
+    "supportTeam": "Support Team"
   }
 }

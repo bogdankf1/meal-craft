@@ -130,6 +130,8 @@ export const baseApi = createApi({
     "AdminFeatures",
     "AdminCurrencies",
     "Currencies",
+    "Support",
+    "SupportTopic",
   ],
   endpoints: () => ({}),
 });
