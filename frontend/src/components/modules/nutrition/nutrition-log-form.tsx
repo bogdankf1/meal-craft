@@ -77,6 +77,7 @@ interface NutritionLogFormProps {
   editingLog?: NutritionLog | null;
   defaultDate?: Date;
   defaultMealType?: MealType;
+  defaultProfileId?: string | null;
   onSuccess?: () => void;
 }
 
@@ -86,6 +87,7 @@ export function NutritionLogForm({
   editingLog,
   defaultDate,
   defaultMealType,
+  defaultProfileId,
   onSuccess,
 }: NutritionLogFormProps) {
   const t = useTranslations("nutrition");
@@ -188,7 +190,10 @@ export function NutritionLogForm({
         }).unwrap();
         toast.success(t("messages.logUpdated"));
       } else {
-        await createLog(data).unwrap();
+        await createLog({
+          ...data,
+          profile_id: defaultProfileId,
+        }).unwrap();
         toast.success(t("messages.logCreated"));
       }
       onOpenChange(false);

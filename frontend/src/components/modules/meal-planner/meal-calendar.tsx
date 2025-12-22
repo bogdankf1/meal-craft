@@ -9,15 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { type Meal, type MealType, MEAL_TYPES } from "@/lib/api/meal-planner-api";
+import { type Meal, type MealType, type MealWithProfile, MEAL_TYPES } from "@/lib/api/meal-planner-api";
 
 interface MealCalendarProps {
   startDate: Date;
-  meals: Meal[];
+  meals: Meal[] | MealWithProfile[];
   servings: number;
   onAddMeal?: (date: Date, mealType: MealType) => void;
-  onEditMeal?: (meal: Meal) => void;
-  onDeleteMeal?: (meal: Meal) => void;
+  onEditMeal?: (meal: Meal | MealWithProfile) => void;
+  onDeleteMeal?: (meal: Meal | MealWithProfile) => void;
+  /** When true, shows all meals per slot (combined view for all members) */
+  showAllMembers?: boolean;
 }
 
 const MEAL_TYPE_ICONS: Record<MealType, React.ReactNode> = {
@@ -34,6 +36,11 @@ const MEAL_TYPE_COLORS: Record<MealType, string> = {
   snack: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 };
 
+// Type guard to check if meal has profile info
+function isMealWithProfile(meal: Meal | MealWithProfile): meal is MealWithProfile {
+  return 'profile_color' in meal;
+}
+
 export function MealCalendar({
   startDate,
   meals,
@@ -41,6 +48,7 @@ export function MealCalendar({
   onAddMeal,
   onEditMeal,
   onDeleteMeal,
+  showAllMembers = false,
 }: MealCalendarProps) {
   const t = useTranslations("mealPlanner");
 
@@ -49,24 +57,24 @@ export function MealCalendar({
     return [...Array(7)].map((_, i) => addDays(startDate, i));
   }, [startDate]);
 
-  // Group meals by date and type
+  // Group meals by date and type - supports multiple meals per slot in combined view
   const mealsByDateAndType = useMemo(() => {
-    const grouped: Record<string, Record<MealType, Meal | undefined>> = {};
+    const grouped: Record<string, Record<MealType, (Meal | MealWithProfile)[]>> = {};
 
     days.forEach((day) => {
       const dateKey = format(day, "yyyy-MM-dd");
       grouped[dateKey] = {
-        breakfast: undefined,
-        lunch: undefined,
-        dinner: undefined,
-        snack: undefined,
+        breakfast: [],
+        lunch: [],
+        dinner: [],
+        snack: [],
       };
     });
 
     meals.forEach((meal) => {
       const dateKey = meal.date;
       if (grouped[dateKey]) {
-        grouped[dateKey][meal.meal_type] = meal;
+        grouped[dateKey][meal.meal_type].push(meal);
       }
     });
 
@@ -116,7 +124,11 @@ export function MealCalendar({
           <div className="grid grid-cols-7 gap-2">
             {days.map((day) => {
               const dateKey = format(day, "yyyy-MM-dd");
-              const meal = mealsByDateAndType[dateKey]?.[mealType];
+              const mealsForSlot = mealsByDateAndType[dateKey]?.[mealType] || [];
+              const hasMeals = mealsForSlot.length > 0;
+
+              // In combined view, show all meals. In single view, show first meal only.
+              const displayMeals = showAllMembers ? mealsForSlot : mealsForSlot.slice(0, 1);
 
               return (
                 <Card
@@ -125,34 +137,72 @@ export function MealCalendar({
                     "min-h-[80px] cursor-pointer transition-colors hover:bg-muted/50",
                     isSameDay(day, today) && "ring-1 ring-primary/20"
                   )}
-                  onClick={() =>
-                    meal
-                      ? onEditMeal?.(meal)
-                      : onAddMeal?.(day, mealType)
-                  }
+                  onClick={() => {
+                    if (!hasMeals) {
+                      onAddMeal?.(day, mealType);
+                    } else if (!showAllMembers && mealsForSlot[0]) {
+                      // In single profile view, clicking edits the meal
+                      onEditMeal?.(mealsForSlot[0]);
+                    }
+                    // In combined view with meals, clicking does nothing - user clicks individual meals
+                  }}
                 >
                   <CardContent className={cn(
                     "p-2",
-                    !meal && "h-[80px] flex items-center justify-center"
+                    !hasMeals && "h-[80px] flex items-center justify-center"
                   )}>
-                    {meal ? (
-                      <div className="space-y-1">
-                        <div className="text-xs font-medium truncate">
-                          {meal.recipe_name || meal.custom_name || t("noMeal")}
-                        </div>
-                        {meal.recipe_prep_time && (
-                          <div className="text-[10px] text-muted-foreground">
-                            {meal.recipe_prep_time + (meal.recipe_cook_time || 0)} min
-                          </div>
-                        )}
-                        {meal.is_leftover && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] px-1 py-0"
-                          >
-                            {t("leftover")}
-                          </Badge>
-                        )}
+                    {hasMeals ? (
+                      <div className="space-y-1.5">
+                        {displayMeals.map((meal) => {
+                          const hasProfile = isMealWithProfile(meal);
+                          const profileColor = hasProfile ? meal.profile_color : null;
+                          const profileName = hasProfile ? meal.profile_name : null;
+
+                          return (
+                            <div
+                              key={meal.id}
+                              className={cn(
+                                "space-y-0.5",
+                                showAllMembers && "p-1.5 rounded-md hover:bg-muted/80 cursor-pointer"
+                              )}
+                              onClick={(e) => {
+                                if (showAllMembers) {
+                                  e.stopPropagation();
+                                  onEditMeal?.(meal);
+                                }
+                              }}
+                              style={showAllMembers && profileColor ? {
+                                borderLeft: `3px solid ${profileColor}`,
+                                paddingLeft: '6px',
+                              } : undefined}
+                            >
+                              <div className="text-xs font-medium truncate">
+                                {meal.recipe_name || meal.custom_name || t("noMeal")}
+                              </div>
+                              {showAllMembers && profileName && (
+                                <div
+                                  className="text-[10px] font-medium truncate"
+                                  style={{ color: profileColor || undefined }}
+                                >
+                                  {profileName}
+                                </div>
+                              )}
+                              {!showAllMembers && meal.recipe_prep_time && (
+                                <div className="text-[10px] text-muted-foreground">
+                                  {meal.recipe_prep_time + (meal.recipe_cook_time || 0)} min
+                                </div>
+                              )}
+                              {meal.is_leftover && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] px-1 py-0"
+                                >
+                                  {t("leftover")}
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <Plus className="h-4 w-4 text-muted-foreground/50" />

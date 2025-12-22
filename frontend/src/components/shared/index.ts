@@ -37,6 +37,9 @@ export type {
 export { ViewSelector, TABLE_VIEW, CALENDAR_VIEW, GRID_VIEW, LIST_VIEW } from "./ViewSelector";
 export type { ViewOption, ViewSelectorProps } from "./ViewSelector";
 
+// Profile Selector
+export { ProfileSelector } from "./ProfileSelector";
+
 // Charts & Analytics
 export { BarChart } from "./BarChart";
 export type { BarChartDataPoint, BarChartProps } from "./BarChart";

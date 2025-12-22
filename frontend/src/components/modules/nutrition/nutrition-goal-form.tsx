@@ -63,6 +63,7 @@ interface NutritionGoalFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingGoal?: NutritionGoal | null;
+  defaultProfileId?: string | null;
   onSuccess?: () => void;
 }
 
@@ -102,6 +103,7 @@ export function NutritionGoalForm({
   open,
   onOpenChange,
   editingGoal,
+  defaultProfileId,
   onSuccess,
 }: NutritionGoalFormProps) {
   const t = useTranslations("nutrition");
@@ -178,7 +180,10 @@ export function NutritionGoalForm({
         }).unwrap();
         toast.success(t("messages.goalUpdated"));
       } else {
-        await createGoal(values).unwrap();
+        await createGoal({
+          ...values,
+          profile_id: defaultProfileId,
+        }).unwrap();
         toast.success(t("messages.goalCreated"));
       }
       onOpenChange(false);

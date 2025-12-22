@@ -25,6 +25,7 @@ import {
   ViewSelector,
   CALENDAR_VIEW,
   LIST_VIEW,
+  ProfileSelector,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +53,7 @@ import {
   type NutritionGoal,
   type MealType,
 } from "@/lib/api/nutrition-api";
+import { useGetProfilesQuery, type Profile } from "@/lib/api/profiles-api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +63,9 @@ export function NutritionContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Profile filtering (null = All Members)
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // Selected date for daily view
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -78,11 +83,27 @@ export function NutritionContent() {
   const [logFormOpen, setLogFormOpen] = useState(false);
   const [defaultMealType, setDefaultMealType] = useState<MealType | undefined>();
 
-  // API queries
-  const { data: dailyData, isLoading: isLoadingDaily } = useGetDailyNutritionQuery(dateString);
-  const { data: activeGoal, isLoading: isLoadingGoal } = useGetActiveNutritionGoalQuery();
-  const { data: allGoals } = useGetNutritionGoalsQuery(false);
-  const { data: analytics, isLoading: isLoadingAnalytics } = useGetNutritionAnalyticsQuery(analyticsDays);
+  // Get all profiles for combined view
+  const { data: profilesData } = useGetProfilesQuery();
+  const profiles = profilesData?.profiles || [];
+
+  // API queries with profile filtering
+  const { data: dailyData, isLoading: isLoadingDaily } = useGetDailyNutritionQuery({
+    date: dateString,
+    profileId: selectedProfileId,
+  });
+  const { data: activeGoal, isLoading: isLoadingGoal } = useGetActiveNutritionGoalQuery(
+    selectedProfileId,
+    { skip: selectedProfileId === null } // Skip when "All Members" - we'll fetch per-profile instead
+  );
+  const { data: allGoals } = useGetNutritionGoalsQuery(
+    { activeOnly: false, profileId: selectedProfileId },
+    { skip: selectedProfileId === null }
+  );
+  const { data: analytics, isLoading: isLoadingAnalytics } = useGetNutritionAnalyticsQuery({
+    days: analyticsDays,
+    profileId: selectedProfileId,
+  });
 
   // Mutations
   const [deleteGoal] = useDeleteNutritionGoalMutation();
@@ -193,6 +214,11 @@ export function NutritionContent() {
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
+                <ProfileSelector
+                  value={selectedProfileId}
+                  onChange={setSelectedProfileId}
+                  showAllOption={true}
+                />
                 <Button
                   variant="outline"
                   size="icon"
@@ -273,144 +299,188 @@ export function NutritionContent() {
         {/* Goals Tab */}
         <TabsContent value="goals">
           <div className="space-y-6">
-            {/* Active Goal Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{t("goals.activeGoal")}</span>
-                  <Button onClick={() => {
-                    setEditingGoal(null);
-                    setGoalFormOpen(true);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("goals.newGoal")}
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingGoal ? (
-                  <div className="text-muted-foreground">{tCommon("loading")}</div>
-                ) : activeGoal ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge>{t(`goalTypes.${activeGoal.goal_type}`)}</Badge>
-                        <Badge variant="outline" className="text-green-600">
-                          {t("goals.active")}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditGoal(activeGoal)}
-                        >
-                          {tCommon("edit")}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <GoalStat
-                        label={t("macros.calories")}
-                        value={activeGoal.daily_calories}
-                        unit={t("units.kcal")}
-                      />
-                      <GoalStat
-                        label={t("macros.protein")}
-                        value={activeGoal.daily_protein_g}
-                        unit="g"
-                      />
-                      <GoalStat
-                        label={t("macros.carbs")}
-                        value={activeGoal.daily_carbs_g}
-                        unit="g"
-                      />
-                      <GoalStat
-                        label={t("macros.fat")}
-                        value={activeGoal.daily_fat_g}
-                        unit="g"
-                      />
-                      <GoalStat
-                        label={t("macros.fiber")}
-                        value={activeGoal.daily_fiber_g}
-                        unit="g"
-                      />
-                      <GoalStat
-                        label={t("macros.sugar")}
-                        value={activeGoal.daily_sugar_g}
-                        unit="g"
-                      />
-                      <GoalStat
-                        label={t("macros.sodium")}
-                        value={activeGoal.daily_sodium_mg}
-                        unit="mg"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <EmptyState
-                    icon={<Target className="h-12 w-12" />}
-                    title={t("goals.empty.title")}
-                    description={t("goals.empty.description")}
-                    action={{
-                      label: t("goals.createGoal"),
-                      onClick: () => setGoalFormOpen(true),
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
+            {/* Profile Selector for Goals */}
+            <div className="flex items-center justify-between">
+              <ProfileSelector
+                value={selectedProfileId}
+                onChange={setSelectedProfileId}
+                showAllOption={true}
+              />
+            </div>
 
-            {/* All Goals History */}
-            {allGoals && allGoals.length > 1 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("goals.goalHistory")}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {allGoals
-                      .filter((g) => g.id !== activeGoal?.id)
-                      .map((goal) => (
-                        <div
-                          key={goal.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                        >
+            {/* Combined View - All Members */}
+            {selectedProfileId === null ? (
+              <div className="space-y-6">
+                <div className="text-lg font-semibold">{t("goals.allMembersGoals")}</div>
+                {profiles.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-8">
+                      <EmptyState
+                        icon={<Target className="h-12 w-12" />}
+                        title={t("goals.noProfiles")}
+                        description={t("goals.noProfilesDescription")}
+                      />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {profiles.map((profile) => (
+                      <ProfileGoalCard
+                        key={profile.id}
+                        profile={profile}
+                        onEditGoal={handleEditGoal}
+                        onCreateGoal={() => {
+                          setSelectedProfileId(profile.id);
+                          setEditingGoal(null);
+                          setGoalFormOpen(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Single Profile View - Active Goal Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{t("goals.activeGoal")}</span>
+                      <Button onClick={() => {
+                        setEditingGoal(null);
+                        setGoalFormOpen(true);
+                      }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        {t("goals.newGoal")}
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isLoadingGoal ? (
+                      <div className="text-muted-foreground">{tCommon("loading")}</div>
+                    ) : activeGoal ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline">
-                              {t(`goalTypes.${goal.goal_type}`)}
+                            <Badge>{t(`goalTypes.${activeGoal.goal_type}`)}</Badge>
+                            <Badge variant="outline" className="text-green-600">
+                              {t("goals.active")}
                             </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {goal.daily_calories} {t("units.kcal")}
-                            </span>
-                            {goal.start_date && (
-                              <span className="text-xs text-muted-foreground">
-                                {format(parseISO(goal.start_date), "MMM d, yyyy")}
-                              </span>
-                            )}
                           </div>
                           <div className="flex gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              onClick={() => handleEditGoal(goal)}
+                              onClick={() => handleEditGoal(activeGoal)}
                             >
                               {tCommon("edit")}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive"
-                              onClick={() => handleDeleteGoal(goal)}
-                            >
-                              {tCommon("delete")}
-                            </Button>
                           </div>
                         </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <GoalStat
+                            label={t("macros.calories")}
+                            value={activeGoal.daily_calories}
+                            unit={t("units.kcal")}
+                          />
+                          <GoalStat
+                            label={t("macros.protein")}
+                            value={activeGoal.daily_protein_g}
+                            unit="g"
+                          />
+                          <GoalStat
+                            label={t("macros.carbs")}
+                            value={activeGoal.daily_carbs_g}
+                            unit="g"
+                          />
+                          <GoalStat
+                            label={t("macros.fat")}
+                            value={activeGoal.daily_fat_g}
+                            unit="g"
+                          />
+                          <GoalStat
+                            label={t("macros.fiber")}
+                            value={activeGoal.daily_fiber_g}
+                            unit="g"
+                          />
+                          <GoalStat
+                            label={t("macros.sugar")}
+                            value={activeGoal.daily_sugar_g}
+                            unit="g"
+                          />
+                          <GoalStat
+                            label={t("macros.sodium")}
+                            value={activeGoal.daily_sodium_mg}
+                            unit="mg"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={<Target className="h-12 w-12" />}
+                        title={t("goals.empty.title")}
+                        description={t("goals.empty.description")}
+                        action={{
+                          label: t("goals.createGoal"),
+                          onClick: () => setGoalFormOpen(true),
+                        }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* All Goals History */}
+                {allGoals && allGoals.length > 1 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t("goals.goalHistory")}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {allGoals
+                          .filter((g) => g.id !== activeGoal?.id)
+                          .map((goal) => (
+                            <div
+                              key={goal.id}
+                              className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">
+                                  {t(`goalTypes.${goal.goal_type}`)}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  {goal.daily_calories} {t("units.kcal")}
+                                </span>
+                                {goal.start_date && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(parseISO(goal.start_date), "MMM d, yyyy")}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditGoal(goal)}
+                                >
+                                  {tCommon("edit")}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive"
+                                  onClick={() => handleDeleteGoal(goal)}
+                                >
+                                  {tCommon("delete")}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
         </TabsContent>
@@ -441,6 +511,7 @@ export function NutritionContent() {
         open={goalFormOpen}
         onOpenChange={setGoalFormOpen}
         editingGoal={editingGoal}
+        defaultProfileId={selectedProfileId}
         onSuccess={() => {
           setGoalFormOpen(false);
           setEditingGoal(null);
@@ -453,6 +524,7 @@ export function NutritionContent() {
         onOpenChange={setLogFormOpen}
         defaultDate={selectedDate}
         defaultMealType={defaultMealType}
+        defaultProfileId={selectedProfileId}
         onSuccess={() => {
           setLogFormOpen(false);
           setDefaultMealType(undefined);
@@ -477,5 +549,94 @@ function GoalStat({ label, value, unit }: GoalStatProps) {
         {value !== null && <span className="text-xs font-normal ml-1">{unit}</span>}
       </div>
     </div>
+  );
+}
+
+// Component to display a profile's goal in the combined view
+interface ProfileGoalCardProps {
+  profile: Profile;
+  onEditGoal: (goal: NutritionGoal) => void;
+  onCreateGoal: () => void;
+}
+
+function ProfileGoalCard({ profile, onEditGoal, onCreateGoal }: ProfileGoalCardProps) {
+  const t = useTranslations("nutrition");
+  const tCommon = useTranslations("common");
+
+  // Fetch active goal for this specific profile
+  const { data: activeGoal, isLoading } = useGetActiveNutritionGoalQuery(profile.id);
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: profile.color || '#3B82F6' }}
+            />
+            <span>{profile.name}</span>
+          </div>
+          {!activeGoal && !isLoading && (
+            <Button size="sm" variant="outline" onClick={onCreateGoal}>
+              <Plus className="h-3 w-3 mr-1" />
+              {t("goals.setGoal")}
+            </Button>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">{tCommon("loading")}</div>
+        ) : activeGoal ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {t(`goalTypes.${activeGoal.goal_type}`)}
+                </Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEditGoal(activeGoal)}
+              >
+                {tCommon("edit")}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-center p-2 rounded bg-muted/30">
+                <div className="text-[10px] text-muted-foreground">{t("macros.calories")}</div>
+                <div className="text-sm font-semibold">
+                  {activeGoal.daily_calories || "-"} <span className="text-[10px] font-normal">{t("units.kcal")}</span>
+                </div>
+              </div>
+              <div className="text-center p-2 rounded bg-muted/30">
+                <div className="text-[10px] text-muted-foreground">{t("macros.protein")}</div>
+                <div className="text-sm font-semibold">
+                  {activeGoal.daily_protein_g || "-"} <span className="text-[10px] font-normal">g</span>
+                </div>
+              </div>
+              <div className="text-center p-2 rounded bg-muted/30">
+                <div className="text-[10px] text-muted-foreground">{t("macros.carbs")}</div>
+                <div className="text-sm font-semibold">
+                  {activeGoal.daily_carbs_g || "-"} <span className="text-[10px] font-normal">g</span>
+                </div>
+              </div>
+              <div className="text-center p-2 rounded bg-muted/30">
+                <div className="text-[10px] text-muted-foreground">{t("macros.fat")}</div>
+                <div className="text-sm font-semibold">
+                  {activeGoal.daily_fat_g || "-"} <span className="text-[10px] font-normal">g</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-muted-foreground text-center py-4">
+            {t("goals.noGoalSet")}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

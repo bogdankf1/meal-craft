@@ -59,6 +59,7 @@ export interface MealUpdate {
 export interface MealPlan {
   id: string;
   user_id: string;
+  profile_id: string | null;
   name: string;
   date_start: string;
   date_end: string;
@@ -76,6 +77,7 @@ export interface MealPlanWithMeals extends Omit<MealPlan, "meal_count"> {
 
 export interface MealPlanListItem {
   id: string;
+  profile_id: string | null;
   name: string;
   date_start: string;
   date_end: string;
@@ -92,6 +94,7 @@ export interface MealPlanCreate {
   date_end: string;
   servings?: number;
   is_template?: boolean;
+  profile_id?: string | null;
 }
 
 export interface MealPlanUpdate {
@@ -101,6 +104,7 @@ export interface MealPlanUpdate {
   servings?: number;
   is_template?: boolean;
   is_archived?: boolean;
+  profile_id?: string | null;
 }
 
 // ============ Filter Types ============
@@ -111,6 +115,7 @@ export interface MealPlanFilters {
   date_to?: string;
   is_template?: boolean;
   is_archived?: boolean;
+  profile_id?: string | null;
   page?: number;
   per_page?: number;
   sort_by?: string;
@@ -222,6 +227,28 @@ export interface ParseMealPlanResponse {
   message: string | null;
 }
 
+// ============ Combined Week Plans (All Members View) ============
+
+export interface ProfileInfo {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
+export interface MealWithProfile extends Meal {
+  profile_id: string | null;
+  profile_name: string | null;
+  profile_color: string | null;
+}
+
+export interface CombinedWeekPlan {
+  date_start: string;
+  date_end: string;
+  meals: MealWithProfile[];
+  profiles: ProfileInfo[];
+  plan_count: number;
+}
+
 // ============ Repeat Request ============
 
 export interface RepeatMealPlanRequest {
@@ -237,10 +264,16 @@ export const mealPlannerApi = baseApi.injectEndpoints({
     // ============ Meal Plan CRUD ============
 
     getMealPlans: builder.query<MealPlanListResponse, MealPlanFilters>({
-      query: (params) => ({
-        url: "/meal-plans",
-        params,
-      }),
+      query: (params) => {
+        // Filter out null/undefined values to avoid sending "null" strings
+        const cleanParams = Object.fromEntries(
+          Object.entries(params).filter(([, v]) => v !== null && v !== undefined)
+        );
+        return {
+          url: "/meal-plans",
+          params: cleanParams,
+        };
+      },
       providesTags: (result) =>
         result
           ? [
@@ -253,9 +286,21 @@ export const mealPlannerApi = baseApi.injectEndpoints({
           : [{ type: "MealPlans", id: "LIST" }],
     }),
 
-    getCurrentWeekPlan: builder.query<MealPlanWithMeals | null, void>({
-      query: () => "/meal-plans/current-week",
+    getCurrentWeekPlan: builder.query<MealPlanWithMeals | null, { profileId?: string | null } | void>({
+      query: (params) => {
+        const profileId = params && 'profileId' in params ? params.profileId : undefined;
+        return {
+          url: "/meal-plans/current-week",
+          // Only include profile_id if it's a valid string (not null/undefined)
+          params: profileId ? { profile_id: profileId } : undefined,
+        };
+      },
       providesTags: [{ type: "MealPlans", id: "CURRENT_WEEK" }],
+    }),
+
+    getCombinedWeekPlan: builder.query<CombinedWeekPlan, void>({
+      query: () => "/meal-plans/current-week/combined",
+      providesTags: [{ type: "MealPlans", id: "CURRENT_WEEK_COMBINED" }],
     }),
 
     getMealPlan: builder.query<MealPlanWithMeals, string>({
@@ -499,6 +544,7 @@ export const mealPlannerApi = baseApi.injectEndpoints({
 export const {
   useGetMealPlansQuery,
   useGetCurrentWeekPlanQuery,
+  useGetCombinedWeekPlanQuery,
   useGetMealPlanQuery,
   useLazyGetMealPlanQuery,
   useCreateMealPlanMutation,

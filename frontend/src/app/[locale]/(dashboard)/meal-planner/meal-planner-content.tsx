@@ -58,10 +58,12 @@ import {
   GenerateShoppingListDialog,
   MealPlanImport,
 } from "@/components/modules/meal-planner";
+import { ProfileSelector } from "@/components/shared/ProfileSelector";
 import {
   useGetMealPlansQuery,
   useGetMealPlanQuery,
   useGetCurrentWeekPlanQuery,
+  useGetCombinedWeekPlanQuery,
   useGetMealPlanAnalyticsQuery,
   useGetMealPlanHistoryQuery,
   useDeleteMealPlanMutation,
@@ -72,6 +74,7 @@ import {
   type MealPlanFilters,
   type Meal,
   type MealType,
+  type MealWithProfile,
 } from "@/lib/api/meal-planner-api";
 import { toast } from "sonner";
 
@@ -81,6 +84,9 @@ export function MealPlannerContent() {
 
   // View mode: calendar or table
   const [viewMode, setViewMode] = useState<string>("calendar");
+
+  // Profile filter
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // State for active items
   const [filters, setFilters] = useState<MealPlanFilters>({
@@ -120,9 +126,22 @@ export function MealPlannerContent() {
   const { data: mealPlansData, isLoading: isLoadingPlans } = useGetMealPlansQuery({
     ...filters,
     search: searchQuery || undefined,
+    profile_id: selectedProfileId,
   });
-  const { data: archivedData, isLoading: isLoadingArchived } = useGetMealPlansQuery(archiveFilters);
-  const { data: currentWeekPlan, isLoading: isLoadingCurrentWeek } = useGetCurrentWeekPlanQuery();
+  const { data: archivedData, isLoading: isLoadingArchived } = useGetMealPlansQuery({
+    ...archiveFilters,
+    profile_id: selectedProfileId,
+  });
+  // For individual profile: fetch single plan
+  const { data: currentWeekPlan, isLoading: isLoadingCurrentWeek } = useGetCurrentWeekPlanQuery(
+    { profileId: selectedProfileId },
+    { skip: selectedProfileId === null } // Skip when "All Members" is selected
+  );
+  // For "All Members": fetch combined plans
+  const { data: combinedWeekPlan, isLoading: isLoadingCombined } = useGetCombinedWeekPlanQuery(
+    undefined,
+    { skip: selectedProfileId !== null } // Only fetch when "All Members" is selected
+  );
   const { data: analytics } = useGetMealPlanAnalyticsQuery();
   const { data: historyData } = useGetMealPlanHistoryQuery(historyMonths);
 
@@ -373,6 +392,11 @@ export function MealPlannerContent() {
                   className="pl-9"
                 />
               </div>
+              <ProfileSelector
+                value={selectedProfileId}
+                onChange={setSelectedProfileId}
+                className="w-[180px]"
+              />
               <ViewSelector
                 currentView={viewMode}
                 onViewChange={setViewMode}
@@ -418,7 +442,47 @@ export function MealPlannerContent() {
 
           {/* Calendar or Table View */}
           {viewMode === "calendar" ? (
-            displayPlan ? (
+            // Combined view for "All Members"
+            selectedProfileId === null && combinedWeekPlan ? (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span>{t("allMembersWeek")}</span>
+                      {/* Profile legend */}
+                      {combinedWeekPlan.profiles.length > 0 && (
+                        <div className="flex items-center gap-3 ml-4">
+                          {combinedWeekPlan.profiles.map((profile) => (
+                            <div key={profile.id} className="flex items-center gap-1.5">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: profile.color || '#3B82F6' }}
+                              />
+                              <span className="text-sm font-normal text-muted-foreground">
+                                {profile.name}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <Badge variant="secondary">
+                      {format(parseISO(combinedWeekPlan.date_start), "MMM d")} -{" "}
+                      {format(parseISO(combinedWeekPlan.date_end), "MMM d, yyyy")}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MealCalendar
+                    startDate={parseISO(combinedWeekPlan.date_start)}
+                    meals={combinedWeekPlan.meals}
+                    servings={2}
+                    onEditMeal={handleEditMeal}
+                    showAllMembers
+                  />
+                </CardContent>
+              </Card>
+            ) : displayPlan ? (
               <Card>
                 <CardHeader className="pb-2">
                   {/* Navigation controls */}
@@ -671,6 +735,7 @@ export function MealPlannerContent() {
         open={formOpen}
         onOpenChange={setFormOpen}
         editingItem={editingItem}
+        defaultProfileId={selectedProfileId}
         onSuccess={() => {
           setFormOpen(false);
           setEditingItem(null);

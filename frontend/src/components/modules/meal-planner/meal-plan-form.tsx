@@ -53,6 +53,7 @@ interface MealPlanFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingItem?: MealPlanListItem | null;
+  defaultProfileId?: string | null;
   onSuccess?: () => void;
 }
 
@@ -60,6 +61,7 @@ export function MealPlanForm({
   open,
   onOpenChange,
   editingItem,
+  defaultProfileId,
   onSuccess,
 }: MealPlanFormProps) {
   const t = useTranslations("mealPlanner");
@@ -119,6 +121,7 @@ export function MealPlanForm({
         date_end: format(values.date_end, "yyyy-MM-dd"),
         servings: values.servings,
         is_template: values.is_template,
+        profile_id: isEditing ? editingItem.profile_id : defaultProfileId,
       };
 
       if (isEditing) {

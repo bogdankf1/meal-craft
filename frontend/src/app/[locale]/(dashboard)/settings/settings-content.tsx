@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -15,6 +16,11 @@ import {
   Sun,
   Moon,
   Monitor,
+  Users,
+  Plus,
+  Pencil,
+  Trash2,
+  Star,
 } from "lucide-react";
 
 import {
@@ -33,6 +39,25 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/components/providers/currency-provider";
@@ -44,6 +69,13 @@ import {
   useGetSeasonalProduceQuery,
   SUPPORTED_COUNTRIES,
 } from "@/lib/api/seasonality-api";
+import {
+  useGetProfilesQuery,
+  useCreateProfileMutation,
+  useUpdateProfileMutation,
+  useDeleteProfileMutation,
+  type Profile,
+} from "@/lib/api/profiles-api";
 
 // Supported languages
 const LANGUAGES = [
@@ -51,9 +83,23 @@ const LANGUAGES = [
   { code: "uk", name: "Українська", flag: "🇺🇦" },
 ];
 
+// Profile colors
+const PROFILE_COLORS = [
+  { value: "#3B82F6", name: "Blue" },
+  { value: "#10B981", name: "Green" },
+  { value: "#EC4899", name: "Pink" },
+  { value: "#F59E0B", name: "Orange" },
+  { value: "#8B5CF6", name: "Purple" },
+  { value: "#EF4444", name: "Red" },
+  { value: "#06B6D4", name: "Cyan" },
+  { value: "#6B7280", name: "Gray" },
+];
+
 export function SettingsContent() {
   const t = useTranslations("settings");
+  const tProfiles = useTranslations("profiles");
   const tSeasonality = useTranslations("seasonality");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
@@ -65,6 +111,20 @@ export function SettingsContent() {
   // Seasonality preferences
   const { data: seasonalPreferences, isLoading: isLoadingSeasonalPrefs } = useGetUserSeasonalPreferencesQuery();
   const [updateSeasonalPreferences] = useUpdateUserSeasonalPreferencesMutation();
+
+  // Profiles
+  const { data: profilesData, isLoading: isLoadingProfiles } = useGetProfilesQuery({});
+  const [createProfile, { isLoading: isCreating }] = useCreateProfileMutation();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [deleteProfile, { isLoading: isDeleting }] = useDeleteProfileMutation();
+
+  // Profile form state
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [profileName, setProfileName] = useState("");
+  const [profileColor, setProfileColor] = useState("#3B82F6");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null);
 
   // Get favorites count
   const selectedCountry = seasonalPreferences?.country_code || "UA";
@@ -79,6 +139,11 @@ export function SettingsContent() {
       value: "general",
       label: t("tabs.general"),
       icon: <Settings className="h-4 w-4" />,
+    },
+    {
+      value: "household",
+      label: t("tabs.household"),
+      icon: <Users className="h-4 w-4" />,
     },
     {
       value: "appearance",
@@ -133,7 +198,75 @@ export function SettingsContent() {
     }
   };
 
+  const openCreateProfileDialog = () => {
+    setEditingProfile(null);
+    setProfileName("");
+    setProfileColor("#3B82F6");
+    setProfileDialogOpen(true);
+  };
+
+  const openEditProfileDialog = (profile: Profile) => {
+    setEditingProfile(profile);
+    setProfileName(profile.name);
+    setProfileColor(profile.color || "#3B82F6");
+    setProfileDialogOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      toast.error(tProfiles("messages.nameRequired"));
+      return;
+    }
+
+    try {
+      if (editingProfile) {
+        await updateProfile({
+          id: editingProfile.id,
+          data: { name: profileName, color: profileColor },
+        }).unwrap();
+        toast.success(tProfiles("messages.updated"));
+      } else {
+        await createProfile({ name: profileName, color: profileColor }).unwrap();
+        toast.success(tProfiles("messages.created"));
+      }
+      setProfileDialogOpen(false);
+    } catch {
+      toast.error(editingProfile ? tProfiles("messages.updateError") : tProfiles("messages.createError"));
+    }
+  };
+
+  const openDeleteDialog = (profile: Profile) => {
+    setProfileToDelete(profile);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!profileToDelete) return;
+
+    try {
+      await deleteProfile(profileToDelete.id).unwrap();
+      toast.success(tProfiles("messages.deleted"));
+      setDeleteDialogOpen(false);
+      setProfileToDelete(null);
+    } catch {
+      toast.error(tProfiles("messages.deleteError"));
+    }
+  };
+
+  const handleSetDefaultProfile = async (profile: Profile) => {
+    try {
+      await updateProfile({
+        id: profile.id,
+        data: { is_default: true },
+      }).unwrap();
+      toast.success(tProfiles("messages.setDefault"));
+    } catch {
+      toast.error(tProfiles("messages.updateError"));
+    }
+  };
+
   return (
+    <>
     <ModuleTabs tabs={tabs} defaultTab="general">
       {/* General Tab */}
       <TabsContent value="general" className="space-y-6">
@@ -162,6 +295,99 @@ export function SettingsContent() {
                 ))}
               </SelectContent>
             </Select>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Household Tab */}
+      <TabsContent value="household" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {t("household.title")}
+                </CardTitle>
+                <CardDescription>{t("household.description")}</CardDescription>
+              </div>
+              <Button onClick={openCreateProfileDialog}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t("household.addMember")}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingProfiles ? (
+              <div className="space-y-3">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : profilesData?.profiles && profilesData.profiles.length > 0 ? (
+              <div className="space-y-3">
+                {profilesData.profiles.map((profile) => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                        style={{ backgroundColor: profile.color || "#3B82F6" }}
+                      >
+                        {profile.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{profile.name}</span>
+                          {profile.is_default && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              {t("household.default")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!profile.is_default && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSetDefaultProfile(profile)}
+                          title={t("household.setDefault")}
+                        >
+                          <Star className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditProfileDialog(profile)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDeleteDialog(profile)}
+                        disabled={profile.is_default && profilesData.profiles.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>{t("household.empty")}</p>
+                <Button className="mt-4" onClick={openCreateProfileDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("household.addFirst")}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </TabsContent>
@@ -419,5 +645,78 @@ export function SettingsContent() {
         </Card>
       </TabsContent>
     </ModuleTabs>
+
+    {/* Profile Create/Edit Dialog */}
+    <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>
+            {editingProfile ? t("household.editMember") : t("household.addMember")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="profile-name">{t("household.name")}</Label>
+            <Input
+              id="profile-name"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              placeholder={t("household.namePlaceholder")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("household.color")}</Label>
+            <div className="flex flex-wrap gap-2">
+              {PROFILE_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setProfileColor(color.value)}
+                  className={cn(
+                    "w-8 h-8 rounded-full border-2 transition-all",
+                    profileColor === color.value
+                      ? "border-primary scale-110"
+                      : "border-transparent hover:scale-105"
+                  )}
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
+            {tCommon("cancel")}
+          </Button>
+          <Button onClick={handleSaveProfile} disabled={isCreating || isUpdating}>
+            {isCreating || isUpdating ? tCommon("saving") : tCommon("save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("household.deleteConfirm.title")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("household.deleteConfirm.description", { name: profileToDelete?.name ?? "" })}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteProfile}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isDeleting}
+          >
+            {isDeleting ? tCommon("deleting") : tCommon("delete")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
