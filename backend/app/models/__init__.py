@@ -1,6 +1,9 @@
 # User and Authentication
 from app.models.user import User, UserRole, SubscriptionTier
 
+# Profiles (Household Members)
+from app.models.profile import Profile
+
 # Subscription and Tiers
 from app.models.subscription import (
     Subscription,
@@ -110,6 +113,8 @@ __all__ = [
     "User",
     "UserRole",
     "SubscriptionTier",
+    # Profile
+    "Profile",
     # Subscription
     "Subscription",
     "SubscriptionStatus",

@@ -69,3 +69,4 @@ class User(Base):
     backups = relationship("Backup", back_populates="user")
     support_topics = relationship("SupportTopic", back_populates="user")
     support_messages = relationship("SupportMessage", back_populates="user")
+    profiles = relationship("Profile", back_populates="user", cascade="all, delete-orphan")

@@ -55,6 +55,7 @@ router = APIRouter()
 @router.get("/goals", response_model=List[NutritionGoalResponse])
 async def list_nutrition_goals(
     active_only: bool = Query(True, description="Only return active goals"),
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -63,6 +64,10 @@ async def list_nutrition_goals(
 
     if active_only:
         query = query.where(NutritionGoal.is_active == True)
+
+    # Filter by profile (None = all members/shared)
+    if profile_id:
+        query = query.where(NutritionGoal.profile_id == profile_id)
 
     query = query.order_by(NutritionGoal.created_at.desc())
 
@@ -74,17 +79,24 @@ async def list_nutrition_goals(
 
 @router.get("/goals/active", response_model=Optional[NutritionGoalResponse])
 async def get_active_goal(
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get the user's currently active nutrition goal."""
+    query = select(NutritionGoal).where(
+        and_(
+            NutritionGoal.user_id == current_user.id,
+            NutritionGoal.is_active == True
+        )
+    )
+
+    # Filter by profile (None = all members/shared)
+    if profile_id:
+        query = query.where(NutritionGoal.profile_id == profile_id)
+
     result = await db.execute(
-        select(NutritionGoal).where(
-            and_(
-                NutritionGoal.user_id == current_user.id,
-                NutritionGoal.is_active == True
-            )
-        ).order_by(NutritionGoal.created_at.desc()).limit(1)
+        query.order_by(NutritionGoal.created_at.desc()).limit(1)
     )
     goal = result.scalar_one_or_none()
 
@@ -100,15 +112,20 @@ async def create_nutrition_goal(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Create a new nutrition goal. Deactivates any existing active goals."""
-    # Deactivate existing active goals
+    """Create a new nutrition goal. Deactivates any existing active goals for the same profile."""
+    # Deactivate existing active goals for the same profile only
+    deactivate_conditions = [
+        NutritionGoal.user_id == current_user.id,
+        NutritionGoal.is_active == True
+    ]
+    # Only deactivate goals for the same profile (or shared goals if no profile specified)
+    if request.profile_id:
+        deactivate_conditions.append(NutritionGoal.profile_id == request.profile_id)
+    else:
+        deactivate_conditions.append(NutritionGoal.profile_id.is_(None))
+
     existing_goals = await db.execute(
-        select(NutritionGoal).where(
-            and_(
-                NutritionGoal.user_id == current_user.id,
-                NutritionGoal.is_active == True
-            )
-        )
+        select(NutritionGoal).where(and_(*deactivate_conditions))
     )
     for goal in existing_goals.scalars().all():
         goal.is_active = False
@@ -116,6 +133,7 @@ async def create_nutrition_goal(
     # Create new goal
     goal = NutritionGoal(
         user_id=current_user.id,
+        profile_id=request.profile_id,
         daily_calories=request.daily_calories,
         daily_protein_g=request.daily_protein_g,
         daily_carbs_g=request.daily_carbs_g,
@@ -154,6 +172,24 @@ async def update_nutrition_goal(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Nutrition goal not found"
         )
+
+    # If activating this goal, deactivate other goals for the same profile
+    if request.is_active is True and not goal.is_active:
+        deactivate_conditions = [
+            NutritionGoal.user_id == current_user.id,
+            NutritionGoal.is_active == True,
+            NutritionGoal.id != goal_id
+        ]
+        if goal.profile_id:
+            deactivate_conditions.append(NutritionGoal.profile_id == goal.profile_id)
+        else:
+            deactivate_conditions.append(NutritionGoal.profile_id.is_(None))
+
+        existing_goals = await db.execute(
+            select(NutritionGoal).where(and_(*deactivate_conditions))
+        )
+        for existing_goal in existing_goals.scalars().all():
+            existing_goal.is_active = False
 
     update_data = request.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -199,6 +235,7 @@ async def list_nutrition_logs(
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
     meal_type: Optional[str] = Query(None),
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
     is_archived: bool = Query(False),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
@@ -219,6 +256,9 @@ async def list_nutrition_logs(
         query = query.where(NutritionLog.date <= date_to)
     if meal_type:
         query = query.where(NutritionLog.meal_type == meal_type)
+    # Filter by profile (None = all members/shared)
+    if profile_id:
+        query = query.where(NutritionLog.profile_id == profile_id)
 
     # Count
     count_query = select(func.count()).select_from(query.subquery())
@@ -253,6 +293,7 @@ async def create_nutrition_log(
     """Create a custom nutrition log entry."""
     log = NutritionLog(
         user_id=current_user.id,
+        profile_id=request.profile_id,
         date=request.date,
         meal_type=request.meal_type.value if request.meal_type else None,
         meal_id=request.meal_id,
@@ -442,6 +483,7 @@ async def delete_health_metric(
 @router.get("/daily/{target_date}", response_model=DailyNutritionWithGoals)
 async def get_daily_nutrition(
     target_date: date,
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -449,16 +491,20 @@ async def get_daily_nutrition(
     entries: List[NutritionEntry] = []
 
     # 1. Get meals from Meal Planner (with recipe nutrition)
+    # Build conditions for meal plan query
+    meal_conditions = [
+        MealPlan.user_id == current_user.id,
+        Meal.date == target_date
+    ]
+    # Filter by profile if specified
+    if profile_id:
+        meal_conditions.append(MealPlan.profile_id == profile_id)
+
     meal_result = await db.execute(
         select(Meal)
         .join(MealPlan)
         .options(selectinload(Meal.recipe).selectinload(Recipe.nutrition))
-        .where(
-            and_(
-                MealPlan.user_id == current_user.id,
-                Meal.date == target_date
-            )
-        )
+        .where(and_(*meal_conditions))
     )
     meals = meal_result.scalars().all()
 
@@ -546,16 +592,19 @@ async def get_daily_nutrition(
         ))
 
     # 3. Get custom nutrition logs
+    log_conditions = [
+        NutritionLog.user_id == current_user.id,
+        NutritionLog.date == target_date,
+        NutritionLog.is_archived == False,
+        NutritionLog.meal_id.is_(None),  # Only standalone custom entries
+        NutritionLog.restaurant_meal_id.is_(None),
+    ]
+    # Filter by profile if specified
+    if profile_id:
+        log_conditions.append(NutritionLog.profile_id == profile_id)
+
     log_result = await db.execute(
-        select(NutritionLog).where(
-            and_(
-                NutritionLog.user_id == current_user.id,
-                NutritionLog.date == target_date,
-                NutritionLog.is_archived == False,
-                NutritionLog.meal_id.is_(None),  # Only standalone custom entries
-                NutritionLog.restaurant_meal_id.is_(None),
-            )
-        )
+        select(NutritionLog).where(and_(*log_conditions))
     )
     logs = log_result.scalars().all()
 
@@ -585,17 +634,80 @@ async def get_daily_nutrition(
     total_sugar = sum(e.sugar_g or 0 for e in entries)
     total_sodium = sum(e.sodium_mg or 0 for e in entries)
 
-    # Get active goal
-    goal_result = await db.execute(
-        select(NutritionGoal).where(
-            and_(
-                NutritionGoal.user_id == current_user.id,
-                NutritionGoal.is_active == True
+    # Get active goal(s)
+    # For "All Members" (no profile_id): aggregate all active goals
+    # For specific profile: get that profile's goal
+    goal_response = None
+    aggregated_goal_calories = None
+    aggregated_goal_protein = None
+    aggregated_goal_carbs = None
+    aggregated_goal_fat = None
+    aggregated_goal_fiber = None
+    aggregated_goal_sugar = None
+    aggregated_goal_sodium = None
+
+    if profile_id:
+        # Single profile - get specific goal
+        goal_result = await db.execute(
+            select(NutritionGoal).where(
+                and_(
+                    NutritionGoal.user_id == current_user.id,
+                    NutritionGoal.is_active == True,
+                    NutritionGoal.profile_id == profile_id
+                )
+            ).limit(1)
+        )
+        goal = goal_result.scalar_one_or_none()
+        if goal:
+            goal_response = NutritionGoalResponse.model_validate(goal)
+            aggregated_goal_calories = goal.daily_calories
+            aggregated_goal_protein = goal.daily_protein_g
+            aggregated_goal_carbs = goal.daily_carbs_g
+            aggregated_goal_fat = goal.daily_fat_g
+            aggregated_goal_fiber = goal.daily_fiber_g
+            aggregated_goal_sugar = goal.daily_sugar_g
+            aggregated_goal_sodium = goal.daily_sodium_mg
+    else:
+        # All Members - aggregate all active goals from all profiles
+        goals_result = await db.execute(
+            select(NutritionGoal).where(
+                and_(
+                    NutritionGoal.user_id == current_user.id,
+                    NutritionGoal.is_active == True
+                )
             )
-        ).limit(1)
-    )
-    goal = goal_result.scalar_one_or_none()
-    goal_response = NutritionGoalResponse.model_validate(goal) if goal else None
+        )
+        all_goals = goals_result.scalars().all()
+
+        if all_goals:
+            # Sum up all goals
+            aggregated_goal_calories = sum(g.daily_calories or 0 for g in all_goals) or None
+            aggregated_goal_protein = sum(g.daily_protein_g or 0 for g in all_goals) or None
+            aggregated_goal_carbs = sum(g.daily_carbs_g or 0 for g in all_goals) or None
+            aggregated_goal_fat = sum(g.daily_fat_g or 0 for g in all_goals) or None
+            aggregated_goal_fiber = sum(g.daily_fiber_g or 0 for g in all_goals) or None
+            aggregated_goal_sugar = sum(g.daily_sugar_g or 0 for g in all_goals) or None
+            aggregated_goal_sodium = sum(g.daily_sodium_mg or 0 for g in all_goals) or None
+
+            # Create an aggregated goal response for display
+            # Use the first goal as a template but with summed values
+            goal_response = NutritionGoalResponse(
+                id=all_goals[0].id,
+                user_id=current_user.id,
+                profile_id=None,
+                daily_calories=aggregated_goal_calories,
+                daily_protein_g=aggregated_goal_protein,
+                daily_carbs_g=aggregated_goal_carbs,
+                daily_fat_g=aggregated_goal_fat,
+                daily_fiber_g=aggregated_goal_fiber,
+                daily_sugar_g=aggregated_goal_sugar,
+                daily_sodium_mg=aggregated_goal_sodium,
+                goal_type=all_goals[0].goal_type,
+                start_date=all_goals[0].start_date,
+                is_active=True,
+                created_at=all_goals[0].created_at,
+                updated_at=all_goals[0].updated_at,
+            )
 
     # Calculate percentages
     def calc_percent(actual: float, target: Optional[int]) -> Optional[float]:
@@ -615,19 +727,20 @@ async def get_daily_nutrition(
         meal_count=len(entries),
         entries=entries,
         goal=goal_response,
-        calories_percent=calc_percent(total_calories, goal.daily_calories if goal else None),
-        protein_percent=calc_percent(total_protein, goal.daily_protein_g if goal else None),
-        carbs_percent=calc_percent(total_carbs, goal.daily_carbs_g if goal else None),
-        fat_percent=calc_percent(total_fat, goal.daily_fat_g if goal else None),
-        fiber_percent=calc_percent(total_fiber, goal.daily_fiber_g if goal else None),
-        sugar_percent=calc_percent(total_sugar, goal.daily_sugar_g if goal else None),
-        sodium_percent=calc_percent(total_sodium, goal.daily_sodium_mg if goal else None),
+        calories_percent=calc_percent(total_calories, aggregated_goal_calories),
+        protein_percent=calc_percent(total_protein, aggregated_goal_protein),
+        carbs_percent=calc_percent(total_carbs, aggregated_goal_carbs),
+        fat_percent=calc_percent(total_fat, aggregated_goal_fat),
+        fiber_percent=calc_percent(total_fiber, aggregated_goal_fiber),
+        sugar_percent=calc_percent(total_sugar, aggregated_goal_sugar),
+        sodium_percent=calc_percent(total_sodium, aggregated_goal_sodium),
     )
 
 
 @router.get("/weekly", response_model=WeeklyNutritionSummary)
 async def get_weekly_nutrition(
     start_date: Optional[date] = Query(None, description="Start date (defaults to current week)"),
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -648,8 +761,8 @@ async def get_weekly_nutrition(
 
     for i in range(7):
         day_date = start_date + timedelta(days=i)
-        # Reuse daily endpoint logic
-        daily = await get_daily_nutrition(day_date, db, current_user)
+        # Reuse daily endpoint logic (with profile filtering)
+        daily = await get_daily_nutrition(day_date, profile_id, db, current_user)
         days.append(DailyNutritionSummary(
             date=daily.date,
             total_calories=daily.total_calories,
@@ -685,6 +798,7 @@ async def get_weekly_nutrition(
 @router.get("/analytics", response_model=NutritionAnalytics)
 async def get_nutrition_analytics(
     days: int = Query(30, ge=7, le=365, description="Number of days to analyze"),
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -707,20 +821,41 @@ async def get_nutrition_analytics(
     days_logged = 0
     days_meeting_goal = 0
 
-    # Get active goal for achievement calculation
-    goal_result = await db.execute(
-        select(NutritionGoal).where(
-            and_(
-                NutritionGoal.user_id == current_user.id,
-                NutritionGoal.is_active == True
+    # Get active goal(s) for achievement calculation
+    # For "All Members": aggregate all active goals
+    # For specific profile: get that profile's goal
+    aggregated_goal_calories = None
+
+    if profile_id:
+        goal_result = await db.execute(
+            select(NutritionGoal).where(
+                and_(
+                    NutritionGoal.user_id == current_user.id,
+                    NutritionGoal.is_active == True,
+                    NutritionGoal.profile_id == profile_id
+                )
+            ).limit(1)
+        )
+        goal = goal_result.scalar_one_or_none()
+        if goal:
+            aggregated_goal_calories = goal.daily_calories
+    else:
+        # All Members - sum all active goals
+        goals_result = await db.execute(
+            select(NutritionGoal).where(
+                and_(
+                    NutritionGoal.user_id == current_user.id,
+                    NutritionGoal.is_active == True
+                )
             )
-        ).limit(1)
-    )
-    goal = goal_result.scalar_one_or_none()
+        )
+        all_goals = goals_result.scalars().all()
+        if all_goals:
+            aggregated_goal_calories = sum(g.daily_calories or 0 for g in all_goals) or None
 
     for i in range(days):
         day_date = start_date + timedelta(days=i)
-        daily = await get_daily_nutrition(day_date, db, current_user)
+        daily = await get_daily_nutrition(day_date, profile_id, db, current_user)
 
         daily_data.append(DailyNutritionSummary(
             date=daily.date,
@@ -756,9 +891,9 @@ async def get_nutrition_analytics(
                     meals_custom += 1
 
             # Check goal achievement
-            if goal and goal.daily_calories:
+            if aggregated_goal_calories:
                 # Consider within 10% of goal as meeting it
-                if 0.9 * goal.daily_calories <= daily.total_calories <= 1.1 * goal.daily_calories:
+                if 0.9 * aggregated_goal_calories <= daily.total_calories <= 1.1 * aggregated_goal_calories:
                     days_meeting_goal += 1
 
     # Calculate averages

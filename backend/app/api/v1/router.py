@@ -6,6 +6,7 @@ from app.api.v1.routes.backups import router as backups_router
 from app.api.v1.routes.admin import router as admin_router
 from app.api.v1.routes.support import router as support_router
 from app.api.v1.routes.dashboard import router as dashboard_router
+from app.api.v1.routes.profiles import router as profiles_router
 
 api_router = APIRouter()
 
@@ -65,3 +66,6 @@ api_router.include_router(support_router)
 
 # Dashboard (aggregated data)
 api_router.include_router(dashboard_router)
+
+# Profiles (household members)
+api_router.include_router(profiles_router)

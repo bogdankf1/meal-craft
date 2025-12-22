@@ -49,6 +49,7 @@ class NutritionGoalBase(BaseModel):
 class NutritionGoalCreate(NutritionGoalBase):
     """Schema for creating a nutrition goal."""
     start_date: Optional[date] = None
+    profile_id: Optional[UUID] = None  # Nullable = shared/all members
 
 
 class NutritionGoalUpdate(BaseModel):
@@ -62,12 +63,14 @@ class NutritionGoalUpdate(BaseModel):
     daily_sodium_mg: Optional[int] = Field(None, ge=0)
     goal_type: Optional[GoalType] = None
     is_active: Optional[bool] = None
+    profile_id: Optional[UUID] = None  # Nullable = shared/all members
 
 
 class NutritionGoalResponse(NutritionGoalBase):
     """Schema for nutrition goal response."""
     id: UUID
     user_id: UUID
+    profile_id: Optional[UUID] = None
     start_date: Optional[date] = None
     is_active: bool = True
     created_at: datetime
@@ -99,6 +102,7 @@ class NutritionLogCreate(NutritionLogBase):
     meal_id: Optional[UUID] = None
     restaurant_meal_id: Optional[UUID] = None
     manual_entry: bool = True
+    profile_id: Optional[UUID] = None  # Nullable = shared/all members
 
 
 class NutritionLogUpdate(BaseModel):
@@ -121,6 +125,7 @@ class NutritionLogResponse(NutritionLogBase):
     """Schema for nutrition log response."""
     id: UUID
     user_id: UUID
+    profile_id: Optional[UUID] = None
     meal_id: Optional[UUID] = None
     restaurant_meal_id: Optional[UUID] = None
     manual_entry: bool = False

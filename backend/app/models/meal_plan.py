@@ -21,6 +21,7 @@ class MealPlan(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)  # Nullable = shared/all members
     name = Column(String(255), nullable=False)
     date_start = Column(Date, nullable=False)
     date_end = Column(Date, nullable=False)
@@ -32,6 +33,7 @@ class MealPlan(Base):
 
     # Relationships
     user = relationship("User", back_populates="meal_plans")
+    profile = relationship("Profile", back_populates="meal_plans")
     meals = relationship("Meal", back_populates="meal_plan", cascade="all, delete-orphan")
     shopping_lists = relationship("ShoppingList", back_populates="meal_plan")
 

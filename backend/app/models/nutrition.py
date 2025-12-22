@@ -13,6 +13,7 @@ class NutritionGoal(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)  # Nullable = shared/all members
     daily_calories = Column(Integer, nullable=True)
     daily_protein_g = Column(Integer, nullable=True)
     daily_carbs_g = Column(Integer, nullable=True)
@@ -28,6 +29,7 @@ class NutritionGoal(Base):
 
     # Relationships
     user = relationship("User", back_populates="nutrition_goals")
+    profile = relationship("Profile", back_populates="nutrition_goals")
 
 
 class NutritionLog(Base):
@@ -36,6 +38,7 @@ class NutritionLog(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)  # Nullable = shared/all members
     date = Column(Date, nullable=False)
     meal_type = Column(String(20), nullable=True)  # breakfast, lunch, dinner, snack
     # Link to meal plan meal (optional)
@@ -59,6 +62,7 @@ class NutritionLog(Base):
 
     # Relationships
     user = relationship("User", back_populates="nutrition_logs")
+    profile = relationship("Profile", back_populates="nutrition_logs")
     meal = relationship("Meal", back_populates="nutrition_logs")
     restaurant_meal = relationship("RestaurantMeal", back_populates="nutrition_logs")
 
@@ -68,6 +72,7 @@ class HealthMetric(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)  # Nullable = shared/all members
     date = Column(Date, nullable=False)
     weight_kg = Column(Numeric(5, 2), nullable=True)
     body_fat_percent = Column(Numeric(4, 1), nullable=True)
@@ -80,3 +85,4 @@ class HealthMetric(Base):
 
     # Relationships
     user = relationship("User", back_populates="health_metrics")
+    profile = relationship("Profile", back_populates="health_metrics")

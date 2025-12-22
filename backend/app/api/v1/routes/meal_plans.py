@@ -43,7 +43,11 @@ from app.schemas.meal_plan import (
     ParseMealPlanTextRequest,
     ParseMealPlanResponse,
     ParsedMealPlanMeal,
+    CombinedWeekPlan,
+    MealWithProfile,
+    ProfileInfo,
 )
+from app.models.profile import Profile
 from app.services.ai_service import ai_service
 
 router = APIRouter(prefix="/meal-plans")
@@ -88,6 +92,7 @@ async def get_meal_plans(
     date_to: Optional[date] = None,
     is_template: Optional[bool] = None,
     is_archived: Optional[bool] = False,
+    profile_id: Optional[UUID] = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     sort_by: str = Query("date_start"),
@@ -97,6 +102,10 @@ async def get_meal_plans(
 ):
     """Get paginated list of meal plans with filters."""
     query = select(MealPlan).where(MealPlan.user_id == current_user.id)
+
+    # Filter by profile (None = all members/shared)
+    if profile_id:
+        query = query.where(MealPlan.profile_id == profile_id)
 
     # Apply filters
     if search:
@@ -139,6 +148,7 @@ async def get_meal_plans(
     items = [
         MealPlanListItem(
             id=p.id,
+            profile_id=p.profile_id,
             name=p.name,
             date_start=p.date_start,
             date_end=p.date_end,
@@ -162,6 +172,7 @@ async def get_meal_plans(
 
 @router.get("/current-week", response_model=Optional[MealPlanWithMeals])
 async def get_current_week_plan(
+    profile_id: Optional[UUID] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -169,15 +180,22 @@ async def get_current_week_plan(
     today = date.today()
     monday, sunday = get_week_bounds(today)
 
+    # Build base conditions
+    conditions = [
+        MealPlan.user_id == current_user.id,
+        MealPlan.date_start <= sunday,
+        MealPlan.date_end >= monday,
+        MealPlan.is_archived == False,
+        MealPlan.is_template == False,
+    ]
+
+    # Filter by profile if specified
+    if profile_id:
+        conditions.append(MealPlan.profile_id == profile_id)
+
     query = (
         select(MealPlan)
-        .where(
-            MealPlan.user_id == current_user.id,
-            MealPlan.date_start <= sunday,
-            MealPlan.date_end >= monday,
-            MealPlan.is_archived == False,
-            MealPlan.is_template == False,
-        )
+        .where(*conditions)
         .options(selectinload(MealPlan.meals).selectinload(Meal.recipe))
         .order_by(desc(MealPlan.created_at))
         .limit(1)
@@ -205,6 +223,105 @@ async def get_current_week_plan(
         created_at=plan.created_at,
         updated_at=plan.updated_at,
         meals=meals,
+    )
+
+
+@router.get("/current-week/combined", response_model=CombinedWeekPlan)
+async def get_combined_week_plans(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get combined meal plans for all profiles for the current week."""
+    today = date.today()
+    monday, sunday = get_week_bounds(today)
+
+    # Get all meal plans for the current week (all profiles)
+    query = (
+        select(MealPlan)
+        .where(
+            MealPlan.user_id == current_user.id,
+            MealPlan.date_start <= sunday,
+            MealPlan.date_end >= monday,
+            MealPlan.is_archived == False,
+            MealPlan.is_template == False,
+        )
+        .options(
+            selectinload(MealPlan.meals).selectinload(Meal.recipe),
+            selectinload(MealPlan.profile),
+        )
+    )
+
+    result = await db.execute(query)
+    plans = result.scalars().all()
+
+    if not plans:
+        return CombinedWeekPlan(
+            date_start=monday,
+            date_end=sunday,
+            meals=[],
+            profiles=[],
+            plan_count=0,
+        )
+
+    # Get all profiles for reference
+    profiles_query = select(Profile).where(
+        Profile.user_id == current_user.id,
+        Profile.is_archived == False
+    )
+    profiles_result = await db.execute(profiles_query)
+    profiles = profiles_result.scalars().all()
+    profiles_map = {p.id: p for p in profiles}
+
+    # Combine all meals with profile info
+    all_meals: List[MealWithProfile] = []
+    seen_profile_ids = set()
+
+    for plan in plans:
+        profile = profiles_map.get(plan.profile_id) if plan.profile_id else None
+        if plan.profile_id:
+            seen_profile_ids.add(plan.profile_id)
+
+        for meal in plan.meals:
+            # Only include meals within the week bounds
+            if monday <= meal.date <= sunday:
+                meal_response = MealWithProfile(
+                    id=meal.id,
+                    meal_plan_id=meal.meal_plan_id,
+                    date=meal.date,
+                    meal_type=meal.meal_type,
+                    recipe_id=meal.recipe_id,
+                    custom_name=meal.custom_name,
+                    servings=meal.servings,
+                    notes=meal.notes,
+                    is_leftover=meal.is_leftover,
+                    leftover_from_meal_id=meal.leftover_from_meal_id,
+                    created_at=meal.created_at,
+                    recipe_name=meal.recipe.name if meal.recipe else None,
+                    recipe_image_url=meal.recipe.image_url if meal.recipe else None,
+                    recipe_prep_time=meal.recipe.prep_time if meal.recipe else None,
+                    recipe_cook_time=meal.recipe.cook_time if meal.recipe else None,
+                    profile_id=plan.profile_id,
+                    profile_name=profile.name if profile else None,
+                    profile_color=profile.color if profile else None,
+                )
+                all_meals.append(meal_response)
+
+    # Sort meals by date and meal type
+    all_meals.sort(key=lambda m: (m.date, m.meal_type))
+
+    # Build profile info list (only profiles that have plans)
+    profile_infos = [
+        ProfileInfo(id=p.id, name=p.name, color=p.color)
+        for p in profiles
+        if p.id in seen_profile_ids
+    ]
+
+    return CombinedWeekPlan(
+        date_start=monday,
+        date_end=sunday,
+        meals=all_meals,
+        profiles=profile_infos,
+        plan_count=len(plans),
     )
 
 
@@ -462,6 +579,7 @@ async def create_meal_plan(
 
     plan = MealPlan(
         user_id=current_user.id,
+        profile_id=data.profile_id,
         name=data.name,
         date_start=data.date_start,
         date_end=data.date_end,
@@ -475,6 +593,7 @@ async def create_meal_plan(
     return MealPlanResponse(
         id=plan.id,
         user_id=plan.user_id,
+        profile_id=plan.profile_id,
         name=plan.name,
         date_start=plan.date_start,
         date_end=plan.date_end,

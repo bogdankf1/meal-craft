@@ -74,6 +74,7 @@ class MealPlanCreate(BaseModel):
     date_end: date
     servings: int = Field(default=2, ge=1)
     is_template: bool = False
+    profile_id: Optional[UUID] = None  # Nullable = shared/all members
 
 
 class MealPlanUpdate(BaseModel):
@@ -84,12 +85,14 @@ class MealPlanUpdate(BaseModel):
     servings: Optional[int] = Field(None, ge=1)
     is_template: Optional[bool] = None
     is_archived: Optional[bool] = None
+    profile_id: Optional[UUID] = None  # Nullable = shared/all members
 
 
 class MealPlanResponse(BaseModel):
     """Schema for meal plan response."""
     id: UUID
     user_id: UUID
+    profile_id: Optional[UUID] = None
     name: str
     date_start: date
     date_end: date
@@ -109,6 +112,7 @@ class MealPlanWithMeals(BaseModel):
     """Schema for meal plan with all meals."""
     id: UUID
     user_id: UUID
+    profile_id: Optional[UUID] = None
     name: str
     date_start: date
     date_end: date
@@ -126,6 +130,7 @@ class MealPlanWithMeals(BaseModel):
 class MealPlanListItem(BaseModel):
     """Schema for meal plan list item."""
     id: UUID
+    profile_id: Optional[UUID] = None
     name: str
     date_start: date
     date_end: date
@@ -302,3 +307,31 @@ class ParseMealPlanResponse(BaseModel):
     meals: List[ParsedMealPlanMeal]
     success: bool
     message: Optional[str] = None
+
+
+# ============ Combined Week Plans (All Members View) ============
+
+class ProfileInfo(BaseModel):
+    """Basic profile info for combined view."""
+    id: UUID
+    name: str
+    color: Optional[str] = "#3B82F6"
+
+    class Config:
+        from_attributes = True
+
+
+class MealWithProfile(MealResponse):
+    """Meal response with profile information."""
+    profile_id: Optional[UUID] = None
+    profile_name: Optional[str] = None
+    profile_color: Optional[str] = None
+
+
+class CombinedWeekPlan(BaseModel):
+    """Combined view of all meal plans for a week."""
+    date_start: date
+    date_end: date
+    meals: List[MealWithProfile] = []
+    profiles: List[ProfileInfo] = []
+    plan_count: int = 0
