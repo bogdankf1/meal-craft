@@ -24,6 +24,7 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
+  Salad,
 } from "lucide-react";
 
 import {
@@ -80,6 +81,7 @@ import {
   type Profile,
 } from "@/lib/api/profiles-api";
 import { DietaryRestrictionsEditor } from "@/components/modules/settings/dietary-restrictions-editor";
+import { NutritionalPreferencesEditor } from "@/components/modules/settings/nutritional-preferences-editor";
 
 // Supported languages
 const LANGUAGES = [
@@ -104,6 +106,7 @@ export function SettingsContent() {
   const tProfiles = useTranslations("profiles");
   const tSeasonality = useTranslations("seasonality");
   const tDietary = useTranslations("dietaryRestrictions");
+  const tNutritional = useTranslations("nutritionalPreferences");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const currentLocale = useLocale();
@@ -400,19 +403,36 @@ export function SettingsContent() {
                       </div>
                     </div>
 
-                    {/* Expanded dietary restrictions section */}
+                    {/* Expanded dietary preferences section */}
                     {expandedProfileId === profile.id && (
-                      <div className="border-t px-4 py-4 bg-muted/30">
-                        <div className="mb-3">
-                          <h4 className="text-sm font-medium flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4" />
-                            {tDietary("title")}
-                          </h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {tDietary("description")}
-                          </p>
+                      <div className="border-t px-4 py-4 bg-muted/30 space-y-6">
+                        {/* Dietary Restrictions */}
+                        <div>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-medium flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4 text-red-500" />
+                              {tDietary("title")}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {tDietary("description")}
+                            </p>
+                          </div>
+                          <DietaryRestrictionsEditor profile={profile} />
                         </div>
-                        <DietaryRestrictionsEditor profile={profile} />
+
+                        {/* Nutritional Preferences */}
+                        <div>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-medium flex items-center gap-2">
+                              <Salad className="h-4 w-4 text-green-500" />
+                              {tNutritional("title")}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {tNutritional("description")}
+                            </p>
+                          </div>
+                          <NutritionalPreferencesEditor profile={profile} />
+                        </div>
                       </div>
                     )}
                   </div>

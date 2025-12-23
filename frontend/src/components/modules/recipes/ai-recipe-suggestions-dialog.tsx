@@ -20,6 +20,9 @@ import {
   AlertTriangle,
   ThumbsDown,
   Settings,
+  Salad,
+  Target,
+  Utensils,
 } from "lucide-react";
 
 import {
@@ -59,6 +62,7 @@ import {
 } from "@/lib/api/recipes-api";
 import { toast } from "sonner";
 import { useGetAllRestrictionsQuery } from "@/lib/api/dietary-restrictions-api";
+import { useGetAllNutritionalPreferencesQuery, DIET_TYPES, NUTRITIONAL_GOALS, MEAL_PREFERENCES } from "@/lib/api/nutritional-preferences-api";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 
@@ -77,6 +81,7 @@ export function AiRecipeSuggestionsDialog({
   const tRecipes = useTranslations("recipes");
   const tCommon = useTranslations("common");
   const tDietary = useTranslations("dietaryRestrictions");
+  const tNutritional = useTranslations("nutritionalPreferences");
   const locale = useLocale();
 
   // Filter state
@@ -96,9 +101,33 @@ export function AiRecipeSuggestionsDialog({
   const [suggestRecipes, { isLoading: isGenerating }] = useSuggestRecipesMutation();
   const [createRecipes, { isLoading: isSaving }] = useCreateRecipesMutation();
   const { data: restrictionsData } = useGetAllRestrictionsQuery();
+  const { data: nutritionalData } = useGetAllNutritionalPreferencesQuery();
 
   // Dietary restrictions summary
   const hasRestrictions = restrictionsData && restrictionsData.all_excluded.length > 0;
+
+  // Nutritional preferences summary
+  const hasNutritionalPreferences = nutritionalData && (
+    nutritionalData.combined_diet_type !== "omnivore" ||
+    nutritionalData.combined_goals.length > 0 ||
+    nutritionalData.combined_preferences.length > 0
+  );
+
+  // Helper to get label from value
+  const getDietTypeLabel = (value: string) => {
+    const diet = DIET_TYPES.find(d => d.value === value);
+    return diet ? tNutritional(`dietType.options.${diet.labelKey}`) : value;
+  };
+
+  const getGoalLabel = (value: string) => {
+    const goal = NUTRITIONAL_GOALS.find(g => g.value === value);
+    return goal ? tNutritional(`goals.options.${goal.labelKey}`) : value;
+  };
+
+  const getPreferenceLabel = (value: string) => {
+    const pref = MEAL_PREFERENCES.find(p => p.value === value);
+    return pref ? tNutritional(`preferences.options.${pref.labelKey}`) : value;
+  };
 
   const handleGenerate = async () => {
     try {
@@ -348,54 +377,116 @@ export function AiRecipeSuggestionsDialog({
               </div>
             </div>
 
-            {/* Dietary Restrictions Summary */}
-            <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-medium">{tDietary("aiSummary.title")}</span>
+            {/* Dietary Restrictions & Nutritional Preferences Summaries */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Dietary Restrictions Summary */}
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm font-medium">{tDietary("aiSummary.title")}</span>
+                  </div>
+                  <Link
+                    href={`/${locale}/settings?tab=household`}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    <Settings className="h-3 w-3" />
+                  </Link>
                 </div>
-                <Link
-                  href={`/${locale}/settings?tab=household`}
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                  onClick={() => onOpenChange(false)}
-                >
-                  <Settings className="h-3 w-3" />
-                  {tDietary("aiSummary.editInSettings")}
-                </Link>
+                {hasRestrictions ? (
+                  <div className="mt-2 space-y-2">
+                    {restrictionsData.combined_allergies.length > 0 && (
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-3 w-3 text-destructive mt-0.5" />
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-muted-foreground">{tDietary("aiSummary.allergies")}:</span>
+                          {restrictionsData.combined_allergies.map((allergy) => (
+                            <Badge key={allergy} variant="destructive" className="text-xs py-0">
+                              {allergy}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {restrictionsData.combined_dislikes.length > 0 && (
+                      <div className="flex items-start gap-2">
+                        <ThumbsDown className="h-3 w-3 text-muted-foreground mt-0.5" />
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-muted-foreground">{tDietary("aiSummary.dislikes")}:</span>
+                          {restrictionsData.combined_dislikes.map((dislike) => (
+                            <Badge key={dislike} variant="secondary" className="text-xs py-0">
+                              {dislike}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">{tDietary("aiSummary.none")}</p>
+                )}
               </div>
-              {hasRestrictions ? (
-                <div className="mt-2 space-y-2">
-                  {restrictionsData.combined_allergies.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-3 w-3 text-destructive mt-0.5" />
-                      <div className="flex flex-wrap gap-1">
-                        <span className="text-xs text-muted-foreground">{tDietary("aiSummary.allergies")}:</span>
-                        {restrictionsData.combined_allergies.map((allergy) => (
-                          <Badge key={allergy} variant="destructive" className="text-xs py-0">
-                            {allergy}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {restrictionsData.combined_dislikes.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <ThumbsDown className="h-3 w-3 text-muted-foreground mt-0.5" />
-                      <div className="flex flex-wrap gap-1">
-                        <span className="text-xs text-muted-foreground">{tDietary("aiSummary.dislikes")}:</span>
-                        {restrictionsData.combined_dislikes.map((dislike) => (
-                          <Badge key={dislike} variant="secondary" className="text-xs py-0">
-                            {dislike}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
+              {/* Nutritional Preferences Summary */}
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Salad className="h-4 w-4 text-green-500" />
+                    <span className="text-sm font-medium">{tNutritional("aiSummary.title")}</span>
+                  </div>
+                  <Link
+                    href={`/${locale}/settings?tab=household`}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    <Settings className="h-3 w-3" />
+                  </Link>
                 </div>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-1">{tDietary("aiSummary.none")}</p>
-              )}
+                {hasNutritionalPreferences ? (
+                  <div className="mt-2 space-y-2">
+                    {nutritionalData.combined_diet_type !== "omnivore" && (
+                      <div className="flex items-start gap-2">
+                        <Salad className="h-3 w-3 text-green-500 mt-0.5" />
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-muted-foreground">{tNutritional("aiSummary.dietType")}:</span>
+                          <Badge variant="outline" className="text-xs py-0 border-green-500 text-green-700 dark:text-green-400">
+                            {getDietTypeLabel(nutritionalData.combined_diet_type)}
+                          </Badge>
+                        </div>
+                      </div>
+                    )}
+                    {nutritionalData.combined_goals.length > 0 && (
+                      <div className="flex items-start gap-2">
+                        <Target className="h-3 w-3 text-blue-500 mt-0.5" />
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-muted-foreground">{tNutritional("aiSummary.goals")}:</span>
+                          {nutritionalData.combined_goals.map((goal) => (
+                            <Badge key={goal} variant="secondary" className="text-xs py-0">
+                              {getGoalLabel(goal)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {nutritionalData.combined_preferences.length > 0 && (
+                      <div className="flex items-start gap-2">
+                        <Utensils className="h-3 w-3 text-orange-500 mt-0.5" />
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-muted-foreground">{tNutritional("aiSummary.preferences")}:</span>
+                          {nutritionalData.combined_preferences.map((pref) => (
+                            <Badge key={pref} variant="secondary" className="text-xs py-0">
+                              {getPreferenceLabel(pref)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">{tNutritional("aiSummary.none")}</p>
+                )}
+              </div>
             </div>
           </div>
 

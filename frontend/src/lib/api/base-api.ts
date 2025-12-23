@@ -106,6 +106,7 @@ export const baseApi = createApi({
     "User",
     "Profiles",
     "DietaryRestrictions",
+    "NutritionalPreferences",
     "Groceries",
     "Recipes",
     "MealPlans",

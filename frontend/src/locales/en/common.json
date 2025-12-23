@@ -3641,5 +3641,57 @@
       "none": "No restrictions set",
       "editInSettings": "Edit in Settings"
     }
+  },
+  "nutritionalPreferences": {
+    "title": "Nutritional Preferences",
+    "description": "Set diet type, nutritional goals, and meal preferences. These will guide AI recipe suggestions.",
+    "dietType": {
+      "title": "Diet Type",
+      "options": {
+        "omnivore": "Omnivore",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "pescatarian": "Pescatarian",
+        "keto": "Keto",
+        "paleo": "Paleo",
+        "mediterranean": "Mediterranean",
+        "flexitarian": "Flexitarian"
+      }
+    },
+    "goals": {
+      "title": "Nutritional Goals",
+      "options": {
+        "highProtein": "High Protein",
+        "lowCarb": "Low Carb",
+        "lowFat": "Low Fat",
+        "lowSodium": "Low Sodium",
+        "highFiber": "High Fiber",
+        "lowSugar": "Low Sugar",
+        "calorieConscious": "Calorie Conscious"
+      }
+    },
+    "preferences": {
+      "title": "Meal Preferences",
+      "options": {
+        "wholeFoods": "Whole Foods",
+        "avoidProcessed": "Avoid Processed",
+        "budgetFriendly": "Budget Friendly",
+        "quickMeals": "Quick Meals",
+        "mealPrep": "Meal Prep Friendly",
+        "kidFriendly": "Kid Friendly"
+      }
+    },
+    "messages": {
+      "updated": "Preferences updated",
+      "updateError": "Failed to update preferences"
+    },
+    "aiSummary": {
+      "title": "Recipe preferences",
+      "dietType": "Diet",
+      "goals": "Goals",
+      "preferences": "Preferences",
+      "none": "No preferences set",
+      "editInSettings": "Edit in Settings"
+    }
   }
 }

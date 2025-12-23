@@ -3674,5 +3674,57 @@
       "none": "Обмежень не встановлено",
       "editInSettings": "Редагувати в налаштуваннях"
     }
+  },
+  "nutritionalPreferences": {
+    "title": "Харчові вподобання",
+    "description": "Встановіть тип дієти, харчові цілі та вподобання страв. Вони будуть враховуватися в AI-рецептах.",
+    "dietType": {
+      "title": "Тип дієти",
+      "options": {
+        "omnivore": "Всеїдний",
+        "vegetarian": "Вегетаріанський",
+        "vegan": "Веганський",
+        "pescatarian": "Пескетаріанський",
+        "keto": "Кето",
+        "paleo": "Палео",
+        "mediterranean": "Середземноморський",
+        "flexitarian": "Флекситаріанський"
+      }
+    },
+    "goals": {
+      "title": "Харчові цілі",
+      "options": {
+        "highProtein": "Багато білка",
+        "lowCarb": "Мало вуглеводів",
+        "lowFat": "Мало жирів",
+        "lowSodium": "Мало солі",
+        "highFiber": "Багато клітковини",
+        "lowSugar": "Мало цукру",
+        "calorieConscious": "Контроль калорій"
+      }
+    },
+    "preferences": {
+      "title": "Вподобання страв",
+      "options": {
+        "wholeFoods": "Цільні продукти",
+        "avoidProcessed": "Без напівфабрикатів",
+        "budgetFriendly": "Бюджетні страви",
+        "quickMeals": "Швидкі страви",
+        "mealPrep": "Для заготівлі",
+        "kidFriendly": "Для дітей"
+      }
+    },
+    "messages": {
+      "updated": "Вподобання оновлено",
+      "updateError": "Не вдалося оновити вподобання"
+    },
+    "aiSummary": {
+      "title": "Вподобання рецептів",
+      "dietType": "Дієта",
+      "goals": "Цілі",
+      "preferences": "Вподобання",
+      "none": "Вподобань не встановлено",
+      "editInSettings": "Редагувати в налаштуваннях"
+    }
   }
 }
