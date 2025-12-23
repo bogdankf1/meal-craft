@@ -1493,6 +1493,7 @@ async def get_recipe_analytics(
 @router.post("/suggest", response_model=RecipeSuggestionResponse)
 async def suggest_recipes(
     data: RecipeSuggestionRequest,
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -1500,8 +1501,47 @@ async def suggest_recipes(
 
     Allows filtering by cuisine type, meal type, category, difficulty,
     dietary restrictions, and more.
+
+    Automatically includes household dietary restrictions (allergies & dislikes).
     """
     try:
+        # Fetch all dietary restrictions for the user's profiles
+        from app.models.profile import Profile
+        from app.models.dietary_restriction import DietaryRestriction, RestrictionType
+
+        profiles_result = await db.execute(
+            select(Profile)
+            .options(selectinload(Profile.dietary_restrictions))
+            .where(
+                and_(
+                    Profile.user_id == current_user.id,
+                    Profile.is_archived == False
+                )
+            )
+        )
+        profiles = profiles_result.scalars().all()
+
+        # Collect all excluded ingredients from all profiles
+        household_excluded = set()
+        household_allergies = set()
+        household_dislikes = set()
+
+        for profile in profiles:
+            for restriction in profile.dietary_restrictions:
+                ingredient = restriction.ingredient_name.lower()
+                household_excluded.add(ingredient)
+                if restriction.restriction_type == RestrictionType.ALLERGY.value:
+                    household_allergies.add(ingredient)
+                else:
+                    household_dislikes.add(ingredient)
+
+        # Combine with user-provided exclude_ingredients
+        all_excluded = list(household_excluded)
+        if data.exclude_ingredients:
+            for ing in data.exclude_ingredients:
+                if ing.lower() not in household_excluded:
+                    all_excluded.append(ing)
+
         suggestions = await ai_service.suggest_recipes(
             cuisine_type=data.cuisine_type.value if data.cuisine_type else None,
             meal_type=data.meal_type.value if data.meal_type else None,
@@ -1512,7 +1552,7 @@ async def suggest_recipes(
             difficulty=data.difficulty.value if data.difficulty else None,
             dietary_restrictions=data.dietary_restrictions,
             include_ingredients=data.include_ingredients,
-            exclude_ingredients=data.exclude_ingredients,
+            exclude_ingredients=all_excluded if all_excluded else None,
             count=data.count,
         )
 
@@ -1592,6 +1632,9 @@ async def suggest_recipes(
             "category": data.category.value if data.category else None,
             "servings": data.servings,
             "difficulty": data.difficulty.value if data.difficulty else None,
+            "excluded_ingredients": all_excluded if all_excluded else [],
+            "household_allergies": list(household_allergies),
+            "household_dislikes": list(household_dislikes),
         }
 
         return RecipeSuggestionResponse(

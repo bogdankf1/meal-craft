@@ -3,6 +3,7 @@ from app.models.user import User, UserRole, SubscriptionTier
 
 # Profiles (Household Members)
 from app.models.profile import Profile
+from app.models.dietary_restriction import DietaryRestriction, RestrictionType
 
 # Subscription and Tiers
 from app.models.subscription import (
@@ -115,6 +116,8 @@ __all__ = [
     "SubscriptionTier",
     # Profile
     "Profile",
+    "DietaryRestriction",
+    "RestrictionType",
     # Subscription
     "Subscription",
     "SubscriptionStatus",

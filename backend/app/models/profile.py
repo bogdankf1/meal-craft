@@ -37,6 +37,7 @@ class Profile(Base):
     nutrition_goals = relationship("NutritionGoal", back_populates="profile", cascade="all, delete-orphan")
     nutrition_logs = relationship("NutritionLog", back_populates="profile", cascade="all, delete-orphan")
     health_metrics = relationship("HealthMetric", back_populates="profile", cascade="all, delete-orphan")
+    dietary_restrictions = relationship("DietaryRestriction", back_populates="profile", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Profile {self.name} (user_id={self.user_id})>"
