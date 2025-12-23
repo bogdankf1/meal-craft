@@ -21,6 +21,9 @@ import {
   Pencil,
   Trash2,
   Star,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
 } from "lucide-react";
 
 import {
@@ -76,6 +79,7 @@ import {
   useDeleteProfileMutation,
   type Profile,
 } from "@/lib/api/profiles-api";
+import { DietaryRestrictionsEditor } from "@/components/modules/settings/dietary-restrictions-editor";
 
 // Supported languages
 const LANGUAGES = [
@@ -99,6 +103,7 @@ export function SettingsContent() {
   const t = useTranslations("settings");
   const tProfiles = useTranslations("profiles");
   const tSeasonality = useTranslations("seasonality");
+  const tDietary = useTranslations("dietaryRestrictions");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const currentLocale = useLocale();
@@ -125,6 +130,7 @@ export function SettingsContent() {
   const [profileColor, setProfileColor] = useState("#3B82F6");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null);
+  const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
 
   // Get favorites count
   const selectedCountry = seasonalPreferences?.country_code || "UA";
@@ -328,53 +334,87 @@ export function SettingsContent() {
                 {profilesData.profiles.map((profile) => (
                   <div
                     key={profile.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="border rounded-lg overflow-hidden"
                   >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                        style={{ backgroundColor: profile.color || "#3B82F6" }}
-                      >
-                        {profile.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{profile.name}</span>
-                          {profile.is_default && (
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              {t("household.default")}
-                            </span>
-                          )}
+                    {/* Profile header */}
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                          style={{ backgroundColor: profile.color || "#3B82F6" }}
+                        >
+                          {profile.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{profile.name}</span>
+                            {profile.is_default && (
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                {t("household.default")}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!profile.is_default && (
+                      <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleSetDefaultProfile(profile)}
-                          title={t("household.setDefault")}
+                          onClick={() => setExpandedProfileId(
+                            expandedProfileId === profile.id ? null : profile.id
+                          )}
+                          title={tDietary("title")}
                         >
-                          <Star className="h-4 w-4" />
+                          <AlertTriangle className="h-4 w-4 mr-1" />
+                          {expandedProfileId === profile.id ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditProfileDialog(profile)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDeleteDialog(profile)}
-                        disabled={profile.is_default && profilesData.profiles.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                        {!profile.is_default && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSetDefaultProfile(profile)}
+                            title={t("household.setDefault")}
+                          >
+                            <Star className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditProfileDialog(profile)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDeleteDialog(profile)}
+                          disabled={profile.is_default && profilesData.profiles.length === 1}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Expanded dietary restrictions section */}
+                    {expandedProfileId === profile.id && (
+                      <div className="border-t px-4 py-4 bg-muted/30">
+                        <div className="mb-3">
+                          <h4 className="text-sm font-medium flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            {tDietary("title")}
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {tDietary("description")}
+                          </p>
+                        </div>
+                        <DietaryRestrictionsEditor profile={profile} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -105,6 +105,7 @@ export const baseApi = createApi({
   tagTypes: [
     "User",
     "Profiles",
+    "DietaryRestrictions",
     "Groceries",
     "Recipes",
     "MealPlans",

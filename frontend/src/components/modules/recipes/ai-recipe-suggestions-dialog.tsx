@@ -17,6 +17,9 @@ import {
   GraduationCap,
   Leaf,
   Sun,
+  AlertTriangle,
+  ThumbsDown,
+  Settings,
 } from "lucide-react";
 
 import {
@@ -55,6 +58,9 @@ import {
   type RecipeSuggestionItem,
 } from "@/lib/api/recipes-api";
 import { toast } from "sonner";
+import { useGetAllRestrictionsQuery } from "@/lib/api/dietary-restrictions-api";
+import Link from "next/link";
+import { useLocale } from "next-intl";
 
 interface AiRecipeSuggestionsDialogProps {
   open: boolean;
@@ -70,6 +76,8 @@ export function AiRecipeSuggestionsDialog({
   const t = useTranslations("recipes.aiSuggestions");
   const tRecipes = useTranslations("recipes");
   const tCommon = useTranslations("common");
+  const tDietary = useTranslations("dietaryRestrictions");
+  const locale = useLocale();
 
   // Filter state
   const [cuisineType, setCuisineType] = useState<CuisineType | "">("");
@@ -87,6 +95,10 @@ export function AiRecipeSuggestionsDialog({
   // API hooks
   const [suggestRecipes, { isLoading: isGenerating }] = useSuggestRecipesMutation();
   const [createRecipes, { isLoading: isSaving }] = useCreateRecipesMutation();
+  const { data: restrictionsData } = useGetAllRestrictionsQuery();
+
+  // Dietary restrictions summary
+  const hasRestrictions = restrictionsData && restrictionsData.all_excluded.length > 0;
 
   const handleGenerate = async () => {
     try {
@@ -334,6 +346,56 @@ export function AiRecipeSuggestionsDialog({
                   step={1}
                 />
               </div>
+            </div>
+
+            {/* Dietary Restrictions Summary */}
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium">{tDietary("aiSummary.title")}</span>
+                </div>
+                <Link
+                  href={`/${locale}/settings?tab=household`}
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <Settings className="h-3 w-3" />
+                  {tDietary("aiSummary.editInSettings")}
+                </Link>
+              </div>
+              {hasRestrictions ? (
+                <div className="mt-2 space-y-2">
+                  {restrictionsData.combined_allergies.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-3 w-3 text-destructive mt-0.5" />
+                      <div className="flex flex-wrap gap-1">
+                        <span className="text-xs text-muted-foreground">{tDietary("aiSummary.allergies")}:</span>
+                        {restrictionsData.combined_allergies.map((allergy) => (
+                          <Badge key={allergy} variant="destructive" className="text-xs py-0">
+                            {allergy}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {restrictionsData.combined_dislikes.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <ThumbsDown className="h-3 w-3 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-wrap gap-1">
+                        <span className="text-xs text-muted-foreground">{tDietary("aiSummary.dislikes")}:</span>
+                        {restrictionsData.combined_dislikes.map((dislike) => (
+                          <Badge key={dislike} variant="secondary" className="text-xs py-0">
+                            {dislike}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">{tDietary("aiSummary.none")}</p>
+              )}
             </div>
           </div>
 

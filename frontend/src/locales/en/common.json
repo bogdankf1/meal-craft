@@ -3612,5 +3612,34 @@
       "errorUpdating": "Failed to update profile",
       "errorDeleting": "Failed to delete profile"
     }
+  },
+  "dietaryRestrictions": {
+    "title": "Dietary Restrictions",
+    "description": "Manage allergies and food dislikes for this member. These will be automatically excluded from AI recipe suggestions.",
+    "allergiesTitle": "Allergies",
+    "dislikesTitle": "Dislikes",
+    "noAllergies": "No allergies added",
+    "noDislikes": "No dislikes added",
+    "addPlaceholder": "Add ingredient...",
+    "quickAdd": "Quick add",
+    "types": {
+      "allergy": "Allergy",
+      "dislike": "Dislike"
+    },
+    "messages": {
+      "ingredientRequired": "Please enter an ingredient name",
+      "alreadyExists": "This ingredient is already in the list",
+      "added": "Restriction added",
+      "addError": "Failed to add restriction",
+      "removed": "Restriction removed",
+      "removeError": "Failed to remove restriction"
+    },
+    "aiSummary": {
+      "title": "Excluded from recipes",
+      "allergies": "Allergies",
+      "dislikes": "Dislikes",
+      "none": "No restrictions set",
+      "editInSettings": "Edit in Settings"
+    }
   }
 }
