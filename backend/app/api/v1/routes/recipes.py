@@ -1502,16 +1502,22 @@ async def suggest_recipes(
     Allows filtering by cuisine type, meal type, category, difficulty,
     dietary restrictions, and more.
 
-    Automatically includes household dietary restrictions (allergies & dislikes).
+    Automatically includes household dietary restrictions (allergies & dislikes)
+    and nutritional preferences (diet type, goals).
     """
     try:
-        # Fetch all dietary restrictions for the user's profiles
+        # Fetch all dietary restrictions and nutritional preferences for the user's profiles
         from app.models.profile import Profile
         from app.models.dietary_restriction import DietaryRestriction, RestrictionType
+        from app.models.nutritional_preference import NutritionalPreference
+        from app.schemas.nutritional_preference import DIET_TYPE_RESTRICTIVENESS
 
         profiles_result = await db.execute(
             select(Profile)
-            .options(selectinload(Profile.dietary_restrictions))
+            .options(
+                selectinload(Profile.dietary_restrictions),
+                selectinload(Profile.nutritional_preference)
+            )
             .where(
                 and_(
                     Profile.user_id == current_user.id,
@@ -1526,7 +1532,13 @@ async def suggest_recipes(
         household_allergies = set()
         household_dislikes = set()
 
+        # Collect nutritional preferences
+        all_diet_types = []
+        all_goals = set()
+        all_preferences = set()
+
         for profile in profiles:
+            # Dietary restrictions
             for restriction in profile.dietary_restrictions:
                 ingredient = restriction.ingredient_name.lower()
                 household_excluded.add(ingredient)
@@ -1534,6 +1546,41 @@ async def suggest_recipes(
                     household_allergies.add(ingredient)
                 else:
                     household_dislikes.add(ingredient)
+
+            # Nutritional preferences
+            if profile.nutritional_preference:
+                pref = profile.nutritional_preference
+                all_diet_types.append(pref.diet_type)
+                all_goals.update(pref.goals or [])
+                all_preferences.update(pref.preferences or [])
+
+        # Determine most restrictive diet type
+        combined_diet_type = "omnivore"
+        for diet in DIET_TYPE_RESTRICTIVENESS:
+            if diet in all_diet_types:
+                combined_diet_type = diet
+                break
+
+        # Build dietary restrictions list for AI
+        dietary_restrictions_for_ai = list(data.dietary_restrictions or [])
+
+        # Add diet type as restriction if not omnivore
+        if combined_diet_type != "omnivore":
+            dietary_restrictions_for_ai.append(combined_diet_type)
+
+        # Add nutritional goals as restrictions/preferences
+        goal_labels = {
+            "high_protein": "high-protein",
+            "low_carb": "low-carb",
+            "low_fat": "low-fat",
+            "low_sodium": "low-sodium",
+            "high_fiber": "high-fiber",
+            "low_sugar": "low-sugar",
+            "calorie_conscious": "low-calorie",
+        }
+        for goal in all_goals:
+            if goal in goal_labels:
+                dietary_restrictions_for_ai.append(goal_labels[goal])
 
         # Combine with user-provided exclude_ingredients
         all_excluded = list(household_excluded)
@@ -1550,7 +1597,7 @@ async def suggest_recipes(
             max_prep_time=data.max_prep_time,
             max_cook_time=data.max_cook_time,
             difficulty=data.difficulty.value if data.difficulty else None,
-            dietary_restrictions=data.dietary_restrictions,
+            dietary_restrictions=dietary_restrictions_for_ai if dietary_restrictions_for_ai else None,
             include_ingredients=data.include_ingredients,
             exclude_ingredients=all_excluded if all_excluded else None,
             count=data.count,
@@ -1635,6 +1682,9 @@ async def suggest_recipes(
             "excluded_ingredients": all_excluded if all_excluded else [],
             "household_allergies": list(household_allergies),
             "household_dislikes": list(household_dislikes),
+            "diet_type": combined_diet_type,
+            "nutritional_goals": list(all_goals),
+            "meal_preferences": list(all_preferences),
         }
 
         return RecipeSuggestionResponse(

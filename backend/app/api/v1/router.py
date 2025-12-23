@@ -8,6 +8,7 @@ from app.api.v1.routes.support import router as support_router
 from app.api.v1.routes.dashboard import router as dashboard_router
 from app.api.v1.routes.profiles import router as profiles_router
 from app.api.v1.routes.dietary_restrictions import router as dietary_restrictions_router
+from app.api.v1.routes.nutritional_preferences import router as nutritional_preferences_router
 
 api_router = APIRouter()
 
@@ -73,3 +74,6 @@ api_router.include_router(profiles_router)
 
 # Dietary Restrictions (allergies & dislikes)
 api_router.include_router(dietary_restrictions_router, prefix="/dietary-restrictions", tags=["Dietary Restrictions"])
+
+# Nutritional Preferences (diet types & goals)
+api_router.include_router(nutritional_preferences_router, prefix="/nutritional-preferences", tags=["Nutritional Preferences"])
