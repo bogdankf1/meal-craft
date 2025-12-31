@@ -256,17 +256,24 @@ async def get_nutrition_stats(db: AsyncSession, user_id: UUID) -> Optional[Nutri
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
 
-    # Get user's nutrition goal
-    goal_query = select(NutritionGoal).where(
+    # Get user's nutrition goals (may have multiple for different profiles)
+    # Aggregate all active goals for dashboard summary
+    goal_query = select(
+        func.sum(NutritionGoal.daily_calories).label('daily_calories'),
+        func.sum(NutritionGoal.daily_protein_g).label('daily_protein_g'),
+        func.sum(NutritionGoal.daily_carbs_g).label('daily_carbs_g'),
+        func.sum(NutritionGoal.daily_fat_g).label('daily_fat_g'),
+    ).where(
         and_(
             NutritionGoal.user_id == user_id,
             NutritionGoal.is_active == True
         )
     )
     goal_result = await db.execute(goal_query)
-    goal = goal_result.scalar_one_or_none()
+    goal = goal_result.first()
 
-    if not goal:
+    # Check if there are no active goals (all aggregated values will be NULL)
+    if not goal or goal.daily_calories is None:
         return None
 
     # Get today's nutrition logs
