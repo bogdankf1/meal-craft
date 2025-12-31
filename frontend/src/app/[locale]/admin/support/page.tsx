@@ -98,21 +98,21 @@ export default function AdminSupportPage() {
     switch (status) {
       case SupportTopicStatus.OPEN:
         return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
             <Clock className="w-3 h-3 mr-1" />
             {t("status.open")}
           </Badge>
         );
       case SupportTopicStatus.IN_PROGRESS:
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
             <Loader2 className="w-3 h-3 mr-1" />
             {t("status.inProgress")}
           </Badge>
         );
       case SupportTopicStatus.RESOLVED:
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
+          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             {t("status.resolved")}
           </Badge>

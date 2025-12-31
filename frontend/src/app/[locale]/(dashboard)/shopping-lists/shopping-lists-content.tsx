@@ -216,7 +216,7 @@ export function ShoppingListsContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("stats.totalLists")}
                 value={analytics?.total_lists?.toString() || "0"}
@@ -368,7 +368,7 @@ export function ShoppingListsContent() {
           <div className="space-y-6">
             {hasLists && analytics ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("analysis.listsThisWeek")}
                     value={analytics.lists_this_week?.toString() || "0"}
@@ -494,7 +494,7 @@ export function ShoppingListsContent() {
               </div>
             ) : historyData && historyData.total_lists > 0 ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("history.totalInPeriod")}
                     value={historyData.total_lists.toString()}

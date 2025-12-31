@@ -269,8 +269,8 @@ export default function DashboardPage() {
                         <div
                           className={`p-1.5 rounded ${
                             item.days_until_expiry <= 2
-                              ? "bg-red-100 text-red-600"
-                              : "bg-orange-100 text-orange-600"
+                              ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+                              : "bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-400"
                           }`}
                         >
                           <Clock className="h-4 w-4" />
@@ -500,7 +500,7 @@ export default function DashboardPage() {
                       <span className="text-sm">{item.name}</span>
                     </div>
                     {item.is_peak && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                         {t("seasonal.peak")}
                       </Badge>
                     )}
@@ -548,7 +548,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{t("nutrition.calories")}</span>

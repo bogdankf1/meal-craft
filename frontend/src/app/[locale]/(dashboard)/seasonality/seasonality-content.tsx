@@ -785,12 +785,12 @@ export function SeasonalityContent() {
                 <DialogTitle className="flex items-center gap-2">
                   {selectedProduce.name}
                   {selectedProduce.is_peak_season && (
-                    <Badge className="bg-orange-100 text-orange-700">
+                    <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                       {t("badges.peak")}
                     </Badge>
                   )}
                   {selectedProduce.is_in_season && !selectedProduce.is_peak_season && (
-                    <Badge className="bg-green-100 text-green-700">
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                       {t("badges.inSeason")}
                     </Badge>
                   )}
@@ -891,7 +891,7 @@ function RecommendationCard({ recommendation: rec, onAddToList, onRecipeClick, o
           <h4 className="font-medium">{rec.produce_name}</h4>
           <div className="flex items-center gap-1">
             {rec.is_peak && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+              <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                 {t("badges.peak")}
               </Badge>
             )}
@@ -1091,12 +1091,12 @@ function ProduceCard({ produce, onToggleFavorite, onDelete, onAddToList, onClick
             {t(`categories.${produce.category}`)}
           </Badge>
           {produce.is_peak_season && (
-            <Badge className="bg-orange-100 text-orange-700 text-xs">
+            <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 text-xs">
               {t("badges.peak")}
             </Badge>
           )}
           {produce.is_in_season && !produce.is_peak_season && (
-            <Badge className="bg-green-100 text-green-700 text-xs">
+            <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
               {t("badges.inSeason")}
             </Badge>
           )}

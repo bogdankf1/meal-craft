@@ -214,33 +214,36 @@ export function DataTable<T extends DataTableItem>({
     <div className="space-y-4">
       {/* Selection bar */}
       {showBulkActions && (
-        <div className="flex items-center gap-2 px-3 h-12 bg-muted/50 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2 sm:py-0 sm:h-12 bg-muted/50 rounded-lg">
           {hasSelection ? (
             <>
               <span className="text-sm font-medium">
                 {texts.selectedCount(validSelectedIds.length)}
               </span>
-              <div className="flex-1" />
-              {bulkActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant={action.variant || "outline"}
-                  size="sm"
-                  onClick={() => handleBulkAction(action)}
-                  disabled={action.isLoading}
-                >
-                  {action.icon}
-                  {action.label}
-                </Button>
-              ))}
+              <div className="flex-1 hidden sm:block" />
+              <div className="flex flex-wrap items-center gap-2">
+                {bulkActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant={action.variant || "outline"}
+                    size="sm"
+                    onClick={() => handleBulkAction(action)}
+                    disabled={action.isLoading}
+                    className="text-xs sm:text-sm"
+                  >
+                    {action.icon}
+                    <span className="hidden xs:inline sm:inline">{action.label}</span>
+                  </Button>
+                ))}
+              </div>
             </>
           ) : (
             <>
               <span className="text-sm text-muted-foreground">
                 {texts.itemsOnPage(items.length)}
               </span>
-              <div className="flex-1" />
-              <span className="text-sm text-muted-foreground">
+              <div className="flex-1 hidden sm:block" />
+              <span className="text-sm text-muted-foreground hidden sm:block">
                 {emptySelectionText || texts.selectToAction}
               </span>
             </>
@@ -249,8 +252,8 @@ export function DataTable<T extends DataTableItem>({
       )}
 
       {/* Table */}
-      <div className="border rounded-lg">
-        <Table>
+      <div className="border rounded-lg overflow-x-auto">
+        <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow>
               {selectable && (
@@ -324,8 +327,8 @@ export function DataTable<T extends DataTableItem>({
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && onPageChange && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             {texts.pageInfo(pagination.page, pagination.totalPages, pagination.total)}
           </div>
           <div className="flex items-center gap-2">
@@ -334,17 +337,22 @@ export function DataTable<T extends DataTableItem>({
               size="sm"
               onClick={() => onPageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
+              className="h-8 px-2 sm:px-3"
             >
               <ChevronLeft className="h-4 w-4" />
-              {texts.previous}
+              <span className="hidden sm:inline ml-1">{texts.previous}</span>
             </Button>
+            <span className="text-sm text-muted-foreground px-2">
+              {pagination.page} / {pagination.totalPages}
+            </span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
+              className="h-8 px-2 sm:px-3"
             >
-              {texts.next}
+              <span className="hidden sm:inline mr-1">{texts.next}</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

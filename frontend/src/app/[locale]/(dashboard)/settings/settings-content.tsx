@@ -477,8 +477,8 @@ export function SettingsContent() {
                 )}
               >
                 <RadioGroupItem value="light" id="theme-light" className="sr-only" />
-                <div className="p-3 rounded-full bg-amber-100">
-                  <Sun className="h-6 w-6 text-amber-600" />
+                <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/50">
+                  <Sun className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="text-center">
                   <p className="font-medium">{t("appearance.theme.light")}</p>
@@ -496,7 +496,7 @@ export function SettingsContent() {
                 )}
               >
                 <RadioGroupItem value="dark" id="theme-dark" className="sr-only" />
-                <div className="p-3 rounded-full bg-slate-800">
+                <div className="p-3 rounded-full bg-slate-800 dark:bg-slate-700">
                   <Moon className="h-6 w-6 text-slate-200" />
                 </div>
                 <div className="text-center">
@@ -515,8 +515,8 @@ export function SettingsContent() {
                 )}
               >
                 <RadioGroupItem value="system" id="theme-system" className="sr-only" />
-                <div className="p-3 rounded-full bg-gradient-to-br from-amber-100 to-slate-800">
-                  <Monitor className="h-6 w-6 text-slate-600" />
+                <div className="p-3 rounded-full bg-gradient-to-br from-amber-100 to-slate-800 dark:from-amber-900/50 dark:to-slate-700">
+                  <Monitor className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                 </div>
                 <div className="text-center">
                   <p className="font-medium">{t("appearance.theme.system")}</p>

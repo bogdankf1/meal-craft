@@ -598,7 +598,7 @@ export function RecipesContent() {
                               className={`h-4 w-4 ${
                                 star <= item.rating!
                                   ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300"
+                                  : "text-gray-300 dark:text-gray-600"
                               }`}
                             />
                           ))}

@@ -232,7 +232,7 @@ export function RestaurantsContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("stats.totalMeals")}
                 value={mealsData?.total?.toString() || "0"}
@@ -360,7 +360,7 @@ export function RestaurantsContent() {
           <div className="space-y-6">
             {hasMeals && analytics ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("stats.thisWeek")}
                     value={analytics.meals_this_week?.toString() || "0"}

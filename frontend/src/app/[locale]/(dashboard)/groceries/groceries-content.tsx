@@ -431,7 +431,7 @@ export function GroceriesContent() {
               </div>
             ) : wasteAnalytics && wasteAnalytics.total_wasted_items > 0 ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("waste.stats.totalWasted")}
                     value={wasteAnalytics.total_wasted_items.toString()}
@@ -573,7 +573,7 @@ export function GroceriesContent() {
           <div className="space-y-6">
             {hasGroceries && analytics ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("analysis.thisWeek")}
                     value={analytics.items_this_week?.toString() || "0"}
@@ -701,13 +701,13 @@ export function GroceriesContent() {
         {/* History Tab */}
         <TabsContent value="history">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">{t("history.title")}</h2>
                 <p className="text-sm text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -725,7 +725,7 @@ export function GroceriesContent() {
               </div>
             ) : historyData && historyData.total_items > 0 ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("history.totalInPeriod")}
                     value={historyData.total_items.toString()}

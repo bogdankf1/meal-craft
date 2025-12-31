@@ -220,7 +220,7 @@ export default function PricingPage() {
                 key={tier.id}
                 className={`relative flex flex-col ${
                   isRecommended
-                    ? "border-primary shadow-lg scale-105 z-10"
+                    ? "border-primary shadow-lg lg:scale-105 z-10"
                     : "border-border"
                 }`}
               >

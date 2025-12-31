@@ -182,19 +182,19 @@ export function NutritionCalendar({
       {calorieGoal && (
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500/30" />
+            <div className="w-3 h-3 rounded bg-green-500/30 dark:bg-green-500/40" />
             <span>{t("legend.onTarget")} (90-110%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-500/30" />
+            <div className="w-3 h-3 rounded bg-yellow-500/30 dark:bg-yellow-500/40" />
             <span>{t("legend.under")} (&lt;50%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-500/30" />
+            <div className="w-3 h-3 rounded bg-red-500/30 dark:bg-red-500/40" />
             <span>{t("legend.over")} (&gt;120%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-500/20" />
+            <div className="w-3 h-3 rounded bg-blue-500/20 dark:bg-blue-500/30" />
             <span>{t("legend.partial")}</span>
           </div>
         </div>
