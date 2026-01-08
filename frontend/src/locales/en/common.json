@@ -183,7 +183,10 @@
     "descriptions": {
       "free": "Perfect for getting started with basic meal planning",
       "plus": "Great for home cooks who want more features",
-      "pro": "For serious meal planners who want it all"
+      "pro": "For serious meal planners who want it all",
+      "home_cook": "Perfect for getting started with basic meal planning",
+      "chefs_choice": "Great for home cooks who want more features",
+      "master_chef": "For serious meal planners who want it all"
     },
     "features": {
       "free": {
