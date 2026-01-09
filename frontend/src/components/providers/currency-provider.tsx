@@ -8,6 +8,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { useSession } from "next-auth/react";
 import {
   type CurrencyCode,
   type Currency,
@@ -72,10 +73,14 @@ export function CurrencyProvider({ children, defaultCurrency = "UAH" }: Currency
     getInitialCurrency(defaultCurrency)
   );
 
-  // Fetch currencies from API
+  // Check if user is authenticated
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
+  // Fetch currencies from API only when authenticated
   const { data: apiCurrencies, isLoading } = useGetCurrenciesQuery(undefined, {
-    // Skip fetching on server
-    skip: typeof window === "undefined",
+    // Skip fetching on server or when not authenticated
+    skip: typeof window === "undefined" || !isAuthenticated,
   });
 
   // Map API currencies to our format
