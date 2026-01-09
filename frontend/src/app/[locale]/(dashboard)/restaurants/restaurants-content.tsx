@@ -232,7 +232,7 @@ export function RestaurantsContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("stats.totalMeals")}
                 value={mealsData?.total?.toString() || "0"}
@@ -360,7 +360,7 @@ export function RestaurantsContent() {
           <div className="space-y-6">
             {hasMeals && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("stats.thisWeek")}
                     value={analytics.meals_this_week?.toString() || "0"}
@@ -383,7 +383,7 @@ export function RestaurantsContent() {
                   />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analytics.byOrderType")}>
                     <DistributionList
                       items={orderTypeItems}
@@ -436,7 +436,7 @@ export function RestaurantsContent() {
                 <p className="text-sm text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -454,7 +454,7 @@ export function RestaurantsContent() {
               </div>
             ) : historyData && historyData.total_meals > 0 ? (
               <>
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                   <StatsCard
                     title={t("history.totalInPeriod")}
                     value={historyData.total_meals.toString()}
@@ -504,7 +504,7 @@ export function RestaurantsContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               <StatsCard
                 title={t("stats.archivedMeals")}
                 value={archivedData?.total?.toString() || "0"}
@@ -512,7 +512,7 @@ export function RestaurantsContent() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <RestaurantMealFiltersBar
                   filters={archiveFilters}

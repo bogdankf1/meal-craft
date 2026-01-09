@@ -86,12 +86,12 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <PageHeader title={t("title")} description={t("description")} />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title={t("stats.mealsPlanned")}
           value={`${data.meal_plan_stats.meals_planned_this_week}/${data.meal_plan_stats.total_meal_slots}`}
@@ -184,7 +184,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Upcoming Meals */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -389,7 +389,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Second Row - Insights */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {/* Waste Analytics */}
         <Card>
           <CardHeader className="pb-2">
@@ -548,7 +548,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{t("nutrition.calories")}</span>

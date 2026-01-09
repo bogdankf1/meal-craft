@@ -167,9 +167,10 @@ export function PantryCalendarView({
       </div>
 
       {/* Calendar Grid */}
-      <div className="border rounded-lg overflow-hidden">
-        {/* Week day headers */}
-        <div className="grid grid-cols-7 bg-muted">
+      <div className="border rounded-lg overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* Week day headers */}
+          <div className="grid grid-cols-7 bg-muted">
           {weekDays.map((day) => (
             <div
               key={day}
@@ -332,6 +333,7 @@ export function PantryCalendarView({
               </div>
             );
           })}
+          </div>
         </div>
       </div>
 

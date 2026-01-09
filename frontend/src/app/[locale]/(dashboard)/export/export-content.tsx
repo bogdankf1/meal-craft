@@ -170,7 +170,7 @@ export function ExportContent() {
           <CardDescription>{t("card.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
             {/* Entry Type Selector */}
             <div className="space-y-2">
               <Label htmlFor="entry-type">{t("labels.dataType")}</Label>

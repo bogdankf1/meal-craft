@@ -342,7 +342,7 @@ export function SeasonalityContent() {
     <>
       <ModuleTabs tabs={tabs} defaultTab="thisMonth">
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           <StatsCard
             title={t("stats.inSeason")}
             value={inSeasonCount}
@@ -374,7 +374,7 @@ export function SeasonalityContent() {
           {/* Country & Month Selector */}
           <Card>
             <CardContent className="py-3">
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{countryInfo?.flag}</span>
                   <div>
@@ -459,7 +459,7 @@ export function SeasonalityContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {recommendations.recommendations.map((rec, idx) => (
                     <RecommendationCard
                       key={idx}
@@ -500,7 +500,7 @@ export function SeasonalityContent() {
                 <CardDescription className="text-sm">{weeklyPicks.market_tip}</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {weeklyPicks.picks.map((pick, idx) => (
                     <WeeklyPickCard
                       key={idx}
@@ -572,7 +572,7 @@ export function SeasonalityContent() {
 
           {/* Produce Grid */}
           {isLoadingProduce ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(8)].map((_, i) => (
                 <Skeleton key={i} className="h-40 rounded-lg" />
               ))}
@@ -584,7 +584,7 @@ export function SeasonalityContent() {
               description={showFavoritesOnly ? t("empty.favorites.description") : t("empty.produce.description")}
             />
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProduce.map((produce) => (
                 <ProduceCard
                   key={produce.id}
@@ -612,7 +612,7 @@ export function SeasonalityContent() {
             </CardHeader>
             <CardContent>
               {isLoadingCalendar ? (
-                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {[...Array(12)].map((_, i) => (
                     <Skeleton key={i} className="h-48 rounded-lg" />
                   ))}
@@ -634,7 +634,7 @@ export function SeasonalityContent() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {calendarData?.months.map((monthData) => (
                     <Card
                       key={monthData.month}
@@ -734,7 +734,7 @@ export function SeasonalityContent() {
             </CardHeader>
             <CardContent>
               {isLoadingSpecialties ? (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   {[...Array(4)].map((_, i) => (
                     <Skeleton key={i} className="h-48 rounded-lg" />
                   ))}
@@ -756,7 +756,7 @@ export function SeasonalityContent() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   {specialtiesData?.items.map((specialty) => (
                     <SpecialtyCard key={specialty.id} specialty={specialty} t={t} />
                   ))}
@@ -1214,7 +1214,7 @@ function SeasonalProduceByMonth({ countryCode, month, t }: SeasonalProduceByMont
 
   if (isLoading) {
     return (
-      <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
         {[...Array(8)].map((_, i) => (
           <Skeleton key={i} className="h-12" />
         ))}

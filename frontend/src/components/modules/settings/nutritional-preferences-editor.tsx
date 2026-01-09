@@ -126,7 +126,7 @@ export function NutritionalPreferencesEditor({ profile }: NutritionalPreferences
           <Target className="h-4 w-4 text-blue-500" />
           <Label className="text-sm font-medium">{t("goals.title")}</Label>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {NUTRITIONAL_GOALS.map((goal) => (
             <div key={goal.value} className="flex items-center space-x-2">
               <Checkbox
@@ -151,7 +151,7 @@ export function NutritionalPreferencesEditor({ profile }: NutritionalPreferences
           <Utensils className="h-4 w-4 text-orange-500" />
           <Label className="text-sm font-medium">{t("preferences.title")}</Label>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {MEAL_PREFERENCES.map((pref) => (
             <div key={pref.value} className="flex items-center space-x-2">
               <Checkbox

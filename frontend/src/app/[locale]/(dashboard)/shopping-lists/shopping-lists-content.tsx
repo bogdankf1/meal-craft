@@ -216,7 +216,7 @@ export function ShoppingListsContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("stats.totalLists")}
                 value={analytics?.total_lists?.toString() || "0"}
@@ -240,7 +240,7 @@ export function ShoppingListsContent() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <ShoppingListFiltersBar filters={filters} onFiltersChange={setFilters} />
               </div>
@@ -296,7 +296,7 @@ export function ShoppingListsContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               <StatsCard
                 title={t("stats.archivedLists")}
                 value={archivedData?.total?.toString() || "0"}
@@ -319,7 +319,7 @@ export function ShoppingListsContent() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <ShoppingListFiltersBar
                   filters={archiveFilters}
@@ -368,7 +368,7 @@ export function ShoppingListsContent() {
           <div className="space-y-6">
             {hasLists && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("analysis.listsThisWeek")}
                     value={analytics.lists_this_week?.toString() || "0"}
@@ -417,7 +417,7 @@ export function ShoppingListsContent() {
                   </div>
                 </AnalyticsCard>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analysis.categoryDistribution")}>
                     <DistributionList
                       items={categoryDistributionItems}
@@ -476,7 +476,7 @@ export function ShoppingListsContent() {
                 <p className="text-sm text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -494,7 +494,7 @@ export function ShoppingListsContent() {
               </div>
             ) : historyData && historyData.total_lists > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("history.totalInPeriod")}
                     value={historyData.total_lists.toString()}
@@ -542,7 +542,7 @@ export function ShoppingListsContent() {
                   </AnalyticsCard>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("history.topItems")}>
                     <TopItemsList
                       items={topItemsData}

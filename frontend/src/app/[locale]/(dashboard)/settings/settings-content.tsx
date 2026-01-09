@@ -467,7 +467,7 @@ export function SettingsContent() {
             <RadioGroup
               value={theme}
               onValueChange={handleThemeChange}
-              className="grid gap-4 md:grid-cols-3"
+              className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
             >
               <Label
                 htmlFor="theme-light"

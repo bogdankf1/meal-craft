@@ -253,7 +253,7 @@ export function PantryContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("stats.totalItems")}
                 value={pantryData?.total?.toString() || "0"}
@@ -371,7 +371,7 @@ export function PantryContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               <StatsCard
                 title={t("stats.archivedItems")}
                 value={archivedData?.total?.toString() || "0"}
@@ -442,7 +442,7 @@ export function PantryContent() {
               </div>
             ) : wasteAnalytics && wasteAnalytics.total_wasted_items > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("waste.stats.totalWasted")}
                     value={wasteAnalytics.total_wasted_items.toString()}
@@ -485,7 +485,7 @@ export function PantryContent() {
                   </AnalyticsCard>
                 )}
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("waste.analytics.byReason")}>
                     <DistributionList
                       items={(wasteAnalytics.by_reason ?? []).map((item) => ({
@@ -587,7 +587,7 @@ export function PantryContent() {
           <div className="space-y-6">
             {hasPantryItems && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("analysis.inFridge")}
                     value={analytics.items_by_location?.fridge?.toString() || "0"}
@@ -611,7 +611,7 @@ export function PantryContent() {
                   />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analysis.locationDistribution")}>
                     <DistributionList
                       items={locationDistributionItems}
@@ -754,7 +754,7 @@ export function PantryContent() {
               </div>
             ) : historyData && historyData.total_items_added > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("history.totalAdded")}
                     value={historyData.total_items_added.toString()}
@@ -804,7 +804,7 @@ export function PantryContent() {
                   </AnalyticsCard>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("history.topItems")}>
                     <TopItemsList
                       items={topItemsData}

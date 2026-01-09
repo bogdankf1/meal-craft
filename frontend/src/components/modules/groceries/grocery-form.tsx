@@ -201,7 +201,7 @@ export function GroceryForm({
           </div>
 
           {/* Quantity and Unit */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">{t("form.quantity")}</Label>
               <Input
@@ -254,7 +254,7 @@ export function GroceryForm({
           </div>
 
           {/* Purchase Date and Expiry Date */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="purchase_date">{t("form.purchaseDate")} *</Label>
               <Input
@@ -279,7 +279,7 @@ export function GroceryForm({
           </div>
 
           {/* Cost and Store */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cost">{t("form.cost")}</Label>
               <Input

@@ -252,7 +252,7 @@ export function NutritionLogForm({
             />
 
             {/* Date and Meal Type */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="date"
@@ -346,7 +346,7 @@ export function NutritionLogForm({
             />
 
             {/* Macros Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="protein_g"

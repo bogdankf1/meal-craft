@@ -134,7 +134,7 @@ export function NutritionDailyView({
           />
 
           {/* Individual Macros */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
             <NutritionProgress
               label={t("macros.protein")}
               current={data.total_protein_g}
@@ -162,7 +162,7 @@ export function NutritionDailyView({
           </div>
 
           {/* Additional nutrients */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
             <NutritionProgress
               label={t("macros.sugar")}
               current={data.total_sugar_g}
@@ -268,7 +268,7 @@ function DailyViewSkeleton() {
         <CardContent className="space-y-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-3 w-full" />
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-16" />
             ))}

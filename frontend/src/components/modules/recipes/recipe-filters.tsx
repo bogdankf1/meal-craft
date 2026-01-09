@@ -35,10 +35,10 @@ export function RecipeFilters({
   const tCommon = useTranslations("common");
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
       {/* Category Filter */}
       <Select value={category} onValueChange={onCategoryChange}>
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-full sm:w-[140px]">
           <SelectValue placeholder={t("filters.category")} />
         </SelectTrigger>
         <SelectContent>
@@ -53,7 +53,7 @@ export function RecipeFilters({
 
       {/* Difficulty Filter */}
       <Select value={difficulty} onValueChange={onDifficultyChange}>
-        <SelectTrigger className="w-[130px]">
+        <SelectTrigger className="w-full sm:w-[130px]">
           <SelectValue placeholder={t("filters.difficulty")} />
         </SelectTrigger>
         <SelectContent>
@@ -68,7 +68,7 @@ export function RecipeFilters({
 
       {/* Cuisine Type Filter */}
       <Select value={cuisineType} onValueChange={onCuisineTypeChange}>
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-full sm:w-[140px]">
           <SelectValue placeholder={t("filters.cuisine")} />
         </SelectTrigger>
         <SelectContent>
@@ -88,7 +88,7 @@ export function RecipeFilters({
 
       {/* Favorites Filter */}
       <Select value={isFavorite} onValueChange={onIsFavoriteChange}>
-        <SelectTrigger className="w-[130px]">
+        <SelectTrigger className="w-full sm:w-[130px]">
           <SelectValue placeholder={t("filters.favorites")} />
         </SelectTrigger>
         <SelectContent>

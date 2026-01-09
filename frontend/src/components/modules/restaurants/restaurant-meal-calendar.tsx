@@ -87,20 +87,23 @@ export function RestaurantMealCalendarView({
         </Button>
       </div>
 
-      {/* Week Days Header */}
-      <div className="grid grid-cols-7 gap-1">
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="text-center text-sm font-medium text-muted-foreground py-2"
-          >
-            {day}
+      {/* Calendar Grid - Scrollable on mobile */}
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="min-w-[600px] md:min-w-0">
+          {/* Week Days Header */}
+          <div className="grid grid-cols-7 gap-1">
+            {weekDays.map((day) => (
+              <div
+                key={day}
+                className="text-center text-sm font-medium text-muted-foreground py-2"
+              >
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1">
         {/* Empty cells for days before the month starts */}
         {Array.from({ length: days[0].getDay() }).map((_, i) => (
           <div key={`empty-start-${i}`} className="min-h-[100px]" />
@@ -171,6 +174,8 @@ export function RestaurantMealCalendarView({
         {Array.from({ length: 6 - days[days.length - 1].getDay() }).map((_, i) => (
           <div key={`empty-end-${i}`} className="min-h-[100px]" />
         ))}
+          </div>
+        </div>
       </div>
     </div>
   );

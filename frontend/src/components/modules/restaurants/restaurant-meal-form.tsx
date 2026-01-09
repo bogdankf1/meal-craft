@@ -283,7 +283,7 @@ export function RestaurantMealForm({
           </div>
 
           {/* Date and Time */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="meal_date">{t("form.date")} *</Label>
               <Input
@@ -306,7 +306,7 @@ export function RestaurantMealForm({
           </div>
 
           {/* Meal Type and Order Type */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t("form.mealType")} *</Label>
               <Select
@@ -380,7 +380,7 @@ export function RestaurantMealForm({
           </div>
 
           {/* Rating and Feeling */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <RatingSelector
               value={rating}
               onChange={(value) => setValue("rating", value)}

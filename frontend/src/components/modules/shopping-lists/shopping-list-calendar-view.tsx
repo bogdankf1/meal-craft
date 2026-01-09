@@ -91,20 +91,23 @@ export function ShoppingListCalendarView({
           </Button>
         </div>
 
-        {/* Week Day Headers */}
-        <div className="grid grid-cols-7 gap-1 mb-1">
-          {weekDays.map((day) => (
-            <div
-              key={day}
-              className="text-center text-sm font-medium text-muted-foreground py-2"
-            >
-              {day}
+        {/* Calendar Grid - Scrollable on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="min-w-[600px] md:min-w-0">
+            {/* Week Day Headers */}
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {weekDays.map((day) => (
+                <div
+                  key={day}
+                  className="text-center text-sm font-medium text-muted-foreground py-2"
+                >
+                  {day}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day) => {
             const dateKey = format(day, "yyyy-MM-dd");
             const dayLists = listsByDate[dateKey] || [];
@@ -179,6 +182,8 @@ export function ShoppingListCalendarView({
               </div>
             );
           })}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

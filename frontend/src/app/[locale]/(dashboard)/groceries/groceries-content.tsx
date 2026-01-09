@@ -257,7 +257,7 @@ export function GroceriesContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               <StatsCard
                 title={t("stats.totalItems")}
                 value={groceriesData?.total?.toString() || "0"}
@@ -290,7 +290,7 @@ export function GroceriesContent() {
               }}
             />
 
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <GroceryFiltersBar filters={filters} onFiltersChange={setFilters} />
               </div>
@@ -359,7 +359,7 @@ export function GroceriesContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               <StatsCard
                 title={t("stats.archivedItems")}
                 value={archivedData?.total?.toString() || "0"}
@@ -379,7 +379,7 @@ export function GroceriesContent() {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <GroceryFiltersBar
                   filters={archiveFilters}
@@ -431,7 +431,7 @@ export function GroceriesContent() {
               </div>
             ) : wasteAnalytics && wasteAnalytics.total_wasted_items > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("waste.stats.totalWasted")}
                     value={wasteAnalytics.total_wasted_items.toString()}
@@ -475,7 +475,7 @@ export function GroceriesContent() {
                   </AnalyticsCard>
                 )}
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("waste.analytics.byReason")}>
                     <DistributionList
                       items={wasteAnalytics.by_reason.map((item) => ({
@@ -573,7 +573,7 @@ export function GroceriesContent() {
           <div className="space-y-6">
             {hasGroceries && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("analysis.thisWeek")}
                     value={analytics.items_this_week?.toString() || "0"}
@@ -634,7 +634,7 @@ export function GroceriesContent() {
                   </div>
                 </AnalyticsCard>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analysis.categoryDistribution")}>
                     <DistributionList
                       items={categoryDistributionItems}
@@ -725,7 +725,7 @@ export function GroceriesContent() {
               </div>
             ) : historyData && historyData.total_items > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     title={t("history.totalInPeriod")}
                     value={historyData.total_items.toString()}
@@ -773,7 +773,7 @@ export function GroceriesContent() {
                   </AnalyticsCard>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("history.topItems")}>
                     <TopItemsList
                       items={topItemsData}

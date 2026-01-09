@@ -156,11 +156,11 @@ export function FilterBar<T extends Record<string, any>>({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
         {filterDefinitions.map((def, index) => {
           if (def.type === "search") {
             return (
-              <div key={index} className="relative flex-1">
+              <div key={index} className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px] sm:max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={def.placeholder}

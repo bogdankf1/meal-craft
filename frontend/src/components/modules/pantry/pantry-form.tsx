@@ -236,7 +236,7 @@ export function PantryForm({
           </div>
 
           {/* Quantity and Unit */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">{t("form.quantity")}</Label>
               <Input
@@ -289,7 +289,7 @@ export function PantryForm({
           </div>
 
           {/* Expiry Date and Opened Date */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="expiry_date">{t("form.expiryDate")}</Label>
               <Input

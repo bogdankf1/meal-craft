@@ -223,7 +223,7 @@ export function KitchenEquipmentContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             <StatsCard
               title={t("stats.totalItems")}
               value={analytics?.total_items || 0}
@@ -280,7 +280,7 @@ export function KitchenEquipmentContent() {
           {/* Filters Row */}
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[200px] max-w-md">
+              <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("filters.search")}
@@ -377,7 +377,7 @@ export function KitchenEquipmentContent() {
         <TabsContent value="maintenance">
           <div className="space-y-6">
             {/* Maintenance Stats */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("maintenance.stats.total")}
                 value={maintenanceOverview?.total_equipment || 0}
@@ -591,7 +591,7 @@ export function KitchenEquipmentContent() {
                 value={historyMonths.toString()}
                 onValueChange={(value) => setHistoryMonths(parseInt(value))}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -603,7 +603,7 @@ export function KitchenEquipmentContent() {
             </div>
 
             {analytics && (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {/* By Category */}
                 <AnalyticsCard title={t("analysis.byCategory")}>
                   <DistributionList

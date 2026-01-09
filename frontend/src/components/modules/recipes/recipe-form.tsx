@@ -258,7 +258,7 @@ export function RecipeForm({
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="category"
@@ -313,7 +313,7 @@ export function RecipeForm({
               <div className="space-y-4">
                 <h3 className="font-medium">{t("form.timeServings")}</h3>
 
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <FormField
                     control={form.control}
                     name="prep_time"
@@ -540,7 +540,7 @@ export function RecipeForm({
               <div className="space-y-4">
                 <h3 className="font-medium">{t("form.sourceNotes")}</h3>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="source"

@@ -227,7 +227,7 @@ export function KitchenEquipmentForm({
           </div>
 
           {/* Category and Condition */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">{t("form.category")}</Label>
               <Select
@@ -267,7 +267,7 @@ export function KitchenEquipmentForm({
           </div>
 
           {/* Brand and Model */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="brand">{t("form.brand")}</Label>
               <Input
@@ -307,7 +307,7 @@ export function KitchenEquipmentForm({
           </div>
 
           {/* Purchase Date and Price */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="purchase_date">{t("form.purchaseDate")}</Label>
               <Input
@@ -332,7 +332,7 @@ export function KitchenEquipmentForm({
           {/* Maintenance Fields */}
           <div className="space-y-2">
             <Label className="text-base font-medium">{t("form.maintenanceSection")}</Label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="last_maintenance_date">{t("form.lastMaintenanceDate")}</Label>
                 <Input

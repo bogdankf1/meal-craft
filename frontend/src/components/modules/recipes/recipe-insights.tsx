@@ -338,7 +338,7 @@ export function RecipeInsights({
               {recipesWithPantryIngredients.map(({ recipeName, matchedIngredients, canMake }) => (
                 <li
                   key={recipeName}
-                  className="p-2 rounded-md bg-white/60 dark:bg-white/5"
+                  className="p-2 rounded-md bg-muted/50"
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
@@ -412,7 +412,7 @@ export function RecipeInsights({
               {missingIngredients.map(({ name, recipeCount }) => (
                 <li
                   key={name}
-                  className="p-2 rounded-md bg-white/60 dark:bg-white/5 flex items-center justify-between"
+                  className="p-2 rounded-md bg-muted/50 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
                     <Badge
@@ -480,7 +480,7 @@ export function RecipeInsights({
               {techniquesInRecipes.map(({ skillName, recipeCount, hasSkill }) => (
                 <li
                   key={skillName}
-                  className="p-2 rounded-md bg-white/60 dark:bg-white/5"
+                  className="p-2 rounded-md bg-muted/50"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

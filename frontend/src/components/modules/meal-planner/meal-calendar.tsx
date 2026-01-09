@@ -86,7 +86,9 @@ export function MealCalendar({
   return (
     <div className="space-y-4">
       {/* Week header */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="min-w-[500px] md:min-w-0">
+          <div className="grid grid-cols-7 gap-2">
         {days.map((day) => (
           <div
             key={day.toISOString()}
@@ -108,6 +110,8 @@ export function MealCalendar({
             </div>
           </div>
         ))}
+          </div>
+        </div>
       </div>
 
       {/* Meal slots */}
@@ -121,7 +125,9 @@ export function MealCalendar({
             {MEAL_TYPE_ICONS[mealType]}
             {t(`mealTypes.${mealType}`)}
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="min-w-[500px] md:min-w-0">
+              <div className="grid grid-cols-7 gap-2">
             {days.map((day) => {
               const dateKey = format(day, "yyyy-MM-dd");
               const mealsForSlot = mealsByDateAndType[dateKey]?.[mealType] || [];
@@ -211,6 +217,8 @@ export function MealCalendar({
                 </Card>
               );
             })}
+              </div>
+            </div>
           </div>
         </div>
       ))}

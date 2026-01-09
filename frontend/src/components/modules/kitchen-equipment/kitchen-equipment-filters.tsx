@@ -41,10 +41,10 @@ export function KitchenEquipmentFilters({
   const t = useTranslations("kitchenEquipment");
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
       {/* Category Filter */}
       <Select value={category} onValueChange={onCategoryChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder={t("filters.allCategories")} />
         </SelectTrigger>
         <SelectContent>
@@ -59,7 +59,7 @@ export function KitchenEquipmentFilters({
 
       {/* Condition Filter */}
       <Select value={condition} onValueChange={onConditionChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder={t("filters.allConditions")} />
         </SelectTrigger>
         <SelectContent>
@@ -74,7 +74,7 @@ export function KitchenEquipmentFilters({
 
       {/* Location Filter */}
       <Select value={location} onValueChange={onLocationChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder={t("filters.allLocations")} />
         </SelectTrigger>
         <SelectContent>
@@ -89,7 +89,7 @@ export function KitchenEquipmentFilters({
 
       {/* Needs Maintenance Filter */}
       <Select value={needsMaintenance} onValueChange={onNeedsMaintenanceChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder={t("filters.maintenanceStatus")} />
         </SelectTrigger>
         <SelectContent>

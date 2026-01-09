@@ -265,7 +265,7 @@ export function LearningContent() {
         {/* Overview Tab - My Skills */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             <StatsCard
               title={t("stats.totalSkills")}
               value={analytics?.total_skills || 0}
@@ -337,8 +337,8 @@ export function LearningContent() {
           )}
 
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-6">
+            <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("filters.searchSkills")}
@@ -348,7 +348,7 @@ export function LearningContent() {
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder={t("filters.category")} />
               </SelectTrigger>
               <SelectContent>
@@ -361,7 +361,7 @@ export function LearningContent() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder={t("filters.status")} />
               </SelectTrigger>
               <SelectContent>
@@ -377,7 +377,7 @@ export function LearningContent() {
 
           {/* Skills Grid or Empty State */}
           {hasUserSkills || isLoadingUserSkills ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {userSkillsData?.items.map((userSkill) => (
                 <SkillCard
                   key={userSkill.id}
@@ -403,8 +403,8 @@ export function LearningContent() {
         {/* Library Tab */}
         <TabsContent value="library">
           {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-6">
+            <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("filters.searchLibrary")}
@@ -414,7 +414,7 @@ export function LearningContent() {
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder={t("filters.category")} />
               </SelectTrigger>
               <SelectContent>
@@ -427,7 +427,7 @@ export function LearningContent() {
               </SelectContent>
             </Select>
             <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder={t("filters.difficulty")} />
               </SelectTrigger>
               <SelectContent>
@@ -443,7 +443,7 @@ export function LearningContent() {
 
           {/* Skills Library Grid */}
           {hasLibrarySkills || isLoadingLibrary ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {libraryData?.items.map((skill) => (
                 <LibrarySkillCard
                   key={skill.id}
@@ -588,7 +588,7 @@ export function LearningContent() {
               {t("paths.availablePaths")}
             </h3>
             {learningPaths && learningPaths.items.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {learningPaths.items.map((path) => (
                   <LearningPathCard
                     key={path.id}
@@ -622,7 +622,7 @@ export function LearningContent() {
                 value={historyMonths.toString()}
                 onValueChange={(value) => setHistoryMonths(parseInt(value))}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -634,7 +634,7 @@ export function LearningContent() {
             </div>
 
             {/* Stats Summary */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title={t("analytics.skillsAdded")}
                 value={historyData?.total_skills_added || 0}
@@ -662,7 +662,7 @@ export function LearningContent() {
             </div>
 
             {analytics && analytics.total_skills > 0 && (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {/* By Category */}
                 <AnalyticsCard title={t("analytics.byCategory")}>
                   <DistributionList

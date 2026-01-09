@@ -347,7 +347,7 @@ export function AiRecipeSuggestionsDialog({
             </div>
 
             {/* Sliders Row */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Servings */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium">

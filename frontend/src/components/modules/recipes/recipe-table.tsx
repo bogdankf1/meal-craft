@@ -79,7 +79,7 @@ function getCategoryBadgeColor(category: string | null): string {
     appetizer: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
     side: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
     beverage: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300",
-    other: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+    other: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
   };
   return colors[category || "other"] || colors.other;
 }
@@ -107,7 +107,7 @@ function getRatingStars(rating: number | null) {
           className={`h-3 w-3 ${
             star <= rating
               ? "fill-yellow-400 text-yellow-400"
-              : "text-gray-300 dark:text-gray-600"
+              : "text-muted-foreground/40"
           }`}
         />
       ))}

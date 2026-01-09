@@ -172,7 +172,7 @@ export function NutritionContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             <StatsCard
               title={t("stats.todayCalories")}
               value={dailyData?.total_calories || 0}
@@ -323,7 +323,7 @@ export function NutritionContent() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid gap-6 md:grid-cols-2">
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                     {profiles.map((profile) => (
                       <ProfileGoalCard
                         key={profile.id}

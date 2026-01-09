@@ -300,7 +300,7 @@ export function PantryBulkForm({
             </Table>
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t pt-4">
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t pt-4">
             <Button
               type="button"
               variant="outline"

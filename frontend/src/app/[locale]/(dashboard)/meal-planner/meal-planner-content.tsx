@@ -357,7 +357,7 @@ export function MealPlannerContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             <StatsCard
               title={t("stats.totalPlans")}
               value={analytics?.total_meal_plans || 0}
@@ -383,7 +383,7 @@ export function MealPlannerContent() {
           {/* Filters and Actions Row */}
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[200px] max-w-md">
+              <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t("filters.search")}
@@ -395,7 +395,7 @@ export function MealPlannerContent() {
               <ProfileSelector
                 value={selectedProfileId}
                 onChange={setSelectedProfileId}
-                className="w-[180px]"
+                className="w-full sm:w-[180px]"
               />
               <ViewSelector
                 currentView={viewMode}
@@ -613,7 +613,7 @@ export function MealPlannerContent() {
         <TabsContent value="analysis">
           <div className="space-y-6">
             {analytics && (
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 {/* By Meal Type */}
                 <AnalyticsCard title={t("analysis.byMealType")}>
                   <DistributionList
@@ -654,7 +654,7 @@ export function MealPlannerContent() {
                 value={historyMonths.toString()}
                 onValueChange={(value) => setHistoryMonths(parseInt(value))}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -667,7 +667,7 @@ export function MealPlannerContent() {
 
             {/* History stats */}
             {historyData && (
-              <div className="grid gap-4 md:grid-cols-3 mb-6">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
                 <StatsCard
                   title={t("history.totalPlans")}
                   value={historyData.total_plans}
