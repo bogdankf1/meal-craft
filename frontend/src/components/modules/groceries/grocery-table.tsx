@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import {
   Pencil,
@@ -21,7 +21,9 @@ import {
   DataTableColumn,
   BulkAction,
   RowAction,
-} from "@/components/shared/DataTable";
+  ColumnVisibilitySelector,
+  type ColumnConfig,
+} from "@/components/shared";
 import {
   useDeleteGroceryMutation,
   useBulkDeleteGroceriesMutation,
@@ -34,6 +36,7 @@ import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 import { MarkAsWastedDialog } from "./mark-as-wasted-dialog";
 import { MoveToPantryDialog } from "./move-to-pantry-dialog";
 import { useCurrency } from "@/components/providers/currency-provider";
+import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface GroceryTableProps {
   data: GroceryListResponse | undefined;
@@ -91,6 +94,10 @@ export function GroceryTable({
   const tShoppingLists = useTranslations("shoppingLists");
   const { formatPriceFromUAH } = useCurrency();
 
+  const { preferences } = useUserStore();
+  const columnVisibility = preferences.columnVisibility?.groceries ?? defaultColumnVisibility.groceries;
+  const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+
   const [deleteGrocery, { isLoading: isDeleting }] = useDeleteGroceryMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteGroceriesMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveGroceriesMutation();
@@ -121,6 +128,17 @@ export function GroceryTable({
 
   const items = data?.items || [];
 
+  // Column configuration for visibility selector
+  const columnConfig: ColumnConfig[] = [
+    { key: "item_name", label: t("table.item"), mandatory: true },
+    { key: "category", label: t("table.category") },
+    { key: "quantity", label: t("table.quantity") },
+    { key: "purchase_date", label: t("table.purchaseDate") },
+    { key: "expiry_date", label: t("table.expiry") },
+    { key: "cost", label: t("table.cost") },
+    { key: "store", label: t("table.store") },
+  ];
+
   // Helper to convert grocery to shopping list item format
   const groceryToShoppingItem = (grocery: Grocery) => ({
     name: grocery.item_name,
@@ -135,8 +153,8 @@ export function GroceryTable({
     name: grocery.item_name,
   });
 
-  // Define columns
-  const columns: DataTableColumn<Grocery>[] = [
+  // Define all columns
+  const allColumns: DataTableColumn<Grocery>[] = [
     {
       key: "item_name",
       header: t("table.item"),
@@ -226,6 +244,13 @@ export function GroceryTable({
       render: (grocery) => grocery.store || "-",
     },
   ];
+
+  // Filter columns based on visibility
+  const columns = useMemo(
+    () => allColumns.filter((col) => columnVisibility[col.key as keyof typeof columnVisibility]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnVisibility]
+  );
 
   // Helper to convert grocery to move to pantry item format
   const groceryToMoveItem = (grocery: Grocery) => ({
@@ -384,52 +409,59 @@ export function GroceryTable({
 
   return (
     <>
-    <DataTable
-      items={items}
-      columns={columns}
-      isLoading={isLoading}
-      pagination={
-        data
-          ? {
-              page,
-              totalPages: data.total_pages,
-              total: data.total,
+    <div className="space-y-4">
+      {showColumnSelector && (
+        <div className="flex justify-end">
+          <ColumnVisibilitySelector module="groceries" columns={columnConfig} />
+        </div>
+      )}
+      <DataTable
+        items={items}
+        columns={columns}
+        isLoading={isLoading}
+        pagination={
+          data
+            ? {
+                page,
+                totalPages: data.total_pages,
+                total: data.total,
+              }
+            : undefined
+        }
+        onPageChange={onPageChange}
+        selectable
+        bulkActions={bulkActions}
+        rowActions={rowActions}
+        deleteConfig={{
+          getItemName: (grocery) => grocery.item_name,
+          onDelete: async (grocery) => {
+            try {
+              await deleteGrocery(grocery.id).unwrap();
+              toast.success(t("messages.itemDeleted"));
+            } catch {
+              toast.error(t("messages.errorDeleting"));
             }
-          : undefined
-      }
-      onPageChange={onPageChange}
-      selectable
-      bulkActions={bulkActions}
-      rowActions={rowActions}
-      deleteConfig={{
-        getItemName: (grocery) => grocery.item_name,
-        onDelete: async (grocery) => {
-          try {
-            await deleteGrocery(grocery.id).unwrap();
-            toast.success(t("messages.itemDeleted"));
-          } catch {
-            toast.error(t("messages.errorDeleting"));
-          }
-        },
-        isDeleting,
-        title: t("confirmDelete.title"),
-      }}
-      texts={{
-        loading: t("filters.loading"),
-        selectedCount: (count: number) => t("table.selectedCount", { count }),
-        itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
-        selectToAction: t("table.selectToAction"),
-        pageInfo: (page: number, totalPages: number, total: number) =>
-          t("table.pageInfo", { page, totalPages, total }),
-        previous: tCommon("previous"),
-        next: tCommon("next"),
-        deleteTitle: t("confirmDelete.title"),
-        deleteDescription: (name: string) => t("confirmDelete.description", { name }),
-        cancel: tCommon("cancel"),
-        delete: tCommon("delete"),
-        deleting: t("table.deleting"),
-      }}
-    />
+          },
+          isDeleting,
+          title: t("confirmDelete.title"),
+        }}
+        texts={{
+          loading: t("filters.loading"),
+          selectedCount: (count: number) => t("table.selectedCount", { count }),
+          itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
+          selectToAction: t("table.selectToAction"),
+          pageInfo: (page: number, totalPages: number, total: number) =>
+            t("table.pageInfo", { page, totalPages, total }),
+          previous: tCommon("previous"),
+          next: tCommon("next"),
+          deleteTitle: t("confirmDelete.title"),
+          deleteDescription: (name: string) => t("confirmDelete.description", { name }),
+          cancel: tCommon("cancel"),
+          delete: tCommon("delete"),
+          deleting: t("table.deleting"),
+        }}
+      />
+    </div>
 
     <AddToShoppingListDialog
       open={addToListOpen}

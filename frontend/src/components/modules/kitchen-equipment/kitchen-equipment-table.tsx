@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Pencil,
@@ -27,7 +27,9 @@ import {
   DataTableColumn,
   BulkAction,
   RowAction,
-} from "@/components/shared/DataTable";
+  ColumnVisibilitySelector,
+  type ColumnConfig,
+} from "@/components/shared";
 import {
   useDeleteKitchenEquipmentMutation,
   useBulkDeleteKitchenEquipmentMutation,
@@ -37,6 +39,7 @@ import {
   type KitchenEquipmentListResponse,
 } from "@/lib/api/kitchen-equipment-api";
 import { RecordMaintenanceDialog } from "./record-maintenance-dialog";
+import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface KitchenEquipmentTableProps {
   data: KitchenEquipmentListResponse | undefined;
@@ -106,6 +109,10 @@ export function KitchenEquipmentTable({
   const t = useTranslations("kitchenEquipment");
   const tCommon = useTranslations("common");
 
+  const { preferences } = useUserStore();
+  const columnVisibility = preferences.columnVisibility?.kitchenEquipment ?? defaultColumnVisibility.kitchenEquipment;
+  const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+
   const [deleteEquipment, { isLoading: isDeleting }] = useDeleteKitchenEquipmentMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteKitchenEquipmentMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveKitchenEquipmentMutation();
@@ -120,8 +127,19 @@ export function KitchenEquipmentTable({
 
   const items = data?.items || [];
 
-  // Define columns
-  const columns: DataTableColumn<KitchenEquipment>[] = [
+  // Column configuration for visibility selector
+  const columnConfig: ColumnConfig[] = [
+    { key: "name", label: t("table.name"), mandatory: true },
+    { key: "category", label: t("table.category") },
+    { key: "brand", label: t("table.brand") },
+    { key: "condition", label: t("table.condition") },
+    { key: "location", label: t("table.location") },
+    { key: "maintenance", label: t("table.maintenance") },
+    { key: "created_at", label: t("table.addedOn") },
+  ];
+
+  // Define all columns
+  const allColumns: DataTableColumn<KitchenEquipment>[] = [
     {
       key: "name",
       header: t("table.name"),
@@ -203,6 +221,13 @@ export function KitchenEquipmentTable({
         format(parseISO(item.created_at), "MMM d, yyyy"),
     },
   ];
+
+  // Filter columns based on visibility
+  const columns = useMemo(
+    () => allColumns.filter((col) => columnVisibility[col.key as keyof typeof columnVisibility]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnVisibility]
+  );
 
   // Define bulk actions
   const bulkActions: BulkAction[] = [
@@ -294,52 +319,59 @@ export function KitchenEquipmentTable({
 
   return (
     <>
-      <DataTable
-        items={items}
-        columns={columns}
-        isLoading={isLoading}
-        pagination={
-          data
-            ? {
-                page,
-                totalPages: data.total_pages,
-                total: data.total,
+      <div className="space-y-4">
+        {showColumnSelector && (
+          <div className="flex justify-end">
+            <ColumnVisibilitySelector module="kitchenEquipment" columns={columnConfig} />
+          </div>
+        )}
+        <DataTable
+          items={items}
+          columns={columns}
+          isLoading={isLoading}
+          pagination={
+            data
+              ? {
+                  page,
+                  totalPages: data.total_pages,
+                  total: data.total,
+                }
+              : undefined
+          }
+          onPageChange={onPageChange}
+          selectable
+          bulkActions={bulkActions}
+          rowActions={rowActions}
+          deleteConfig={{
+            getItemName: (item) => item.name,
+            onDelete: async (item) => {
+              try {
+                await deleteEquipment(item.id).unwrap();
+                toast.success(t("messages.itemDeleted"));
+              } catch {
+                toast.error(t("messages.errorDeleting"));
               }
-            : undefined
-        }
-        onPageChange={onPageChange}
-        selectable
-        bulkActions={bulkActions}
-        rowActions={rowActions}
-        deleteConfig={{
-          getItemName: (item) => item.name,
-          onDelete: async (item) => {
-            try {
-              await deleteEquipment(item.id).unwrap();
-              toast.success(t("messages.itemDeleted"));
-            } catch {
-              toast.error(t("messages.errorDeleting"));
-            }
-          },
-          isDeleting,
-          title: t("confirmDelete.title"),
-        }}
-        texts={{
-          loading: t("filters.loading"),
-          selectedCount: (count: number) => t("table.selectedCount", { count }),
-          itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
-          selectToAction: t("table.selectToAction"),
-          pageInfo: (page: number, totalPages: number, total: number) =>
-            t("table.pageInfo", { page, totalPages, total }),
-          previous: tCommon("previous"),
-          next: tCommon("next"),
-          deleteTitle: t("confirmDelete.title"),
-          deleteDescription: (name: string) => t("confirmDelete.description", { name }),
-          cancel: tCommon("cancel"),
-          delete: tCommon("delete"),
-          deleting: t("table.deleting"),
-        }}
-      />
+            },
+            isDeleting,
+            title: t("confirmDelete.title"),
+          }}
+          texts={{
+            loading: t("filters.loading"),
+            selectedCount: (count: number) => t("table.selectedCount", { count }),
+            itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
+            selectToAction: t("table.selectToAction"),
+            pageInfo: (page: number, totalPages: number, total: number) =>
+              t("table.pageInfo", { page, totalPages, total }),
+            previous: tCommon("previous"),
+            next: tCommon("next"),
+            deleteTitle: t("confirmDelete.title"),
+            deleteDescription: (name: string) => t("confirmDelete.description", { name }),
+            cancel: tCommon("cancel"),
+            delete: tCommon("delete"),
+            deleting: t("table.deleting"),
+          }}
+        />
+      </div>
 
       <RecordMaintenanceDialog
         open={maintenanceDialogOpen}

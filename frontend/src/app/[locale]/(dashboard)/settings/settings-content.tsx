@@ -752,6 +752,18 @@ export function SettingsContent() {
                       onCheckedChange={(checked) => handleUIVisibilityChange("showSorting", checked)}
                     />
                   </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showColumnSelector.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.toolbarElements.showColumnSelector.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showColumnSelector}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showColumnSelector", checked)}
+                    />
+                  </div>
                 </div>
               )}
             </div>

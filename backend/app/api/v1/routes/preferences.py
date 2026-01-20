@@ -5,13 +5,100 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 
 from app.core.database import get_db
 from app.models.user import User
 from app.api.deps import get_current_user
 
 router = APIRouter()
+
+
+# Column visibility models for each module
+class RecipesColumnVisibility(BaseModel):
+    """Column visibility for recipes table."""
+    name: bool = True
+    category: bool = True
+    cuisine_type: bool = True
+    time: bool = True
+    servings: bool = True
+    difficulty: bool = True
+    rating: bool = True
+    times_cooked: bool = True
+    created_at: bool = True
+
+
+class GroceriesColumnVisibility(BaseModel):
+    """Column visibility for groceries table."""
+    item_name: bool = True
+    category: bool = True
+    quantity: bool = True
+    purchase_date: bool = True
+    expiry_date: bool = True
+    cost: bool = True
+    store: bool = True
+
+
+class PantryColumnVisibility(BaseModel):
+    """Column visibility for pantry table."""
+    item_name: bool = True
+    storage_location: bool = True
+    category: bool = True
+    quantity: bool = True
+    expiry_date: bool = True
+    created_at: bool = True
+
+
+class MealPlansColumnVisibility(BaseModel):
+    """Column visibility for meal plans table."""
+    name: bool = True
+    date_range: bool = True
+    meals: bool = True
+    servings: bool = True
+    status: bool = True
+
+
+class ShoppingListsColumnVisibility(BaseModel):
+    """Column visibility for shopping lists table."""
+    name: bool = True
+    status: bool = True
+    progress: bool = True
+    estimated_cost: bool = True
+    created_at: bool = True
+    completed_at: bool = True
+
+
+class RestaurantMealsColumnVisibility(BaseModel):
+    """Column visibility for restaurant meals table."""
+    restaurant: bool = True
+    date: bool = True
+    meal_type: bool = True
+    order_type: bool = True
+    items: bool = True
+    rating: bool = True
+    feeling: bool = True
+
+
+class KitchenEquipmentColumnVisibility(BaseModel):
+    """Column visibility for kitchen equipment table."""
+    name: bool = True
+    category: bool = True
+    brand: bool = True
+    condition: bool = True
+    location: bool = True
+    maintenance: bool = True
+    created_at: bool = True
+
+
+class ColumnVisibility(BaseModel):
+    """Column visibility preferences for all modules."""
+    recipes: RecipesColumnVisibility = RecipesColumnVisibility()
+    groceries: GroceriesColumnVisibility = GroceriesColumnVisibility()
+    pantry: PantryColumnVisibility = PantryColumnVisibility()
+    mealPlans: MealPlansColumnVisibility = MealPlansColumnVisibility()
+    shoppingLists: ShoppingListsColumnVisibility = ShoppingListsColumnVisibility()
+    restaurantMeals: RestaurantMealsColumnVisibility = RestaurantMealsColumnVisibility()
+    kitchenEquipment: KitchenEquipmentColumnVisibility = KitchenEquipmentColumnVisibility()
 
 
 class UIVisibility(BaseModel):
@@ -25,6 +112,7 @@ class UIVisibility(BaseModel):
     showPageTitle: bool = True
     showPageSubtitle: bool = True
     showInsights: bool = True
+    showColumnSelector: bool = True  # Column visibility selector toggle
     # Common tabs
     showArchiveTab: bool = True
     showWasteTab: bool = True
@@ -73,6 +161,7 @@ class UIVisibility(BaseModel):
 class UIPreferencesResponse(BaseModel):
     """Response with UI preferences."""
     uiVisibility: UIVisibility
+    columnVisibility: ColumnVisibility
 
     class Config:
         from_attributes = True
@@ -81,6 +170,7 @@ class UIPreferencesResponse(BaseModel):
 class UIPreferencesUpdate(BaseModel):
     """Request body for updating UI preferences."""
     uiVisibility: Optional[UIVisibility] = None
+    columnVisibility: Optional[ColumnVisibility] = None
 
 
 # Default UI visibility preferences
@@ -94,6 +184,7 @@ DEFAULT_UI_VISIBILITY = {
     "showPageTitle": True,
     "showPageSubtitle": True,
     "showInsights": True,
+    "showColumnSelector": True,
     # Common tabs
     "showArchiveTab": True,
     "showWasteTab": True,
@@ -139,6 +230,71 @@ DEFAULT_UI_VISIBILITY = {
     "showDashboardNutrition": True,
 }
 
+# Default column visibility preferences
+DEFAULT_COLUMN_VISIBILITY = {
+    "recipes": {
+        "name": True,
+        "category": True,
+        "cuisine_type": True,
+        "time": True,
+        "servings": True,
+        "difficulty": True,
+        "rating": True,
+        "times_cooked": True,
+        "created_at": True,
+    },
+    "groceries": {
+        "item_name": True,
+        "category": True,
+        "quantity": True,
+        "purchase_date": True,
+        "expiry_date": True,
+        "cost": True,
+        "store": True,
+    },
+    "pantry": {
+        "item_name": True,
+        "storage_location": True,
+        "category": True,
+        "quantity": True,
+        "expiry_date": True,
+        "created_at": True,
+    },
+    "mealPlans": {
+        "name": True,
+        "date_range": True,
+        "meals": True,
+        "servings": True,
+        "status": True,
+    },
+    "shoppingLists": {
+        "name": True,
+        "status": True,
+        "progress": True,
+        "estimated_cost": True,
+        "created_at": True,
+        "completed_at": True,
+    },
+    "restaurantMeals": {
+        "restaurant": True,
+        "date": True,
+        "meal_type": True,
+        "order_type": True,
+        "items": True,
+        "rating": True,
+        "feeling": True,
+    },
+    "kitchenEquipment": {
+        "name": True,
+        "category": True,
+        "brand": True,
+        "condition": True,
+        "location": True,
+        "maintenance": True,
+        "created_at": True,
+    },
+}
+
 
 @router.get("/ui", response_model=UIPreferencesResponse)
 async def get_ui_preferences(
@@ -149,12 +305,20 @@ async def get_ui_preferences(
     """
     ui_prefs = current_user.ui_preferences or {}
     ui_visibility = ui_prefs.get("uiVisibility", DEFAULT_UI_VISIBILITY)
+    column_visibility = ui_prefs.get("columnVisibility", DEFAULT_COLUMN_VISIBILITY)
 
     # Merge with defaults to ensure all fields are present
     merged_visibility = {**DEFAULT_UI_VISIBILITY, **ui_visibility}
 
+    # Merge column visibility with defaults (deep merge per module)
+    merged_column_visibility = {}
+    for module, default_cols in DEFAULT_COLUMN_VISIBILITY.items():
+        user_cols = column_visibility.get(module, {})
+        merged_column_visibility[module] = {**default_cols, **user_cols}
+
     return UIPreferencesResponse(
-        uiVisibility=UIVisibility(**merged_visibility)
+        uiVisibility=UIVisibility(**merged_visibility),
+        columnVisibility=ColumnVisibility(**merged_column_visibility)
     )
 
 
@@ -175,6 +339,10 @@ async def update_ui_preferences(
     if request.uiVisibility:
         ui_prefs["uiVisibility"] = request.uiVisibility.model_dump()
 
+    # Update column visibility if provided
+    if request.columnVisibility:
+        ui_prefs["columnVisibility"] = request.columnVisibility.model_dump()
+
     # Save to database - assign new dict and flag as modified for SQLAlchemy
     current_user.ui_preferences = ui_prefs
     attributes.flag_modified(current_user, "ui_preferences")
@@ -185,6 +353,14 @@ async def update_ui_preferences(
     ui_visibility = ui_prefs.get("uiVisibility", DEFAULT_UI_VISIBILITY)
     merged_visibility = {**DEFAULT_UI_VISIBILITY, **ui_visibility}
 
+    # Merge column visibility with defaults
+    column_visibility = ui_prefs.get("columnVisibility", DEFAULT_COLUMN_VISIBILITY)
+    merged_column_visibility = {}
+    for module, default_cols in DEFAULT_COLUMN_VISIBILITY.items():
+        user_cols = column_visibility.get(module, {})
+        merged_column_visibility[module] = {**default_cols, **user_cols}
+
     return UIPreferencesResponse(
-        uiVisibility=UIVisibility(**merged_visibility)
+        uiVisibility=UIVisibility(**merged_visibility),
+        columnVisibility=ColumnVisibility(**merged_column_visibility)
     )

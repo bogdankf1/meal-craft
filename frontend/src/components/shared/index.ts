@@ -52,3 +52,7 @@ export type { TopItem, TopItemsListProps } from "./TopItemsList";
 
 // Feature gating
 export { FeatureGate } from "./FeatureGate";
+
+// Column Visibility
+export { ColumnVisibilitySelector } from "./ColumnVisibilitySelector";
+export type { ColumnConfig } from "./ColumnVisibilitySelector";

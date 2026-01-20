@@ -3,7 +3,86 @@ import { persist } from "zustand/middleware";
 
 export type SubscriptionTier = "HOME_COOK" | "CHEFS_CHOICE" | "MASTER_CHEF";
 export type UserRole = "USER" | "ADMIN";
-export type { UIVisibility };
+export type { UIVisibility, ColumnVisibility };
+
+// Column visibility types for each module
+interface RecipesColumnVisibility {
+  name: boolean;
+  category: boolean;
+  cuisine_type: boolean;
+  time: boolean;
+  servings: boolean;
+  difficulty: boolean;
+  rating: boolean;
+  times_cooked: boolean;
+  created_at: boolean;
+}
+
+interface GroceriesColumnVisibility {
+  item_name: boolean;
+  category: boolean;
+  quantity: boolean;
+  purchase_date: boolean;
+  expiry_date: boolean;
+  cost: boolean;
+  store: boolean;
+}
+
+interface PantryColumnVisibility {
+  item_name: boolean;
+  storage_location: boolean;
+  category: boolean;
+  quantity: boolean;
+  expiry_date: boolean;
+  created_at: boolean;
+}
+
+interface MealPlansColumnVisibility {
+  name: boolean;
+  date_range: boolean;
+  meals: boolean;
+  servings: boolean;
+  status: boolean;
+}
+
+interface ShoppingListsColumnVisibility {
+  name: boolean;
+  status: boolean;
+  progress: boolean;
+  estimated_cost: boolean;
+  created_at: boolean;
+  completed_at: boolean;
+}
+
+interface RestaurantMealsColumnVisibility {
+  restaurant: boolean;
+  date: boolean;
+  meal_type: boolean;
+  order_type: boolean;
+  items: boolean;
+  rating: boolean;
+  feeling: boolean;
+}
+
+interface KitchenEquipmentColumnVisibility {
+  name: boolean;
+  category: boolean;
+  brand: boolean;
+  condition: boolean;
+  location: boolean;
+  maintenance: boolean;
+  created_at: boolean;
+}
+
+interface ColumnVisibility {
+  recipes: RecipesColumnVisibility;
+  groceries: GroceriesColumnVisibility;
+  pantry: PantryColumnVisibility;
+  mealPlans: MealPlansColumnVisibility;
+  shoppingLists: ShoppingListsColumnVisibility;
+  restaurantMeals: RestaurantMealsColumnVisibility;
+  kitchenEquipment: KitchenEquipmentColumnVisibility;
+}
 
 interface UIVisibility {
   showStatsCards: boolean;
@@ -15,6 +94,7 @@ interface UIVisibility {
   showPageTitle: boolean;
   showPageSubtitle: boolean;
   showInsights: boolean;
+  showColumnSelector: boolean;
   // Common tabs
   showArchiveTab: boolean;
   showWasteTab: boolean;
@@ -68,6 +148,7 @@ interface UserPreferences {
   firstDayOfWeek: "monday" | "sunday";
   dateFormat: "DD/MM/YYYY" | "MM/DD/YYYY";
   uiVisibility: UIVisibility;
+  columnVisibility: ColumnVisibility;
 }
 
 interface UserState {
@@ -78,6 +159,10 @@ interface UserState {
   setRole: (role: UserRole) => void;
   setPreferences: (preferences: Partial<UserPreferences>) => void;
   setUIVisibility: (visibility: Partial<UIVisibility>) => void;
+  setColumnVisibility: <T extends keyof ColumnVisibility>(
+    module: T,
+    visibility: Partial<ColumnVisibility[T]>
+  ) => void;
   hasFeature: (feature: "PLUS" | "PRO") => boolean;
   isAdmin: () => boolean;
 }
@@ -92,6 +177,7 @@ const defaultUIVisibility: UIVisibility = {
   showPageTitle: true,
   showPageSubtitle: true,
   showInsights: true,
+  showColumnSelector: true,
   // Common tabs
   showArchiveTab: true,
   showWasteTab: true,
@@ -137,6 +223,70 @@ const defaultUIVisibility: UIVisibility = {
   showDashboardNutrition: true,
 };
 
+export const defaultColumnVisibility: ColumnVisibility = {
+  recipes: {
+    name: true,
+    category: true,
+    cuisine_type: true,
+    time: true,
+    servings: true,
+    difficulty: true,
+    rating: true,
+    times_cooked: true,
+    created_at: true,
+  },
+  groceries: {
+    item_name: true,
+    category: true,
+    quantity: true,
+    purchase_date: true,
+    expiry_date: true,
+    cost: true,
+    store: true,
+  },
+  pantry: {
+    item_name: true,
+    storage_location: true,
+    category: true,
+    quantity: true,
+    expiry_date: true,
+    created_at: true,
+  },
+  mealPlans: {
+    name: true,
+    date_range: true,
+    meals: true,
+    servings: true,
+    status: true,
+  },
+  shoppingLists: {
+    name: true,
+    status: true,
+    progress: true,
+    estimated_cost: true,
+    created_at: true,
+    completed_at: true,
+  },
+  restaurantMeals: {
+    restaurant: true,
+    date: true,
+    meal_type: true,
+    order_type: true,
+    items: true,
+    rating: true,
+    feeling: true,
+  },
+  kitchenEquipment: {
+    name: true,
+    category: true,
+    brand: true,
+    condition: true,
+    location: true,
+    maintenance: true,
+    created_at: true,
+  },
+};
+
 const defaultPreferences: UserPreferences = {
   locale: "en",
   theme: "system",
@@ -145,6 +295,7 @@ const defaultPreferences: UserPreferences = {
   firstDayOfWeek: "monday",
   dateFormat: "DD/MM/YYYY",
   uiVisibility: defaultUIVisibility,
+  columnVisibility: defaultColumnVisibility,
 };
 
 export const useUserStore = create<UserState>()(
@@ -169,6 +320,20 @@ export const useUserStore = create<UserState>()(
             uiVisibility: {
               ...state.preferences.uiVisibility,
               ...visibility,
+            },
+          },
+        })),
+
+      setColumnVisibility: (module, visibility) =>
+        set((state) => ({
+          preferences: {
+            ...state.preferences,
+            columnVisibility: {
+              ...state.preferences.columnVisibility,
+              [module]: {
+                ...state.preferences.columnVisibility[module],
+                ...visibility,
+              },
             },
           },
         })),

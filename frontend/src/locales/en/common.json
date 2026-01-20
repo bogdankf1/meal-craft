@@ -158,6 +158,8 @@
     "active": "Active",
     "archived": "Archived"
   },
+  "columns": "Columns",
+  "resetToDefault": "Reset to default",
   "theme": {
     "light": "Light",
     "dark": "Dark",
@@ -2969,6 +2971,10 @@
           "showSorting": {
             "label": "Sorting",
             "description": "Show sort options"
+          },
+          "showColumnSelector": {
+            "label": "Column Selector",
+            "description": "Show column visibility toggle in tables"
           }
         },
         "tabs": {

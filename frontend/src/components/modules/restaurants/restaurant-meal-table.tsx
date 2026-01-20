@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTablePagination } from "@/components/shared";
+import { DataTablePagination, ColumnVisibilitySelector, type ColumnConfig } from "@/components/shared";
 import {
   useDeleteRestaurantMealMutation,
   useBulkArchiveRestaurantMealsMutation,
@@ -45,6 +45,7 @@ import {
   type RestaurantMealListResponse,
 } from "@/lib/api/restaurants-api";
 import { cn } from "@/lib/utils";
+import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface RestaurantMealTableProps {
   data?: RestaurantMealListResponse;
@@ -67,6 +68,21 @@ export function RestaurantMealTable({
 }: RestaurantMealTableProps) {
   const t = useTranslations("restaurants");
   const tCommon = useTranslations("common");
+
+  const { preferences } = useUserStore();
+  const columnVisibility = preferences.columnVisibility?.restaurantMeals ?? defaultColumnVisibility.restaurantMeals;
+  const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+
+  // Column configuration for visibility selector
+  const columnConfig: ColumnConfig[] = [
+    { key: "restaurant", label: t("table.restaurant"), mandatory: true },
+    { key: "date", label: t("table.date") },
+    { key: "meal_type", label: t("table.mealType") },
+    { key: "order_type", label: t("table.orderType") },
+    { key: "items", label: t("table.items") },
+    { key: "rating", label: t("table.rating") },
+    { key: "feeling", label: t("table.feeling") },
+  ];
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -258,8 +274,18 @@ export function RestaurantMealTable({
     );
   }
 
+  // Count visible columns for colSpan
+  const visibleColumnCount = Object.values(columnVisibility).filter(Boolean).length + 2; // +2 for checkbox and actions
+
   return (
     <div className="space-y-4">
+      {/* Column visibility selector */}
+      {showColumnSelector && (
+        <div className="flex justify-end">
+          <ColumnVisibilitySelector module="restaurantMeals" columns={columnConfig} />
+        </div>
+      )}
+
       {/* Selection bar - always visible */}
       <div className="flex items-center gap-2 px-3 h-12 bg-muted/50 rounded-lg">
         {hasSelected ? (
@@ -302,20 +328,20 @@ export function RestaurantMealTable({
               <TableHead className="w-12">
                 <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
               </TableHead>
-              <TableHead>{t("table.restaurant")}</TableHead>
-              <TableHead>{t("table.date")}</TableHead>
-              <TableHead>{t("table.mealType")}</TableHead>
-              <TableHead>{t("table.orderType")}</TableHead>
-              <TableHead>{t("table.items")}</TableHead>
-              <TableHead>{t("table.rating")}</TableHead>
-              <TableHead>{t("table.feeling")}</TableHead>
+              {columnVisibility.restaurant && <TableHead>{t("table.restaurant")}</TableHead>}
+              {columnVisibility.date && <TableHead>{t("table.date")}</TableHead>}
+              {columnVisibility.meal_type && <TableHead>{t("table.mealType")}</TableHead>}
+              {columnVisibility.order_type && <TableHead>{t("table.orderType")}</TableHead>}
+              {columnVisibility.items && <TableHead>{t("table.items")}</TableHead>}
+              {columnVisibility.rating && <TableHead>{t("table.rating")}</TableHead>}
+              {columnVisibility.feeling && <TableHead>{t("table.feeling")}</TableHead>}
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {meals.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={visibleColumnCount} className="text-center py-8 text-muted-foreground">
                   {t("table.noMeals")}
                 </TableCell>
               </TableRow>
@@ -335,37 +361,51 @@ export function RestaurantMealTable({
                       onCheckedChange={() => toggleOne(meal.id)}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{meal.restaurant_name}</TableCell>
-                  <TableCell>
-                    {format(parseISO(meal.meal_date), "MMM d, yyyy")}
-                    {meal.meal_time && (
-                      <span className="text-muted-foreground text-xs block">
-                        {meal.meal_time}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {t(`mealTypes.${meal.meal_type}`)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                      {getOrderTypeIcon(meal.order_type)}
-                      {t(`orderTypes.${meal.order_type}`)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[200px]">
-                    {meal.items_ordered && meal.items_ordered.length > 0 ? (
-                      <span className="truncate block">
-                        {meal.items_ordered.join(", ")}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{renderRating(meal.rating, "star")}</TableCell>
-                  <TableCell>{renderRating(meal.feeling_after, "heart")}</TableCell>
+                  {columnVisibility.restaurant && (
+                    <TableCell className="font-medium">{meal.restaurant_name}</TableCell>
+                  )}
+                  {columnVisibility.date && (
+                    <TableCell>
+                      {format(parseISO(meal.meal_date), "MMM d, yyyy")}
+                      {meal.meal_time && (
+                        <span className="text-muted-foreground text-xs block">
+                          {meal.meal_time}
+                        </span>
+                      )}
+                    </TableCell>
+                  )}
+                  {columnVisibility.meal_type && (
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {t(`mealTypes.${meal.meal_type}`)}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {columnVisibility.order_type && (
+                    <TableCell>
+                      <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                        {getOrderTypeIcon(meal.order_type)}
+                        {t(`orderTypes.${meal.order_type}`)}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {columnVisibility.items && (
+                    <TableCell className="max-w-[200px]">
+                      {meal.items_ordered && meal.items_ordered.length > 0 ? (
+                        <span className="truncate block">
+                          {meal.items_ordered.join(", ")}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                  )}
+                  {columnVisibility.rating && (
+                    <TableCell>{renderRating(meal.rating, "star")}</TableCell>
+                  )}
+                  {columnVisibility.feeling && (
+                    <TableCell>{renderRating(meal.feeling_after, "heart")}</TableCell>
+                  )}
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

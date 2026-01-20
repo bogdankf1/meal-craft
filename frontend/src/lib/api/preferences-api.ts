@@ -1,12 +1,14 @@
 import { baseApi } from "./base-api";
-import type { UIVisibility } from "@/lib/store/user-store";
+import type { UIVisibility, ColumnVisibility } from "@/lib/store/user-store";
 
 interface UIPreferencesResponse {
   uiVisibility: UIVisibility;
+  columnVisibility: ColumnVisibility;
 }
 
 interface UIPreferencesUpdate {
-  uiVisibility: Partial<UIVisibility>;
+  uiVisibility?: Partial<UIVisibility>;
+  columnVisibility?: Partial<ColumnVisibility>;
 }
 
 export const preferencesApi = baseApi.injectEndpoints({

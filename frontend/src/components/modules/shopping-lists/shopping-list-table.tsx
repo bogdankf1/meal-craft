@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Pencil,
@@ -19,7 +20,9 @@ import {
   DataTableColumn,
   BulkAction,
   RowAction,
-} from "@/components/shared/DataTable";
+  ColumnVisibilitySelector,
+  type ColumnConfig,
+} from "@/components/shared";
 import {
   useDeleteShoppingListMutation,
   useBulkDeleteShoppingListsMutation,
@@ -30,6 +33,7 @@ import {
   type ShoppingListListResponse,
 } from "@/lib/api/shopping-lists-api";
 import { useCurrency } from "@/components/providers/currency-provider";
+import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface ShoppingListTableProps {
   data: ShoppingListListResponse | undefined;
@@ -65,6 +69,10 @@ export function ShoppingListTable({
   const tCommon = useTranslations("common");
   const { formatPriceFromUAH } = useCurrency();
 
+  const { preferences } = useUserStore();
+  const columnVisibility = preferences.columnVisibility?.shoppingLists ?? defaultColumnVisibility.shoppingLists;
+  const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+
   const [deleteList, { isLoading: isDeleting }] = useDeleteShoppingListMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteShoppingListsMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveShoppingListsMutation();
@@ -73,7 +81,17 @@ export function ShoppingListTable({
 
   const items = data?.items || [];
 
-  const columns: DataTableColumn<ShoppingListSummary>[] = [
+  // Column configuration for visibility selector
+  const columnConfig: ColumnConfig[] = [
+    { key: "name", label: t("table.name"), mandatory: true },
+    { key: "status", label: t("table.status") },
+    { key: "progress", label: t("table.progress") },
+    { key: "estimated_cost", label: t("table.estimatedCost") },
+    { key: "created_at", label: t("table.createdAt") },
+    { key: "completed_at", label: t("table.completedAt") },
+  ];
+
+  const allColumns: DataTableColumn<ShoppingListSummary>[] = [
     {
       key: "name",
       header: t("table.name"),
@@ -127,6 +145,13 @@ export function ShoppingListTable({
           : "-",
     },
   ];
+
+  // Filter columns based on visibility
+  const columns = useMemo(
+    () => allColumns.filter((col) => columnVisibility[col.key as keyof typeof columnVisibility]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnVisibility]
+  );
 
   const bulkActions: BulkAction[] = [
     ...(isArchiveView
@@ -213,51 +238,58 @@ export function ShoppingListTable({
   ];
 
   return (
-    <DataTable
-      items={items}
-      columns={columns}
-      isLoading={isLoading}
-      pagination={
-        data
-          ? {
-              page,
-              totalPages: data.total_pages,
-              total: data.total,
+    <div className="space-y-4">
+      {showColumnSelector && (
+        <div className="flex justify-end">
+          <ColumnVisibilitySelector module="shoppingLists" columns={columnConfig} />
+        </div>
+      )}
+      <DataTable
+        items={items}
+        columns={columns}
+        isLoading={isLoading}
+        pagination={
+          data
+            ? {
+                page,
+                totalPages: data.total_pages,
+                total: data.total,
+              }
+            : undefined
+        }
+        onPageChange={onPageChange}
+        selectable
+        bulkActions={bulkActions}
+        rowActions={rowActions}
+        deleteConfig={{
+          getItemName: (list) => list.name,
+          onDelete: async (list) => {
+            try {
+              await deleteList(list.id).unwrap();
+              toast.success(t("messages.listDeleted"));
+            } catch {
+              toast.error(t("messages.errorDeleting"));
             }
-          : undefined
-      }
-      onPageChange={onPageChange}
-      selectable
-      bulkActions={bulkActions}
-      rowActions={rowActions}
-      deleteConfig={{
-        getItemName: (list) => list.name,
-        onDelete: async (list) => {
-          try {
-            await deleteList(list.id).unwrap();
-            toast.success(t("messages.listDeleted"));
-          } catch {
-            toast.error(t("messages.errorDeleting"));
-          }
-        },
-        isDeleting,
-        title: t("confirmDelete.title"),
-      }}
-      texts={{
-        loading: tCommon("loading"),
-        selectedCount: (count: number) => t("table.selectedCount", { count }),
-        itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
-        selectToAction: t("table.selectToAction"),
-        pageInfo: (page: number, totalPages: number, total: number) =>
-          t("table.pageInfo", { page, totalPages, total }),
-        previous: tCommon("previous"),
-        next: tCommon("next"),
-        deleteTitle: t("confirmDelete.title"),
-        deleteDescription: (name: string) => t("confirmDelete.description", { name }),
-        cancel: tCommon("cancel"),
-        delete: tCommon("delete"),
-        deleting: t("table.deleting"),
-      }}
-    />
+          },
+          isDeleting,
+          title: t("confirmDelete.title"),
+        }}
+        texts={{
+          loading: tCommon("loading"),
+          selectedCount: (count: number) => t("table.selectedCount", { count }),
+          itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
+          selectToAction: t("table.selectToAction"),
+          pageInfo: (page: number, totalPages: number, total: number) =>
+            t("table.pageInfo", { page, totalPages, total }),
+          previous: tCommon("previous"),
+          next: tCommon("next"),
+          deleteTitle: t("confirmDelete.title"),
+          deleteDescription: (name: string) => t("confirmDelete.description", { name }),
+          cancel: tCommon("cancel"),
+          delete: tCommon("delete"),
+          deleting: t("table.deleting"),
+        }}
+      />
+    </div>
   );
 }

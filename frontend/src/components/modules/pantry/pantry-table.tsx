@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import {
   Pencil,
@@ -26,7 +26,9 @@ import {
   DataTableColumn,
   BulkAction,
   RowAction,
-} from "@/components/shared/DataTable";
+  ColumnVisibilitySelector,
+  type ColumnConfig,
+} from "@/components/shared";
 import {
   useDeletePantryItemMutation,
   useBulkDeletePantryItemsMutation,
@@ -38,6 +40,7 @@ import {
 } from "@/lib/api/pantry-api";
 import { MarkAsWastedPantryDialog } from "./mark-as-wasted-pantry-dialog";
 import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
+import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface PantryTableProps {
   data: PantryListResponse | undefined;
@@ -113,6 +116,10 @@ export function PantryTable({
   const tCommon = useTranslations("common");
   const tShoppingLists = useTranslations("shoppingLists");
 
+  const { preferences } = useUserStore();
+  const columnVisibility = preferences.columnVisibility?.pantry ?? defaultColumnVisibility.pantry;
+  const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+
   const [deletePantryItem, { isLoading: isDeleting }] = useDeletePantryItemMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeletePantryItemsMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchivePantryItemsMutation();
@@ -136,6 +143,16 @@ export function PantryTable({
 
   const items = data?.items || [];
 
+  // Column configuration for visibility selector
+  const columnConfig: ColumnConfig[] = [
+    { key: "item_name", label: t("table.item"), mandatory: true },
+    { key: "storage_location", label: t("table.location") },
+    { key: "category", label: t("table.category") },
+    { key: "quantity", label: t("table.quantity") },
+    { key: "expiry_date", label: t("table.expiry") },
+    { key: "created_at", label: t("table.addedOn") },
+  ];
+
   // Helper to convert pantry item to waste item format
   const pantryToWasteItem = (item: PantryItem) => ({
     id: item.id,
@@ -150,8 +167,8 @@ export function PantryTable({
     category: item.category,
   });
 
-  // Define columns
-  const columns: DataTableColumn<PantryItem>[] = [
+  // Define all columns
+  const allColumns: DataTableColumn<PantryItem>[] = [
     {
       key: "item_name",
       header: t("table.item"),
@@ -249,6 +266,13 @@ export function PantryTable({
         format(parseISO(item.created_at), "MMM d, yyyy"),
     },
   ];
+
+  // Filter columns based on visibility
+  const columns = useMemo(
+    () => allColumns.filter((col) => columnVisibility[col.key as keyof typeof columnVisibility]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnVisibility]
+  );
 
   // Define bulk actions
   const bulkActions: BulkAction[] = [
@@ -373,52 +397,59 @@ export function PantryTable({
 
   return (
     <>
-      <DataTable
-        items={items}
-        columns={columns}
-        isLoading={isLoading}
-        pagination={
-          data
-            ? {
-                page,
-                totalPages: data.total_pages,
-                total: data.total,
+      <div className="space-y-4">
+        {showColumnSelector && (
+          <div className="flex justify-end">
+            <ColumnVisibilitySelector module="pantry" columns={columnConfig} />
+          </div>
+        )}
+        <DataTable
+          items={items}
+          columns={columns}
+          isLoading={isLoading}
+          pagination={
+            data
+              ? {
+                  page,
+                  totalPages: data.total_pages,
+                  total: data.total,
+                }
+              : undefined
+          }
+          onPageChange={onPageChange}
+          selectable
+          bulkActions={bulkActions}
+          rowActions={rowActions}
+          deleteConfig={{
+            getItemName: (item) => item.item_name,
+            onDelete: async (item) => {
+              try {
+                await deletePantryItem(item.id).unwrap();
+                toast.success(t("messages.itemDeleted"));
+              } catch {
+                toast.error(t("messages.errorDeleting"));
               }
-            : undefined
-        }
-        onPageChange={onPageChange}
-        selectable
-        bulkActions={bulkActions}
-        rowActions={rowActions}
-        deleteConfig={{
-          getItemName: (item) => item.item_name,
-          onDelete: async (item) => {
-            try {
-              await deletePantryItem(item.id).unwrap();
-              toast.success(t("messages.itemDeleted"));
-            } catch {
-              toast.error(t("messages.errorDeleting"));
-            }
-          },
-          isDeleting,
-          title: t("confirmDelete.title"),
-        }}
-        texts={{
-          loading: t("filters.loading"),
-          selectedCount: (count: number) => t("table.selectedCount", { count }),
-          itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
-          selectToAction: t("table.selectToAction"),
-          pageInfo: (page: number, totalPages: number, total: number) =>
-            t("table.pageInfo", { page, totalPages, total }),
-          previous: tCommon("previous"),
-          next: tCommon("next"),
-          deleteTitle: t("confirmDelete.title"),
-          deleteDescription: (name: string) => t("confirmDelete.description", { name }),
-          cancel: tCommon("cancel"),
-          delete: tCommon("delete"),
-          deleting: t("table.deleting"),
-        }}
-      />
+            },
+            isDeleting,
+            title: t("confirmDelete.title"),
+          }}
+          texts={{
+            loading: t("filters.loading"),
+            selectedCount: (count: number) => t("table.selectedCount", { count }),
+            itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
+            selectToAction: t("table.selectToAction"),
+            pageInfo: (page: number, totalPages: number, total: number) =>
+              t("table.pageInfo", { page, totalPages, total }),
+            previous: tCommon("previous"),
+            next: tCommon("next"),
+            deleteTitle: t("confirmDelete.title"),
+            deleteDescription: (name: string) => t("confirmDelete.description", { name }),
+            cancel: tCommon("cancel"),
+            delete: tCommon("delete"),
+            deleting: t("table.deleting"),
+          }}
+        />
+      </div>
 
       <MarkAsWastedPantryDialog
         open={markAsWastedOpen}

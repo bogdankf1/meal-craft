@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Pencil,
@@ -28,7 +28,9 @@ import {
   DataTableColumn,
   BulkAction,
   RowAction,
-} from "@/components/shared/DataTable";
+  ColumnVisibilitySelector,
+  type ColumnConfig,
+} from "@/components/shared";
 import {
   useDeleteRecipeMutation,
   useBulkDeleteRecipesMutation,
@@ -39,6 +41,7 @@ import {
   type RecipeListItem,
   type RecipeListResponse,
 } from "@/lib/api/recipes-api";
+import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface RecipeTableProps {
   data: RecipeListResponse | undefined;
@@ -130,6 +133,10 @@ export function RecipeTable({
   const t = useTranslations("recipes");
   const tCommon = useTranslations("common");
 
+  const { preferences } = useUserStore();
+  const columnVisibility = preferences.columnVisibility?.recipes ?? defaultColumnVisibility.recipes;
+  const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+
   const [deleteRecipe, { isLoading: isDeleting }] = useDeleteRecipeMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteRecipesMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveRecipesMutation();
@@ -139,8 +146,21 @@ export function RecipeTable({
 
   const items = data?.items || [];
 
-  // Define columns
-  const columns: DataTableColumn<RecipeListItem>[] = [
+  // Column configuration for visibility selector
+  const columnConfig: ColumnConfig[] = [
+    { key: "name", label: t("table.name"), mandatory: true },
+    { key: "category", label: t("table.category") },
+    { key: "cuisine_type", label: t("table.cuisine") },
+    { key: "time", label: t("table.time") },
+    { key: "servings", label: t("table.servings") },
+    { key: "difficulty", label: t("table.difficulty") },
+    { key: "rating", label: t("table.rating") },
+    { key: "times_cooked", label: t("table.cooked") },
+    { key: "created_at", label: t("table.addedOn") },
+  ];
+
+  // Define all columns
+  const allColumns: DataTableColumn<RecipeListItem>[] = [
     {
       key: "name",
       header: t("table.name"),
@@ -234,6 +254,13 @@ export function RecipeTable({
       render: (item) => format(parseISO(item.created_at), "MMM d, yyyy"),
     },
   ];
+
+  // Filter columns based on visibility
+  const columns = useMemo(
+    () => allColumns.filter((col) => columnVisibility[col.key as keyof typeof columnVisibility]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnVisibility]
+  );
 
   // Define bulk actions
   const bulkActions: BulkAction[] = [
@@ -380,51 +407,58 @@ export function RecipeTable({
   ];
 
   return (
-    <DataTable
-      items={items}
-      columns={columns}
-      isLoading={isLoading}
-      pagination={
-        data
-          ? {
-              page,
-              totalPages: data.total_pages,
-              total: data.total,
+    <div className="space-y-4">
+      {showColumnSelector && (
+        <div className="flex justify-end">
+          <ColumnVisibilitySelector module="recipes" columns={columnConfig} />
+        </div>
+      )}
+      <DataTable
+        items={items}
+        columns={columns}
+        isLoading={isLoading}
+        pagination={
+          data
+            ? {
+                page,
+                totalPages: data.total_pages,
+                total: data.total,
+              }
+            : undefined
+        }
+        onPageChange={onPageChange}
+        selectable
+        bulkActions={bulkActions}
+        rowActions={rowActions}
+        deleteConfig={{
+          getItemName: (item) => item.name,
+          onDelete: async (item) => {
+            try {
+              await deleteRecipe(item.id).unwrap();
+              toast.success(t("messages.itemDeleted"));
+            } catch {
+              toast.error(t("messages.errorDeleting"));
             }
-          : undefined
-      }
-      onPageChange={onPageChange}
-      selectable
-      bulkActions={bulkActions}
-      rowActions={rowActions}
-      deleteConfig={{
-        getItemName: (item) => item.name,
-        onDelete: async (item) => {
-          try {
-            await deleteRecipe(item.id).unwrap();
-            toast.success(t("messages.itemDeleted"));
-          } catch {
-            toast.error(t("messages.errorDeleting"));
-          }
-        },
-        isDeleting,
-        title: t("confirmDelete.title"),
-      }}
-      texts={{
-        loading: t("filters.loading"),
-        selectedCount: (count: number) => t("table.selectedCount", { count }),
-        itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
-        selectToAction: t("table.selectToAction"),
-        pageInfo: (page: number, totalPages: number, total: number) =>
-          t("table.pageInfo", { page, totalPages, total }),
-        previous: tCommon("previous"),
-        next: tCommon("next"),
-        deleteTitle: t("confirmDelete.title"),
-        deleteDescription: (name: string) => t("confirmDelete.description", { name }),
-        cancel: tCommon("cancel"),
-        delete: tCommon("delete"),
-        deleting: t("table.deleting"),
-      }}
-    />
+          },
+          isDeleting,
+          title: t("confirmDelete.title"),
+        }}
+        texts={{
+          loading: t("filters.loading"),
+          selectedCount: (count: number) => t("table.selectedCount", { count }),
+          itemsOnPage: (count: number) => t("table.itemsOnPage", { count }),
+          selectToAction: t("table.selectToAction"),
+          pageInfo: (page: number, totalPages: number, total: number) =>
+            t("table.pageInfo", { page, totalPages, total }),
+          previous: tCommon("previous"),
+          next: tCommon("next"),
+          deleteTitle: t("confirmDelete.title"),
+          deleteDescription: (name: string) => t("confirmDelete.description", { name }),
+          cancel: tCommon("cancel"),
+          delete: tCommon("delete"),
+          deleting: t("table.deleting"),
+        }}
+      />
+    </div>
   );
 }
