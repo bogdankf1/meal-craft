@@ -2058,7 +2058,8 @@
         "anyCuisine": "Any Cuisine",
         "anyMealType": "Any Style",
         "anyCategory": "Any Category",
-        "anyDifficulty": "Any Difficulty"
+        "anyDifficulty": "Any Difficulty",
+        "useAvailableIngredients": "Generate recipes only with products from my Groceries and Pantry"
       },
       "mealTypes": {
         "quick_easy": "Quick & Easy",
@@ -3031,6 +3032,123 @@
           }
         },
         "settingsUpdated": "Interface settings updated"
+      },
+      "sidebarNavigation": {
+        "title": "Sidebar Navigation",
+        "description": "Show or hide navigation items in the sidebar. Hidden sections will be automatically collapsed.",
+        "planning": {
+          "title": "Planning",
+          "mealPlanner": {
+            "label": "Meal Planner",
+            "description": "Plan your weekly meals"
+          },
+          "recipes": {
+            "label": "Recipes",
+            "description": "Manage your recipe collection"
+          },
+          "shoppingLists": {
+            "label": "Shopping Lists",
+            "description": "Create and manage shopping lists"
+          }
+        },
+        "inventory": {
+          "title": "Inventory",
+          "groceries": {
+            "label": "Groceries",
+            "description": "Track your grocery purchases"
+          },
+          "pantry": {
+            "label": "Pantry & Storage",
+            "description": "Manage your pantry items"
+          },
+          "kitchenEquipment": {
+            "label": "Kitchen Equipment",
+            "description": "Track kitchen tools and appliances"
+          }
+        },
+        "tracking": {
+          "title": "Tracking",
+          "restaurants": {
+            "label": "Restaurants & Takeout",
+            "description": "Log restaurant meals and takeout"
+          },
+          "nutrition": {
+            "label": "Nutrition",
+            "description": "Track nutritional information"
+          }
+        },
+        "lifestyle": {
+          "title": "Lifestyle",
+          "seasonality": {
+            "label": "Seasonality",
+            "description": "Discover seasonal produce"
+          },
+          "learning": {
+            "label": "Learning & Skills",
+            "description": "Learn cooking skills and techniques"
+          }
+        },
+        "tools": {
+          "title": "Tools",
+          "export": {
+            "label": "Export",
+            "description": "Export your data"
+          },
+          "backups": {
+            "label": "Backups",
+            "description": "Manage data backups"
+          },
+          "help": {
+            "label": "Help Center",
+            "description": "Get help and support"
+          }
+        }
+      },
+      "dashboardContent": {
+        "title": "Dashboard Content",
+        "description": "Show or hide content sections on your dashboard.",
+        "mainContent": {
+          "title": "Main Content",
+          "stats": {
+            "label": "Stats Cards",
+            "description": "Show overview statistics like meals planned, pantry items, etc."
+          },
+          "upcomingMeals": {
+            "label": "Upcoming Meals",
+            "description": "Show your upcoming planned meals"
+          },
+          "expiringSoon": {
+            "label": "Expiring Soon",
+            "description": "Show items that are expiring soon"
+          },
+          "recentActivity": {
+            "label": "Recent Activity",
+            "description": "Show your recent actions and updates"
+          },
+          "quickActions": {
+            "label": "Quick Actions",
+            "description": "Show quick action buttons"
+          }
+        },
+        "insights": {
+          "title": "Insights",
+          "wasteAnalytics": {
+            "label": "Waste Analytics",
+            "description": "Show food waste tracking and statistics"
+          },
+          "skillsProgress": {
+            "label": "Skills Progress",
+            "description": "Show your cooking skills progression"
+          },
+          "seasonalInsights": {
+            "label": "Seasonal & Equipment",
+            "description": "Show seasonal produce and kitchen equipment insights"
+          },
+          "nutrition": {
+            "label": "Nutrition Progress",
+            "description": "Show your nutrition goals and progress"
+          }
+        }
       }
     },
     "notifications": {

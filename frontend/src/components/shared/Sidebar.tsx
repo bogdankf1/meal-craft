@@ -43,6 +43,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import { useGetMeQuery } from "@/lib/api/auth-api";
+import { useUserStore, type UIVisibility } from "@/lib/store/user-store";
 
 // Extended session type that includes backend fields (matches auth.ts module augmentation)
 interface ExtendedSession extends Session {
@@ -53,6 +54,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  visibilityKey?: keyof UIVisibility;
 }
 
 interface NavGroup {
@@ -64,40 +66,40 @@ const navGroups: NavGroup[] = [
   {
     label: "planning",
     items: [
-      { href: "/meal-planner", label: "mealPlanner", icon: Calendar },
-      { href: "/recipes", label: "recipes", icon: BookOpen },
-      { href: "/shopping-lists", label: "shoppingLists", icon: ShoppingCart },
+      { href: "/meal-planner", label: "mealPlanner", icon: Calendar, visibilityKey: "showSidebarMealPlanner" },
+      { href: "/recipes", label: "recipes", icon: BookOpen, visibilityKey: "showSidebarRecipes" },
+      { href: "/shopping-lists", label: "shoppingLists", icon: ShoppingCart, visibilityKey: "showSidebarShoppingLists" },
     ],
   },
   {
     label: "inventory",
     items: [
-      { href: "/groceries", label: "groceries", icon: Carrot },
-      { href: "/pantry", label: "pantry", icon: Archive },
-      { href: "/kitchen-equipment", label: "kitchenEquipment", icon: Utensils },
+      { href: "/groceries", label: "groceries", icon: Carrot, visibilityKey: "showSidebarGroceries" },
+      { href: "/pantry", label: "pantry", icon: Archive, visibilityKey: "showSidebarPantry" },
+      { href: "/kitchen-equipment", label: "kitchenEquipment", icon: Utensils, visibilityKey: "showSidebarKitchenEquipment" },
     ],
   },
   {
     label: "tracking",
     items: [
-      { href: "/restaurants", label: "restaurants", icon: Pizza },
-      { href: "/nutrition", label: "nutrition", icon: Dumbbell },
+      { href: "/restaurants", label: "restaurants", icon: Pizza, visibilityKey: "showSidebarRestaurants" },
+      { href: "/nutrition", label: "nutrition", icon: Dumbbell, visibilityKey: "showSidebarNutrition" },
     ],
   },
   {
     label: "lifestyle",
     items: [
-      { href: "/seasonality", label: "seasonality", icon: Leaf },
-      { href: "/learning", label: "learning", icon: GraduationCap },
+      { href: "/seasonality", label: "seasonality", icon: Leaf, visibilityKey: "showSidebarSeasonality" },
+      { href: "/learning", label: "learning", icon: GraduationCap, visibilityKey: "showSidebarLearning" },
       // { href: "/health", label: "health", icon: Heart }, // Hidden until web-compatible health integrations are available
     ],
   },
   {
     label: "tools",
     items: [
-      { href: "/export", label: "export", icon: Download },
-      { href: "/backups", label: "backups", icon: RefreshCw },
-      { href: "/help", label: "help", icon: HelpCircle },
+      { href: "/export", label: "export", icon: Download, visibilityKey: "showSidebarExport" },
+      { href: "/backups", label: "backups", icon: RefreshCw, visibilityKey: "showSidebarBackups" },
+      { href: "/help", label: "help", icon: HelpCircle, visibilityKey: "showSidebarHelp" },
     ],
   },
 ];
@@ -117,6 +119,20 @@ export function Sidebar({ onClose }: SidebarProps) {
   const { data: userData } = useGetMeQuery(undefined, {
     skip: sessionStatus !== "authenticated",
   });
+
+  // Get UI visibility settings
+  const { preferences } = useUserStore();
+  const uiVisibility = preferences.uiVisibility;
+
+  // Filter nav items based on visibility settings
+  const filteredNavGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        !item.visibilityKey || uiVisibility[item.visibilityKey]
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   // Initialize state with values from localStorage (SSR-safe with lazy init)
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -210,62 +226,66 @@ export function Sidebar({ onClose }: SidebarProps) {
           </Link>
         </div>
 
-        <Separator className="my-2" />
+        {filteredNavGroups.length > 0 && (
+          <>
+            <Separator className="my-2" />
 
-        {/* Collapsible groups */}
-        {isCollapsed ? (
-          // Collapsed view - just icons
-          <div className="px-3 space-y-1">
-            {navGroups.flatMap((group) =>
-              group.items.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <Button
-                    variant={isActive(item.href) ? "secondary" : "ghost"}
-                    size="icon"
-                    className="w-full"
-                    title={t(item.label)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                  </Button>
-                </Link>
-              ))
-            )}
-          </div>
-        ) : (
-          // Expanded view - accordion groups
-          <Accordion
-            type="multiple"
-            value={expandedGroups}
-            onValueChange={handleGroupChange}
-            className="px-3"
-          >
-            {navGroups.map((group) => (
-              <AccordionItem
-                key={group.label}
-                value={group.label}
-                className="border-none"
+            {/* Collapsible groups */}
+            {isCollapsed ? (
+              // Collapsed view - just icons
+              <div className="px-3 space-y-1">
+                {filteredNavGroups.flatMap((group) =>
+                  group.items.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <Button
+                        variant={isActive(item.href) ? "secondary" : "ghost"}
+                        size="icon"
+                        className="w-full"
+                        title={t(item.label)}
+                      >
+                        <item.icon className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                  ))
+                )}
+              </div>
+            ) : (
+              // Expanded view - accordion groups
+              <Accordion
+                type="multiple"
+                value={expandedGroups}
+                onValueChange={handleGroupChange}
+                className="px-3"
               >
-                <AccordionTrigger className="py-2 text-xs font-semibold uppercase text-muted-foreground hover:no-underline">
-                  {t(group.label)}
-                </AccordionTrigger>
-                <AccordionContent className="pb-2">
-                  <div className="space-y-1">
-                    {group.items.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        <Button
-                          variant={isActive(item.href) ? "secondary" : "ghost"}
-                          className="w-full justify-start gap-3"
-                        >
-                          <item.icon className="h-5 w-5 shrink-0" />
-                          <span>{t(item.label)}</span>
-                        </Button>
-                      </Link>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                {filteredNavGroups.map((group) => (
+                  <AccordionItem
+                    key={group.label}
+                    value={group.label}
+                    className="border-none"
+                  >
+                    <AccordionTrigger className="py-2 text-xs font-semibold uppercase text-muted-foreground hover:no-underline">
+                      {t(group.label)}
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-2">
+                      <div className="space-y-1">
+                        {group.items.map((item) => (
+                          <Link key={item.href} href={item.href}>
+                            <Button
+                              variant={isActive(item.href) ? "secondary" : "ghost"}
+                              className="w-full justify-start gap-3"
+                            >
+                              <item.icon className="h-5 w-5 shrink-0" />
+                              <span>{t(item.label)}</span>
+                            </Button>
+                          </Link>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </>
         )}
 
         <Separator className="my-2" />
@@ -377,6 +397,20 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
     skip: sessionStatus !== "authenticated",
   });
 
+  // Get UI visibility settings
+  const { preferences } = useUserStore();
+  const uiVisibility = preferences.uiVisibility;
+
+  // Filter nav items based on visibility settings
+  const filteredNavGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        !item.visibilityKey || uiVisibility[item.visibilityKey]
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+
   const [expandedGroups, setExpandedGroups] = useState<string[]>(() => {
     if (typeof window === "undefined") {
       return ["planning", "inventory", "tracking", "lifestyle", "tools"];
@@ -461,48 +495,52 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             </div>
 
-            <Separator className="my-2" />
+            {filteredNavGroups.length > 0 && (
+              <>
+                <Separator className="my-2" />
 
-            {/* Accordion groups */}
-            <Accordion
-              type="multiple"
-              value={expandedGroups}
-              onValueChange={handleGroupChange}
-              className="px-3"
-            >
-              {navGroups.map((group) => (
-                <AccordionItem
-                  key={group.label}
-                  value={group.label}
-                  className="border-none"
+                {/* Accordion groups */}
+                <Accordion
+                  type="multiple"
+                  value={expandedGroups}
+                  onValueChange={handleGroupChange}
+                  className="px-3"
                 >
-                  <AccordionTrigger className="py-2 text-xs font-semibold uppercase text-muted-foreground hover:no-underline">
-                    {t(group.label)}
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-2">
-                    <div className="space-y-1">
-                      {group.items.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={handleNavClick}
-                        >
-                          <Button
-                            variant={
-                              isActive(item.href) ? "secondary" : "ghost"
-                            }
-                            className="w-full justify-start gap-3"
-                          >
-                            <item.icon className="h-5 w-5 shrink-0" />
-                            <span>{t(item.label)}</span>
-                          </Button>
-                        </Link>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                  {filteredNavGroups.map((group) => (
+                    <AccordionItem
+                      key={group.label}
+                      value={group.label}
+                      className="border-none"
+                    >
+                      <AccordionTrigger className="py-2 text-xs font-semibold uppercase text-muted-foreground hover:no-underline">
+                        {t(group.label)}
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-2">
+                        <div className="space-y-1">
+                          {group.items.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              onClick={handleNavClick}
+                            >
+                              <Button
+                                variant={
+                                  isActive(item.href) ? "secondary" : "ghost"
+                                }
+                                className="w-full justify-start gap-3"
+                              >
+                                <item.icon className="h-5 w-5 shrink-0" />
+                                <span>{t(item.label)}</span>
+                              </Button>
+                            </Link>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </>
+            )}
 
             <Separator className="my-2" />
 

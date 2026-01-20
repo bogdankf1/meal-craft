@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useGetDashboardQuery } from "@/lib/api/dashboard-api";
 import { useCurrency } from "@/components/providers/currency-provider";
+import { useUserStore } from "@/lib/store/user-store";
 import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns";
 import Link from "next/link";
 
@@ -62,6 +63,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { data, isLoading, refetch } = useGetDashboardQuery();
   const { formatPriceFromUAH } = useCurrency();
+  const { preferences } = useUserStore();
+  const uiVisibility = preferences.uiVisibility;
 
   const getTrendIcon = (current: number, previous: number) => {
     if (current > previous) return <TrendingUp className="h-3 w-3 text-green-500" />;
@@ -128,6 +131,7 @@ export default function DashboardPage() {
       />
 
       {/* Stats Cards */}
+      {uiVisibility.showDashboardStats && (
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title={t("stats.mealsPlanned")}
@@ -182,10 +186,12 @@ export default function DashboardPage() {
           />
         )}
       </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Upcoming Meals */}
+        {uiVisibility.showDashboardUpcomingMeals && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -239,8 +245,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Expiring Soon */}
+        {uiVisibility.showDashboardExpiringSoon && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -300,8 +308,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Recent Activity */}
+        {uiVisibility.showDashboardRecentActivity && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -342,8 +352,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Quick Actions */}
+        {uiVisibility.showDashboardQuickActions && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">{t("quickActions.title")}</CardTitle>
@@ -386,11 +398,13 @@ export default function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
+        )}
       </div>
 
       {/* Second Row - Insights */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {/* Waste Analytics */}
+        {uiVisibility.showDashboardWasteAnalytics && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -426,8 +440,10 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Skills Progress */}
+        {uiVisibility.showDashboardSkillsProgress && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -473,8 +489,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Seasonal & Equipment */}
+        {uiVisibility.showDashboardSeasonalInsights && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -536,10 +554,11 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
       {/* Nutrition Progress (if available) */}
-      {data.nutrition_stats && (
+      {uiVisibility.showDashboardNutrition && data.nutrition_stats && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">

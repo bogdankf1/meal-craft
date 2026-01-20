@@ -521,6 +521,7 @@ export interface RecipeSuggestionRequest {
   include_ingredients?: string[] | null;
   exclude_ingredients?: string[] | null;
   count?: number;
+  use_available_ingredients?: boolean;
 }
 
 export interface RecipeSuggestionItem {

@@ -91,6 +91,7 @@ export function AiRecipeSuggestionsDialog({
   const [difficulty, setDifficulty] = useState<RecipeDifficulty | "">("");
   const [servings, setServings] = useState(4);
   const [count, setCount] = useState(6);
+  const [useAvailableIngredients, setUseAvailableIngredients] = useState(true);
 
   // Results state
   const [suggestions, setSuggestions] = useState<RecipeSuggestionItem[]>([]);
@@ -138,6 +139,7 @@ export function AiRecipeSuggestionsDialog({
         difficulty: difficulty || undefined,
         servings,
         count,
+        use_available_ingredients: useAvailableIngredients,
       }).unwrap();
 
       setSuggestions(result.suggestions);
@@ -375,6 +377,21 @@ export function AiRecipeSuggestionsDialog({
                   step={1}
                 />
               </div>
+            </div>
+
+            {/* Use Available Ingredients Checkbox */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="useAvailableIngredients"
+                checked={useAvailableIngredients}
+                onCheckedChange={(checked) => setUseAvailableIngredients(checked === true)}
+              />
+              <Label
+                htmlFor="useAvailableIngredients"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                {t("filters.useAvailableIngredients")}
+              </Label>
             </div>
 
             {/* Dietary Restrictions & Nutritional Preferences Summaries */}

@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   Salad,
   LayoutDashboard,
+  PanelLeft,
 } from "lucide-react";
 
 import {
@@ -147,6 +148,15 @@ export function SettingsContent() {
     toolbarElements: false,
     commonTabs: false,
     moduleSpecificTabs: false,
+    // Sidebar navigation sections
+    sidebarPlanning: false,
+    sidebarInventory: false,
+    sidebarTracking: false,
+    sidebarLifestyle: false,
+    sidebarTools: false,
+    // Dashboard content sections
+    dashboardMainContent: false,
+    dashboardInsights: false,
   });
 
   const toggleSection = (section: string) => {
@@ -943,6 +953,448 @@ export function SettingsContent() {
                     <Switch
                       checked={uiVisibility.showLearningPathsTab}
                       onCheckedChange={(checked) => handleUIVisibilityChange("showLearningPathsTab", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sidebar Navigation */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PanelLeft className="h-5 w-5" />
+              {t("appearance.sidebarNavigation.title")}
+            </CardTitle>
+            <CardDescription>{t("appearance.sidebarNavigation.description")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Planning Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("sidebarPlanning")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.sidebarNavigation.planning.title")}
+                </h4>
+                {expandedSections.sidebarPlanning ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.sidebarPlanning && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.planning.mealPlanner.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.planning.mealPlanner.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarMealPlanner}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarMealPlanner", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.planning.recipes.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.planning.recipes.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarRecipes}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarRecipes", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.planning.shoppingLists.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.planning.shoppingLists.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarShoppingLists}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarShoppingLists", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Inventory Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("sidebarInventory")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.sidebarNavigation.inventory.title")}
+                </h4>
+                {expandedSections.sidebarInventory ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.sidebarInventory && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.inventory.groceries.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.inventory.groceries.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarGroceries}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarGroceries", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.inventory.pantry.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.inventory.pantry.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarPantry}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarPantry", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.inventory.kitchenEquipment.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.inventory.kitchenEquipment.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarKitchenEquipment}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarKitchenEquipment", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tracking Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("sidebarTracking")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.sidebarNavigation.tracking.title")}
+                </h4>
+                {expandedSections.sidebarTracking ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.sidebarTracking && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.tracking.restaurants.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.tracking.restaurants.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarRestaurants}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarRestaurants", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.tracking.nutrition.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.tracking.nutrition.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarNutrition}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarNutrition", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Lifestyle Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("sidebarLifestyle")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.sidebarNavigation.lifestyle.title")}
+                </h4>
+                {expandedSections.sidebarLifestyle ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.sidebarLifestyle && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.lifestyle.seasonality.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.lifestyle.seasonality.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarSeasonality}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarSeasonality", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.lifestyle.learning.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.lifestyle.learning.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarLearning}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarLearning", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tools Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("sidebarTools")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.sidebarNavigation.tools.title")}
+                </h4>
+                {expandedSections.sidebarTools ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.sidebarTools && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.tools.export.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.tools.export.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarExport}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarExport", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.tools.backups.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.tools.backups.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarBackups}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarBackups", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.sidebarNavigation.tools.help.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.sidebarNavigation.tools.help.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSidebarHelp}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarHelp", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dashboard Content */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LayoutDashboard className="h-5 w-5" />
+              {t("appearance.dashboardContent.title")}
+            </CardTitle>
+            <CardDescription>{t("appearance.dashboardContent.description")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Main Content Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("dashboardMainContent")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.dashboardContent.mainContent.title")}
+                </h4>
+                {expandedSections.dashboardMainContent ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.dashboardMainContent && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.mainContent.stats.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.mainContent.stats.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardStats}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardStats", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.mainContent.upcomingMeals.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.mainContent.upcomingMeals.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardUpcomingMeals}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardUpcomingMeals", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.mainContent.expiringSoon.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.mainContent.expiringSoon.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardExpiringSoon}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardExpiringSoon", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.mainContent.recentActivity.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.mainContent.recentActivity.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardRecentActivity}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardRecentActivity", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.mainContent.quickActions.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.mainContent.quickActions.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardQuickActions}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardQuickActions", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Insights Section */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("dashboardInsights")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.dashboardContent.insights.title")}
+                </h4>
+                {expandedSections.dashboardInsights ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.dashboardInsights && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.insights.wasteAnalytics.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.insights.wasteAnalytics.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardWasteAnalytics}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardWasteAnalytics", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.insights.skillsProgress.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.insights.skillsProgress.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardSkillsProgress}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardSkillsProgress", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.insights.seasonalInsights.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.insights.seasonalInsights.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardSeasonalInsights}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardSeasonalInsights", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.dashboardContent.insights.nutrition.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.dashboardContent.insights.nutrition.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDashboardNutrition}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardNutrition", checked)}
                     />
                   </div>
                 </div>

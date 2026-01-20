@@ -30,6 +30,34 @@ interface UIVisibility {
   showLibraryTab: boolean; // Learning
   showLearningPathsTab: boolean; // Learning
   showCollectionsTab: boolean; // Recipes
+  // Sidebar navigation - Planning
+  showSidebarMealPlanner: boolean;
+  showSidebarRecipes: boolean;
+  showSidebarShoppingLists: boolean;
+  // Sidebar navigation - Inventory
+  showSidebarGroceries: boolean;
+  showSidebarPantry: boolean;
+  showSidebarKitchenEquipment: boolean;
+  // Sidebar navigation - Tracking
+  showSidebarRestaurants: boolean;
+  showSidebarNutrition: boolean;
+  // Sidebar navigation - Lifestyle
+  showSidebarSeasonality: boolean;
+  showSidebarLearning: boolean;
+  // Sidebar navigation - Tools
+  showSidebarExport: boolean;
+  showSidebarBackups: boolean;
+  showSidebarHelp: boolean;
+  // Dashboard content
+  showDashboardStats: boolean;
+  showDashboardUpcomingMeals: boolean;
+  showDashboardExpiringSoon: boolean;
+  showDashboardRecentActivity: boolean;
+  showDashboardQuickActions: boolean;
+  showDashboardWasteAnalytics: boolean;
+  showDashboardSkillsProgress: boolean;
+  showDashboardSeasonalInsights: boolean;
+  showDashboardNutrition: boolean;
 }
 
 interface UserPreferences {
@@ -79,6 +107,34 @@ const defaultUIVisibility: UIVisibility = {
   showLibraryTab: true,
   showLearningPathsTab: true,
   showCollectionsTab: true,
+  // Sidebar navigation - Planning
+  showSidebarMealPlanner: true,
+  showSidebarRecipes: true,
+  showSidebarShoppingLists: true,
+  // Sidebar navigation - Inventory
+  showSidebarGroceries: true,
+  showSidebarPantry: true,
+  showSidebarKitchenEquipment: true,
+  // Sidebar navigation - Tracking
+  showSidebarRestaurants: true,
+  showSidebarNutrition: true,
+  // Sidebar navigation - Lifestyle
+  showSidebarSeasonality: true,
+  showSidebarLearning: true,
+  // Sidebar navigation - Tools
+  showSidebarExport: true,
+  showSidebarBackups: true,
+  showSidebarHelp: true,
+  // Dashboard content
+  showDashboardStats: true,
+  showDashboardUpcomingMeals: true,
+  showDashboardExpiringSoon: true,
+  showDashboardRecentActivity: true,
+  showDashboardQuickActions: true,
+  showDashboardWasteAnalytics: true,
+  showDashboardSkillsProgress: true,
+  showDashboardSeasonalInsights: true,
+  showDashboardNutrition: true,
 };
 
 const defaultPreferences: UserPreferences = {
