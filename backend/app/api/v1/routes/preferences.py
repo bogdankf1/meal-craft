@@ -40,6 +40,34 @@ class UIVisibility(BaseModel):
     showLibraryTab: bool = True  # Learning
     showLearningPathsTab: bool = True  # Learning
     showCollectionsTab: bool = True  # Recipes
+    # Sidebar navigation - Planning
+    showSidebarMealPlanner: bool = True
+    showSidebarRecipes: bool = True
+    showSidebarShoppingLists: bool = True
+    # Sidebar navigation - Inventory
+    showSidebarGroceries: bool = True
+    showSidebarPantry: bool = True
+    showSidebarKitchenEquipment: bool = True
+    # Sidebar navigation - Tracking
+    showSidebarRestaurants: bool = True
+    showSidebarNutrition: bool = True
+    # Sidebar navigation - Lifestyle
+    showSidebarSeasonality: bool = True
+    showSidebarLearning: bool = True
+    # Sidebar navigation - Tools
+    showSidebarExport: bool = True
+    showSidebarBackups: bool = True
+    showSidebarHelp: bool = True
+    # Dashboard content
+    showDashboardStats: bool = True
+    showDashboardUpcomingMeals: bool = True
+    showDashboardExpiringSoon: bool = True
+    showDashboardRecentActivity: bool = True
+    showDashboardQuickActions: bool = True
+    showDashboardWasteAnalytics: bool = True
+    showDashboardSkillsProgress: bool = True
+    showDashboardSeasonalInsights: bool = True
+    showDashboardNutrition: bool = True
 
 
 class UIPreferencesResponse(BaseModel):
@@ -81,6 +109,34 @@ DEFAULT_UI_VISIBILITY = {
     "showLibraryTab": True,
     "showLearningPathsTab": True,
     "showCollectionsTab": True,
+    # Sidebar navigation - Planning
+    "showSidebarMealPlanner": True,
+    "showSidebarRecipes": True,
+    "showSidebarShoppingLists": True,
+    # Sidebar navigation - Inventory
+    "showSidebarGroceries": True,
+    "showSidebarPantry": True,
+    "showSidebarKitchenEquipment": True,
+    # Sidebar navigation - Tracking
+    "showSidebarRestaurants": True,
+    "showSidebarNutrition": True,
+    # Sidebar navigation - Lifestyle
+    "showSidebarSeasonality": True,
+    "showSidebarLearning": True,
+    # Sidebar navigation - Tools
+    "showSidebarExport": True,
+    "showSidebarBackups": True,
+    "showSidebarHelp": True,
+    # Dashboard content
+    "showDashboardStats": True,
+    "showDashboardUpcomingMeals": True,
+    "showDashboardExpiringSoon": True,
+    "showDashboardRecentActivity": True,
+    "showDashboardQuickActions": True,
+    "showDashboardWasteAnalytics": True,
+    "showDashboardSkillsProgress": True,
+    "showDashboardSeasonalInsights": True,
+    "showDashboardNutrition": True,
 }
 
 

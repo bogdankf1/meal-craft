@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, status
 from sqlalchemy import select, func, desc, asc, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -1589,6 +1589,42 @@ async def suggest_recipes(
                 if ing.lower() not in household_excluded:
                     all_excluded.append(ing)
 
+        # Fetch available ingredients from groceries and pantry if requested
+        available_ingredients = list(data.include_ingredients or [])
+        if data.use_available_ingredients:
+            from app.models.grocery import Grocery
+            from app.models.pantry import PantryItem
+
+            # Fetch grocery items (not archived)
+            groceries_result = await db.execute(
+                select(Grocery.item_name)
+                .where(
+                    and_(
+                        Grocery.user_id == current_user.id,
+                        Grocery.is_archived == False
+                    )
+                )
+            )
+            grocery_names = [name for (name,) in groceries_result.fetchall()]
+
+            # Fetch pantry items (not archived)
+            pantry_result = await db.execute(
+                select(PantryItem.item_name)
+                .where(
+                    and_(
+                        PantryItem.user_id == current_user.id,
+                        PantryItem.is_archived == False
+                    )
+                )
+            )
+            pantry_names = [name for (name,) in pantry_result.fetchall()]
+
+            # Combine all available ingredients (remove duplicates)
+            all_available = set(grocery_names + pantry_names)
+            for ing in all_available:
+                if ing.lower() not in [i.lower() for i in available_ingredients]:
+                    available_ingredients.append(ing)
+
         suggestions = await ai_service.suggest_recipes(
             cuisine_type=data.cuisine_type.value if data.cuisine_type else None,
             meal_type=data.meal_type.value if data.meal_type else None,
@@ -1598,9 +1634,10 @@ async def suggest_recipes(
             max_cook_time=data.max_cook_time,
             difficulty=data.difficulty.value if data.difficulty else None,
             dietary_restrictions=dietary_restrictions_for_ai if dietary_restrictions_for_ai else None,
-            include_ingredients=data.include_ingredients,
+            include_ingredients=available_ingredients if available_ingredients else None,
             exclude_ingredients=all_excluded if all_excluded else None,
             count=data.count,
+            use_only_available=data.use_available_ingredients and len(available_ingredients) > 0,
         )
 
         # Convert to response models

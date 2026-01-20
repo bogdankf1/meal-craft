@@ -2694,6 +2694,7 @@ JSON object:"""
         include_ingredients: Optional[List[str]] = None,
         exclude_ingredients: Optional[List[str]] = None,
         count: int = 6,
+        use_only_available: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Generate AI-powered recipe suggestions based on user preferences.
@@ -2710,6 +2711,7 @@ JSON object:"""
             include_ingredients: Ingredients that should be included
             exclude_ingredients: Ingredients to avoid
             count: Number of suggestions to generate
+            use_only_available: If True, recipes should only use the provided ingredients
 
         Returns:
             List of recipe suggestion dictionaries
@@ -2761,7 +2763,10 @@ JSON object:"""
             constraints.append(f"Dietary restrictions: {', '.join(dietary_restrictions)}")
 
         if include_ingredients:
-            constraints.append(f"Must include ingredients: {', '.join(include_ingredients)}")
+            if use_only_available:
+                constraints.append(f"IMPORTANT: You MUST ONLY use ingredients from this list (the user's available groceries and pantry items): {', '.join(include_ingredients)}. Do not suggest recipes requiring ingredients not in this list. Basic pantry staples like salt, pepper, oil, and water are allowed.")
+            else:
+                constraints.append(f"Should include ingredients: {', '.join(include_ingredients)}")
 
         if exclude_ingredients:
             constraints.append(f"Must NOT include: {', '.join(exclude_ingredients)}")

@@ -563,6 +563,7 @@ class RecipeSuggestionRequest(BaseModel):
     include_ingredients: Optional[List[str]] = Field(None, description="Ingredients to include")
     exclude_ingredients: Optional[List[str]] = Field(None, description="Ingredients to exclude")
     count: int = Field(default=6, ge=1, le=12, description="Number of suggestions to generate")
+    use_available_ingredients: bool = Field(default=True, description="Only use ingredients from user's groceries and pantry")
 
 
 class RecipeSuggestionItem(BaseModel):
