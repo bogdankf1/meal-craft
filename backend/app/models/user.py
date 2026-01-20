@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import Column, String, DateTime, Enum, Boolean
+from sqlalchemy import Column, String, DateTime, Enum, Boolean, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -36,6 +36,9 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     locale = Column(String(5), default="en")
     is_active = Column(Boolean, default=True)
+
+    # UI preferences (for interface customization settings)
+    ui_preferences = Column(JSON, nullable=True, default=None)
 
     # Stripe fields
     stripe_customer_id = Column(String(255), unique=True, nullable=True, index=True)
