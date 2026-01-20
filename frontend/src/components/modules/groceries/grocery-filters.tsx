@@ -1,12 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { FilterBar, FilterDefinition } from "@/components/shared/FilterBar";
+import { FilterBar, FilterDefinition, type FilterBarVisibility } from "@/components/shared/FilterBar";
 import { GROCERY_CATEGORIES, type GroceryFilters } from "@/lib/api/groceries-api";
 
 interface GroceryFiltersProps {
   filters: GroceryFilters;
   onFiltersChange: (filters: GroceryFilters) => void;
+  visibility?: FilterBarVisibility;
 }
 
 // Default filter values
@@ -21,6 +22,7 @@ const preserveKeys: (keyof GroceryFilters)[] = ["per_page", "is_archived"];
 export function GroceryFiltersBar({
   filters,
   onFiltersChange,
+  visibility,
 }: GroceryFiltersProps) {
   const t = useTranslations("groceries");
 
@@ -90,6 +92,7 @@ export function GroceryFiltersBar({
       filterDefinitions={filterDefinitions}
       defaultFilters={defaultFilters}
       preserveKeys={preserveKeys}
+      visibility={visibility}
     />
   );
 }

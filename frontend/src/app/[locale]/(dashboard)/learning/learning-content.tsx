@@ -64,12 +64,15 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LearningInsights } from "@/components/modules/learning";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function LearningContent() {
   const t = useTranslations("learning");
   const tCommon = useTranslations("common");
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // State for user skills (Overview tab)
   const [userSkillFilters, setUserSkillFilters] = useState<UserSkillFilters>({
@@ -134,28 +137,34 @@ export function LearningContent() {
       .map((us) => us.skill_id) || []
   );
 
-  const tabs = [
+  const allTabs = [
     {
       value: "overview",
       label: t("tabs.overview"),
       icon: <BookOpen className="h-4 w-4" />,
+      visibilityKey: "showMySkillsTab" as const,
     },
     {
       value: "library",
       label: t("tabs.library"),
       icon: <Library className="h-4 w-4" />,
+      visibilityKey: "showLibraryTab" as const,
     },
     {
       value: "learning",
       label: t("tabs.learning"),
       icon: <GraduationCap className="h-4 w-4" />,
+      visibilityKey: "showLearningPathsTab" as const,
     },
     {
       value: "analytics",
       label: t("tabs.analytics"),
       icon: <BarChart3 className="h-4 w-4" />,
+      visibilityKey: "showAnalysisTab" as const,
     },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const handleAddSkill = async (skillId: string) => {
     try {
@@ -265,31 +274,33 @@ export function LearningContent() {
         {/* Overview Tab - My Skills */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard
-              title={t("stats.totalSkills")}
-              value={analytics?.total_skills || 0}
-              icon={<BookOpen className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.mastered")}
-              value={analytics?.skills_mastered || 0}
-              icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
-              variant={
-                (analytics?.skills_mastered || 0) > 0 ? "success" : "default"
-              }
-            />
-            <StatsCard
-              title={t("stats.learning")}
-              value={analytics?.skills_learning || 0}
-              icon={<Target className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.practiceHours")}
-              value={`${analytics?.total_practice_hours || 0}h`}
-              icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-            />
-          </div>
+          {uiVisibility.showStatsCards && (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              <StatsCard
+                title={t("stats.totalSkills")}
+                value={analytics?.total_skills || 0}
+                icon={<BookOpen className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.mastered")}
+                value={analytics?.skills_mastered || 0}
+                icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
+                variant={
+                  (analytics?.skills_mastered || 0) > 0 ? "success" : "default"
+                }
+              />
+              <StatsCard
+                title={t("stats.learning")}
+                value={analytics?.skills_learning || 0}
+                icon={<Target className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.practiceHours")}
+                value={`${analytics?.total_practice_hours || 0}h`}
+                icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+              />
+            </div>
+          )}
 
           {/* Streak Card */}
           {analytics?.learning_streak && analytics.learning_streak.current_streak_days > 0 && (
@@ -313,7 +324,7 @@ export function LearningContent() {
           )}
 
           {/* Cross-module Insights */}
-          {userSkillsData?.items && userSkillsData.items.length > 0 && (
+          {uiVisibility.showInsights && userSkillsData?.items && userSkillsData.items.length > 0 && (
             <div className="mb-6">
               <LearningInsights
                 userSkills={userSkillsData.items}
@@ -634,32 +645,34 @@ export function LearningContent() {
             </div>
 
             {/* Stats Summary */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title={t("analytics.skillsAdded")}
-                value={historyData?.total_skills_added || 0}
-                icon={<Plus className="h-4 w-4 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("analytics.skillsMastered")}
-                value={historyData?.total_skills_mastered || 0}
-                icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("analytics.practiceSessions")}
-                value={historyData?.total_practice_sessions || 0}
-                icon={<Target className="h-4 w-4 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("analytics.avgPracticeHours")}
-                value={`${historyData?.avg_monthly_practice_hours || 0}h`}
-                icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-                trend={{
-                  value: "",
-                  label: t("analytics.perMonth"),
-                }}
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title={t("analytics.skillsAdded")}
+                  value={historyData?.total_skills_added || 0}
+                  icon={<Plus className="h-4 w-4 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("analytics.skillsMastered")}
+                  value={historyData?.total_skills_mastered || 0}
+                  icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("analytics.practiceSessions")}
+                  value={historyData?.total_practice_sessions || 0}
+                  icon={<Target className="h-4 w-4 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("analytics.avgPracticeHours")}
+                  value={`${historyData?.avg_monthly_practice_hours || 0}h`}
+                  icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+                  trend={{
+                    value: "",
+                    label: t("analytics.perMonth"),
+                  }}
+                />
+              </div>
+            )}
 
             {analytics && analytics.total_skills > 0 && (
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">

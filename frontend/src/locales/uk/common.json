@@ -2957,6 +2957,113 @@
         "description": "Оберіть бажану валюту для відображення цін",
         "placeholder": "Оберіть валюту",
         "hint": "Ціни будуть автоматично конвертовані у вибрану валюту"
+      },
+      "interfaceCustomization": {
+        "title": "Налаштування інтерфейсу",
+        "description": "Показати або приховати елементи інтерфейсу у всіх модулях",
+        "pageElements": {
+          "title": "Елементи сторінки",
+          "showPageTitle": {
+            "label": "Заголовок сторінки",
+            "description": "Показувати головний заголовок на сторінках модулів"
+          },
+          "showPageSubtitle": {
+            "label": "Підзаголовок сторінки",
+            "description": "Показувати текст опису під заголовками"
+          },
+          "showStatsCards": {
+            "label": "Картки статистики",
+            "description": "Показувати зведену статистику вгорі сторінок"
+          },
+          "showInsights": {
+            "label": "Секції рекомендацій",
+            "description": "Показувати картки з рекомендаціями та підказками"
+          }
+        },
+        "toolbarElements": {
+          "title": "Елементи панелі інструментів",
+          "showSearchBar": {
+            "label": "Пошуковий рядок",
+            "description": "Показувати поле пошуку"
+          },
+          "showFilters": {
+            "label": "Фільтри",
+            "description": "Показувати випадаючі списки фільтрів"
+          },
+          "showDateRange": {
+            "label": "Вибір діапазону дат",
+            "description": "Показувати елементи вибору діапазону дат"
+          },
+          "showViewSelector": {
+            "label": "Перемикач вигляду",
+            "description": "Показувати перемикач сітки/списку"
+          },
+          "showSorting": {
+            "label": "Сортування",
+            "description": "Показувати параметри сортування"
+          }
+        },
+        "tabs": {
+          "title": "Загальні вкладки",
+          "description": "Ці вкладки з'являються в кількох модулях",
+          "showArchiveTab": {
+            "label": "Вкладка Архів",
+            "description": "Показувати вкладку Архів у модулях"
+          },
+          "showWasteTab": {
+            "label": "Вкладка Відходи",
+            "description": "Показувати вкладку Відходи у модулях"
+          },
+          "showAnalysisTab": {
+            "label": "Вкладка Аналіз",
+            "description": "Показувати вкладку Аналіз у модулях"
+          },
+          "showHistoryTab": {
+            "label": "Вкладка Історія",
+            "description": "Показувати вкладку Історія у модулях"
+          }
+        },
+        "moduleSpecificTabs": {
+          "title": "Вкладки окремих модулів",
+          "description": "Ці вкладки доступні лише в певних модулях",
+          "showMaintenanceTab": {
+            "label": "Вкладка Обслуговування",
+            "description": "Модуль Кухонне обладнання"
+          },
+          "showGoalsTab": {
+            "label": "Вкладка Цілі",
+            "description": "Модуль Харчування"
+          },
+          "showSeasonalCalendarTab": {
+            "label": "Вкладка Сезонний календар",
+            "description": "Модуль Сезонність"
+          },
+          "showLocalSpecialtiesTab": {
+            "label": "Вкладка Місцеві страви",
+            "description": "Модуль Сезонність"
+          },
+          "showThisMonthTab": {
+            "label": "Вкладка Цей місяць",
+            "description": "Модуль Сезонність"
+          },
+          "showMySkillsTab": {
+            "label": "Вкладка Мої навички",
+            "description": "Модуль Навчання"
+          },
+          "showLibraryTab": {
+            "label": "Вкладка Бібліотека",
+            "description": "Модуль Навчання"
+          },
+          "showLearningPathsTab": {
+            "label": "Вкладка Шляхи навчання",
+            "description": "Модуль Навчання"
+          },
+          "showCollectionsTab": {
+            "label": "Вкладка Колекції",
+            "description": "Модуль Рецепти"
+          }
+        },
+        "settingsUpdated": "Налаштування інтерфейсу оновлено"
       }
     },
     "notifications": {

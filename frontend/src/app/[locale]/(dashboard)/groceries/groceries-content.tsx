@@ -80,11 +80,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { useCurrency } from "@/components/providers/currency-provider";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function GroceriesContent() {
   const t = useTranslations("groceries");
   const tCommon = useTranslations("common");
   const { formatPriceFromUAH } = useCurrency();
+  const { preferences } = useUserStore();
+  const uiVisibility = preferences.uiVisibility;
 
   // State for active items
   const [filters, setFilters] = useState<GroceryFilters>({
@@ -146,14 +149,20 @@ export function GroceriesContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
-    { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
-    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
-    { value: "waste", label: t("tabs.waste"), icon: <Trash2 className="h-4 w-4" /> },
-    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
+  const allTabs = [
+    { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" />, alwaysShow: true },
+    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" />, alwaysShow: true },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
+    { value: "waste", label: t("tabs.waste"), icon: <Trash2 className="h-4 w-4" />, visibilityKey: "showWasteTab" as const },
+    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
   ];
+
+  const tabs = allTabs.filter((tab) => {
+    if (tab.alwaysShow) return true;
+    if (tab.visibilityKey) return uiVisibility[tab.visibilityKey];
+    return true;
+  });
 
   const handleAddClick = () => {
     setEditingGrocery(null);
@@ -257,27 +266,29 @@ export function GroceriesContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <StatsCard
-                title={t("stats.totalItems")}
-                value={groceriesData?.total?.toString() || "0"}
-                icon={<Carrot className="h-5 w-5 text-primary" />}
-              />
-              <StatsCard
-                title={t("stats.expiringSoon")}
-                value={analytics?.expiring_soon?.toString() || "0"}
-                icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
-                variant={analytics?.expiring_soon ? "warning" : "default"}
-              />
-              <StatsCard
-                title={t("stats.totalSpent")}
-                value={formatCurrency(
-                  groceriesData?.items?.reduce((sum, item) => sum + (item.cost || 0), 0) || 0
-                )}
-                icon={<DollarSign className="h-5 w-5 text-green-500" />}
-                variant="success"
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <StatsCard
+                  title={t("stats.totalItems")}
+                  value={groceriesData?.total?.toString() || "0"}
+                  icon={<Carrot className="h-5 w-5 text-primary" />}
+                />
+                <StatsCard
+                  title={t("stats.expiringSoon")}
+                  value={analytics?.expiring_soon?.toString() || "0"}
+                  icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+                  variant={analytics?.expiring_soon ? "warning" : "default"}
+                />
+                <StatsCard
+                  title={t("stats.totalSpent")}
+                  value={formatCurrency(
+                    groceriesData?.items?.reduce((sum, item) => sum + (item.cost || 0), 0) || 0
+                  )}
+                  icon={<DollarSign className="h-5 w-5 text-green-500" />}
+                  variant="success"
+                />
+              </div>
+            )}
 
             {/* Insights Section - Seasonality & Meal Planner */}
             <GroceryInsights
@@ -290,16 +301,31 @@ export function GroceriesContent() {
               }}
             />
 
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
-              <div className="flex-1 w-full">
-                <GroceryFiltersBar filters={filters} onFiltersChange={setFilters} />
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <ViewSelector
-                  currentView={currentView}
-                  onViewChange={setCurrentView}
-                  views={viewOptions}
+            {/* Filters and Actions - Two line layout for better responsiveness */}
+            <div className="space-y-3">
+              {/* First row: Search and filters */}
+              <div className="w-full">
+                <GroceryFiltersBar
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  visibility={{
+                    showSearch: uiVisibility.showSearchBar,
+                    showFilters: uiVisibility.showFilters,
+                    showDateRange: uiVisibility.showDateRange,
+                    showSorting: uiVisibility.showSorting,
+                  }}
                 />
+              </div>
+
+              {/* Second row: View selector and actions */}
+              <div className="flex flex-wrap items-center justify-start gap-3">
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={currentView}
+                    onViewChange={setCurrentView}
+                    views={viewOptions}
+                  />
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button>
@@ -308,7 +334,7 @@ export function GroceriesContent() {
                       <ChevronDown className="h-4 w-4 ml-2" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={handleAddClick}>
                       <Plus className="h-4 w-4 mr-2" />
                       {t("addItem")}
@@ -359,39 +385,49 @@ export function GroceriesContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <StatsCard
-                title={t("stats.archivedItems")}
-                value={archivedData?.total?.toString() || "0"}
-                icon={<FolderArchive className="h-5 w-5 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("stats.archivedValue")}
-                value={formatCurrency(
-                  archivedData?.items?.reduce((sum, item) => sum + (item.cost || 0), 0) || 0
-                )}
-                icon={<DollarSign className="h-5 w-5 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("stats.categories")}
-                value={new Set(archivedData?.items?.map((item) => item.category).filter(Boolean)).size.toString()}
-                icon={<Tag className="h-5 w-5 text-muted-foreground" />}
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <StatsCard
+                  title={t("stats.archivedItems")}
+                  value={archivedData?.total?.toString() || "0"}
+                  icon={<FolderArchive className="h-5 w-5 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("stats.archivedValue")}
+                  value={formatCurrency(
+                    archivedData?.items?.reduce((sum, item) => sum + (item.cost || 0), 0) || 0
+                  )}
+                  icon={<DollarSign className="h-5 w-5 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("stats.categories")}
+                  value={new Set(archivedData?.items?.map((item) => item.category).filter(Boolean)).size.toString()}
+                  icon={<Tag className="h-5 w-5 text-muted-foreground" />}
+                />
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <GroceryFiltersBar
                   filters={archiveFilters}
                   onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
+                  visibility={{
+                    showSearch: uiVisibility.showSearchBar,
+                    showFilters: uiVisibility.showFilters,
+                    showDateRange: uiVisibility.showDateRange,
+                    showSorting: uiVisibility.showSorting,
+                  }}
                 />
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <ViewSelector
-                  currentView={archiveView}
-                  onViewChange={setArchiveView}
-                  views={viewOptions}
-                />
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={archiveView}
+                    onViewChange={setArchiveView}
+                    views={viewOptions}
+                  />
+                )}
               </div>
             </div>
 
@@ -431,32 +467,34 @@ export function GroceriesContent() {
               </div>
             ) : wasteAnalytics && wasteAnalytics.total_wasted_items > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("waste.stats.totalWasted")}
-                    value={wasteAnalytics.total_wasted_items.toString()}
-                    icon={<Trash2 className="h-5 w-5 text-red-500" />}
-                    variant="danger"
-                  />
-                  <StatsCard
-                    title={t("waste.stats.costWasted")}
-                    value={formatCurrency(wasteAnalytics.total_wasted_cost)}
-                    icon={<DollarSign className="h-5 w-5 text-red-500" />}
-                    variant="danger"
-                  />
-                  <StatsCard
-                    title={t("waste.stats.wastedThisMonth")}
-                    value={wasteAnalytics.wasted_this_month.toString()}
-                    icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
-                    variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
-                  />
-                  <StatsCard
-                    title={t("waste.stats.wasteRate")}
-                    value={`${wasteAnalytics.waste_rate}%`}
-                    icon={<Percent className="h-5 w-5 text-purple-500" />}
-                    variant={wasteAnalytics.waste_rate > 10 ? "warning" : "default"}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("waste.stats.totalWasted")}
+                      value={wasteAnalytics.total_wasted_items.toString()}
+                      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                      variant="danger"
+                    />
+                    <StatsCard
+                      title={t("waste.stats.costWasted")}
+                      value={formatCurrency(wasteAnalytics.total_wasted_cost)}
+                      icon={<DollarSign className="h-5 w-5 text-red-500" />}
+                      variant="danger"
+                    />
+                    <StatsCard
+                      title={t("waste.stats.wastedThisMonth")}
+                      value={wasteAnalytics.wasted_this_month.toString()}
+                      icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+                      variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
+                    />
+                    <StatsCard
+                      title={t("waste.stats.wasteRate")}
+                      value={`${wasteAnalytics.waste_rate}%`}
+                      icon={<Percent className="h-5 w-5 text-purple-500" />}
+                      variant={wasteAnalytics.waste_rate > 10 ? "warning" : "default"}
+                    />
+                  </div>
+                )}
 
                 {/* Suggestions card */}
                 {wasteAnalytics.suggestions.length > 0 && (
@@ -573,33 +611,35 @@ export function GroceriesContent() {
           <div className="space-y-6">
             {hasGroceries && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("analysis.thisWeek")}
-                    value={analytics.items_this_week?.toString() || "0"}
-                    icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.thisMonth")}
-                    value={analytics.items_this_month?.toString() || "0"}
-                    icon={<ShoppingBag className="h-5 w-5 text-purple-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.avgPerItem")}
-                    value={formatCurrency(
-                      analytics.items_this_month > 0
-                        ? analytics.total_spent_this_month / analytics.items_this_month
-                        : 0
-                    )}
-                    icon={<TrendingUp className="h-5 w-5 text-green-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.expiryStatus")}
-                    value={`${analytics.expired || 0} / ${analytics.expiring_soon || 0}`}
-                    icon={<Clock className="h-5 w-5 text-orange-500" />}
-                    variant={analytics.expired > 0 ? "danger" : analytics.expiring_soon > 0 ? "warning" : "default"}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("analysis.thisWeek")}
+                      value={analytics.items_this_week?.toString() || "0"}
+                      icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.thisMonth")}
+                      value={analytics.items_this_month?.toString() || "0"}
+                      icon={<ShoppingBag className="h-5 w-5 text-purple-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.avgPerItem")}
+                      value={formatCurrency(
+                        analytics.items_this_month > 0
+                          ? analytics.total_spent_this_month / analytics.items_this_month
+                          : 0
+                      )}
+                      icon={<TrendingUp className="h-5 w-5 text-green-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.expiryStatus")}
+                      value={`${analytics.expired || 0} / ${analytics.expiring_soon || 0}`}
+                      icon={<Clock className="h-5 w-5 text-orange-500" />}
+                      variant={analytics.expired > 0 ? "danger" : analytics.expiring_soon > 0 ? "warning" : "default"}
+                    />
+                  </div>
+                )}
 
                 {/* Week vs Month Comparison */}
                 <AnalyticsCard title={t("analysis.weekVsMonth")}>
@@ -725,28 +765,30 @@ export function GroceriesContent() {
               </div>
             ) : historyData && historyData.total_items > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("history.totalInPeriod")}
-                    value={historyData.total_items.toString()}
-                    icon={<Package className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("stats.totalSpent")}
-                    value={formatCurrency(historyData.total_spent)}
-                    icon={<DollarSign className="h-5 w-5 text-green-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.avgMonthlyItems")}
-                    value={Math.round(historyData.avg_monthly_items).toString()}
-                    icon={<Repeat className="h-5 w-5 text-purple-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.avgMonthlySpending")}
-                    value={formatCurrency(historyData.avg_monthly_spending)}
-                    icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("history.totalInPeriod")}
+                      value={historyData.total_items.toString()}
+                      icon={<Package className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("stats.totalSpent")}
+                      value={formatCurrency(historyData.total_spent)}
+                      icon={<DollarSign className="h-5 w-5 text-green-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.avgMonthlyItems")}
+                      value={Math.round(historyData.avg_monthly_items).toString()}
+                      icon={<Repeat className="h-5 w-5 text-purple-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.avgMonthlySpending")}
+                      value={formatCurrency(historyData.avg_monthly_spending)}
+                      icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
+                    />
+                  </div>
+                )}
 
                 <div className="grid gap-6">
                   <AnalyticsCard

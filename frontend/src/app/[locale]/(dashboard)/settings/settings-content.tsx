@@ -25,6 +25,7 @@ import {
   ChevronUp,
   AlertTriangle,
   Salad,
+  LayoutDashboard,
 } from "lucide-react";
 
 import {
@@ -82,6 +83,7 @@ import {
 } from "@/lib/api/profiles-api";
 import { DietaryRestrictionsEditor } from "@/components/modules/settings/dietary-restrictions-editor";
 import { NutritionalPreferencesEditor } from "@/components/modules/settings/nutritional-preferences-editor";
+import { useUserStore } from "@/lib/store/user-store";
 
 // Supported languages
 const LANGUAGES = [
@@ -116,6 +118,10 @@ export function SettingsContent() {
   // Currency
   const { currency, currencies, setCurrency } = useCurrency();
 
+  // UI Visibility
+  const { preferences, setUIVisibility } = useUserStore();
+  const uiVisibility = preferences.uiVisibility;
+
   // Seasonality preferences
   const { data: seasonalPreferences, isLoading: isLoadingSeasonalPrefs } = useGetUserSeasonalPreferencesQuery();
   const [updateSeasonalPreferences] = useUpdateUserSeasonalPreferencesMutation();
@@ -134,6 +140,18 @@ export function SettingsContent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null);
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
+
+  // Interface customization section collapse state (all closed by default)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    pageElements: false,
+    toolbarElements: false,
+    commonTabs: false,
+    moduleSpecificTabs: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   // Get favorites count
   const selectedCountry = seasonalPreferences?.country_code || "UA";
@@ -187,6 +205,11 @@ export function SettingsContent() {
   const handleCurrencyChange = (newCurrency: string) => {
     setCurrency(newCurrency as CurrencyCode);
     toast.success(t("messages.currencyChanged"));
+  };
+
+  const handleUIVisibilityChange = (key: keyof typeof uiVisibility, value: boolean) => {
+    setUIVisibility({ [key]: value });
+    toast.success(t("appearance.interfaceCustomization.settingsUpdated"));
   };
 
   const handleCountryChange = async (countryCode: string) => {
@@ -558,6 +581,373 @@ export function SettingsContent() {
             <p className="text-sm text-muted-foreground mt-2">
               {t("appearance.currency.hint")}
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Interface Customization */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LayoutDashboard className="h-5 w-5" />
+              {t("appearance.interfaceCustomization.title")}
+            </CardTitle>
+            <CardDescription>{t("appearance.interfaceCustomization.description")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Page Elements */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("pageElements")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.interfaceCustomization.pageElements.title")}
+                </h4>
+                {expandedSections.pageElements ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.pageElements && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.pageElements.showPageTitle.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.pageElements.showPageTitle.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showPageTitle}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showPageTitle", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.pageElements.showPageSubtitle.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.pageElements.showPageSubtitle.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showPageSubtitle}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showPageSubtitle", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.pageElements.showStatsCards.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.pageElements.showStatsCards.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showStatsCards}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showStatsCards", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.pageElements.showInsights.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.pageElements.showInsights.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showInsights}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showInsights", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Toolbar Elements */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("toolbarElements")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.interfaceCustomization.toolbarElements.title")}
+                </h4>
+                {expandedSections.toolbarElements ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.toolbarElements && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showSearchBar.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.toolbarElements.showSearchBar.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSearchBar}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSearchBar", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showFilters.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.toolbarElements.showFilters.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showFilters}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showFilters", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showDateRange.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.toolbarElements.showDateRange.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showDateRange}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showDateRange", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showViewSelector.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.toolbarElements.showViewSelector.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showViewSelector}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showViewSelector", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showSorting.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.toolbarElements.showSorting.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSorting}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSorting", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Module Tabs */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("commonTabs")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("appearance.interfaceCustomization.tabs.title")}
+                </h4>
+                {expandedSections.commonTabs ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {expandedSections.commonTabs && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.tabs.showArchiveTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.tabs.showArchiveTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showArchiveTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showArchiveTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.tabs.showWasteTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.tabs.showWasteTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showWasteTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showWasteTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.tabs.showAnalysisTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.tabs.showAnalysisTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showAnalysisTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showAnalysisTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.tabs.showHistoryTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.tabs.showHistoryTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showHistoryTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showHistoryTab", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Module-Specific Tabs */}
+            <div className="border rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleSection("moduleSpecificTabs")}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("appearance.interfaceCustomization.moduleSpecificTabs.title")}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1">{t("appearance.interfaceCustomization.moduleSpecificTabs.description")}</p>
+                </div>
+                {expandedSections.moduleSpecificTabs ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                )}
+              </button>
+              {expandedSections.moduleSpecificTabs && (
+                <div className="px-4 pb-4 space-y-4 border-t">
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showMaintenanceTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showMaintenanceTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showMaintenanceTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showMaintenanceTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showGoalsTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showGoalsTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showGoalsTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showGoalsTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showCollectionsTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showCollectionsTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showCollectionsTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showCollectionsTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showThisMonthTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showThisMonthTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showThisMonthTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showThisMonthTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showSeasonalCalendarTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showSeasonalCalendarTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showSeasonalCalendarTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showSeasonalCalendarTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showLocalSpecialtiesTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showLocalSpecialtiesTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showLocalSpecialtiesTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showLocalSpecialtiesTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showMySkillsTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showMySkillsTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showMySkillsTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showMySkillsTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showLibraryTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showLibraryTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showLibraryTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showLibraryTab", checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showLearningPathsTab.label")}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showLearningPathsTab.description")}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={uiVisibility.showLearningPathsTab}
+                      onCheckedChange={(checked) => handleUIVisibilityChange("showLearningPathsTab", checked)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

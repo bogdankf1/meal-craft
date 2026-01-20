@@ -65,10 +65,13 @@ import {
   type RestaurantMeal,
   type RestaurantMealFilters,
 } from "@/lib/api/restaurants-api";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function RestaurantsContent() {
   const t = useTranslations("restaurants");
   const tCommon = useTranslations("common");
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // State for active items
   const [filters, setFilters] = useState<RestaurantMealFilters>({
@@ -133,13 +136,15 @@ export function RestaurantsContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
+  const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
     { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "analytics", label: t("tabs.analytics"), icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
+    { value: "analytics", label: t("tabs.analytics"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const handleAddClick = () => {
     setEditingMeal(null);
@@ -232,31 +237,33 @@ export function RestaurantsContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title={t("stats.totalMeals")}
-                value={mealsData?.total?.toString() || "0"}
-                icon={<UtensilsCrossed className="h-5 w-5 text-primary" />}
-              />
-              <StatsCard
-                title={t("stats.thisWeek")}
-                value={analytics?.meals_this_week?.toString() || "0"}
-                icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
-              />
-              <StatsCard
-                title={t("stats.avgRating")}
-                value={analytics?.avg_rating ? `${analytics.avg_rating}/5` : "-"}
-                icon={<Star className="h-5 w-5 text-yellow-500" />}
-              />
-              <StatsCard
-                title={t("stats.avgFeeling")}
-                value={analytics?.avg_feeling ? `${analytics.avg_feeling}/5` : "-"}
-                icon={<Heart className="h-5 w-5 text-red-500" />}
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title={t("stats.totalMeals")}
+                  value={mealsData?.total?.toString() || "0"}
+                  icon={<UtensilsCrossed className="h-5 w-5 text-primary" />}
+                />
+                <StatsCard
+                  title={t("stats.thisWeek")}
+                  value={analytics?.meals_this_week?.toString() || "0"}
+                  icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+                />
+                <StatsCard
+                  title={t("stats.avgRating")}
+                  value={analytics?.avg_rating ? `${analytics.avg_rating}/5` : "-"}
+                  icon={<Star className="h-5 w-5 text-yellow-500" />}
+                />
+                <StatsCard
+                  title={t("stats.avgFeeling")}
+                  value={analytics?.avg_feeling ? `${analytics.avg_feeling}/5` : "-"}
+                  icon={<Heart className="h-5 w-5 text-red-500" />}
+                />
+              </div>
+            )}
 
             {/* Cross-module Insights */}
-            {mealsData?.items && mealsData.items.length > 0 && (
+            {uiVisibility.showInsights && mealsData?.items && mealsData.items.length > 0 && (
               <RestaurantsInsights
                 meals={mealsData.items}
                 onNavigateToRecipes={() => router.push("/recipes")}
@@ -276,16 +283,27 @@ export function RestaurantsContent() {
             <div className="space-y-3">
               {/* First row: Search and filters */}
               <div className="w-full">
-                <RestaurantMealFiltersBar filters={filters} onFiltersChange={setFilters} />
+                <RestaurantMealFiltersBar
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  visibility={{
+                    showSearch: uiVisibility.showSearchBar,
+                    showFilters: uiVisibility.showFilters,
+                    showDateRange: uiVisibility.showDateRange,
+                    showSorting: uiVisibility.showSorting,
+                  }}
+                />
               </div>
 
               {/* Second row: View selector and actions */}
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <ViewSelector
-                  currentView={currentView}
-                  onViewChange={setCurrentView}
-                  views={viewOptions}
-                />
+              <div className="flex flex-wrap items-center justify-start gap-3">
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={currentView}
+                    onViewChange={setCurrentView}
+                    views={viewOptions}
+                  />
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button>
@@ -360,28 +378,30 @@ export function RestaurantsContent() {
           <div className="space-y-6">
             {hasMeals && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("stats.thisWeek")}
-                    value={analytics.meals_this_week?.toString() || "0"}
-                    icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("stats.thisMonth")}
-                    value={analytics.meals_this_month?.toString() || "0"}
-                    icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
-                  />
-                  <StatsCard
-                    title={t("stats.avgRating")}
-                    value={analytics.avg_rating ? `${analytics.avg_rating}/5` : "-"}
-                    icon={<Star className="h-5 w-5 text-yellow-500" />}
-                  />
-                  <StatsCard
-                    title={t("stats.avgFeeling")}
-                    value={analytics.avg_feeling ? `${analytics.avg_feeling}/5` : "-"}
-                    icon={<Heart className="h-5 w-5 text-red-500" />}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("stats.thisWeek")}
+                      value={analytics.meals_this_week?.toString() || "0"}
+                      icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("stats.thisMonth")}
+                      value={analytics.meals_this_month?.toString() || "0"}
+                      icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+                    />
+                    <StatsCard
+                      title={t("stats.avgRating")}
+                      value={analytics.avg_rating ? `${analytics.avg_rating}/5` : "-"}
+                      icon={<Star className="h-5 w-5 text-yellow-500" />}
+                    />
+                    <StatsCard
+                      title={t("stats.avgFeeling")}
+                      value={analytics.avg_feeling ? `${analytics.avg_feeling}/5` : "-"}
+                      icon={<Heart className="h-5 w-5 text-red-500" />}
+                    />
+                  </div>
+                )}
 
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analytics.byOrderType")}>
@@ -454,23 +474,25 @@ export function RestaurantsContent() {
               </div>
             ) : historyData && historyData.total_meals > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-                  <StatsCard
-                    title={t("history.totalInPeriod")}
-                    value={historyData.total_meals.toString()}
-                    icon={<UtensilsCrossed className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.avgMonthly")}
-                    value={Math.round(historyData.avg_monthly_meals).toString()}
-                    icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.uniqueRestaurants")}
-                    value={historyData.all_time_top_restaurants.length.toString()}
-                    icon={<Truck className="h-5 w-5 text-orange-500" />}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                    <StatsCard
+                      title={t("history.totalInPeriod")}
+                      value={historyData.total_meals.toString()}
+                      icon={<UtensilsCrossed className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.avgMonthly")}
+                      value={Math.round(historyData.avg_monthly_meals).toString()}
+                      icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.uniqueRestaurants")}
+                      value={historyData.all_time_top_restaurants.length.toString()}
+                      icon={<Truck className="h-5 w-5 text-orange-500" />}
+                    />
+                  </div>
+                )}
 
                 <AnalyticsCard
                   title={t("history.mealsTrend")}
@@ -504,27 +526,37 @@ export function RestaurantsContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <StatsCard
-                title={t("stats.archivedMeals")}
-                value={archivedData?.total?.toString() || "0"}
-                icon={<Archive className="h-5 w-5 text-muted-foreground" />}
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <StatsCard
+                  title={t("stats.archivedMeals")}
+                  value={archivedData?.total?.toString() || "0"}
+                  icon={<Archive className="h-5 w-5 text-muted-foreground" />}
+                />
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <RestaurantMealFiltersBar
                   filters={archiveFilters}
                   onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
+                  visibility={{
+                    showSearch: uiVisibility.showSearchBar,
+                    showFilters: uiVisibility.showFilters,
+                    showDateRange: uiVisibility.showDateRange,
+                    showSorting: uiVisibility.showSorting,
+                  }}
                 />
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <ViewSelector
-                  currentView={archiveView}
-                  onViewChange={setArchiveView}
-                  views={viewOptions}
-                />
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={archiveView}
+                    onViewChange={setArchiveView}
+                    views={viewOptions}
+                  />
+                )}
               </div>
             </div>
 

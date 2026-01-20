@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { FilterBar, FilterDefinition } from "@/components/shared/FilterBar";
+import { FilterBar, FilterDefinition, FilterBarVisibility } from "@/components/shared/FilterBar";
 import {
   MEAL_TYPES,
   ORDER_TYPES,
@@ -11,6 +11,7 @@ import {
 interface RestaurantMealFiltersBarProps {
   filters: RestaurantMealFilters;
   onFiltersChange: (filters: RestaurantMealFilters) => void;
+  visibility?: FilterBarVisibility;
 }
 
 // Default filter values
@@ -25,6 +26,7 @@ const preserveKeys: (keyof RestaurantMealFilters)[] = ["per_page", "is_archived"
 export function RestaurantMealFiltersBar({
   filters,
   onFiltersChange,
+  visibility,
 }: RestaurantMealFiltersBarProps) {
   const t = useTranslations("restaurants");
 
@@ -79,6 +81,7 @@ export function RestaurantMealFiltersBar({
       filterDefinitions={filterDefinitions}
       defaultFilters={defaultFilters}
       preserveKeys={preserveKeys}
+      visibility={visibility}
     />
   );
 }

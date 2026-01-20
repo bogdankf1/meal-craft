@@ -3,6 +3,34 @@ import { persist } from "zustand/middleware";
 
 export type SubscriptionTier = "HOME_COOK" | "CHEFS_CHOICE" | "MASTER_CHEF";
 export type UserRole = "USER" | "ADMIN";
+export type { UIVisibility };
+
+interface UIVisibility {
+  showStatsCards: boolean;
+  showSearchBar: boolean;
+  showFilters: boolean;
+  showDateRange: boolean;
+  showViewSelector: boolean;
+  showSorting: boolean;
+  showPageTitle: boolean;
+  showPageSubtitle: boolean;
+  showInsights: boolean;
+  // Common tabs
+  showArchiveTab: boolean;
+  showWasteTab: boolean;
+  showAnalysisTab: boolean;
+  showHistoryTab: boolean;
+  // Module-specific tabs
+  showMaintenanceTab: boolean; // Kitchen Equipment
+  showGoalsTab: boolean; // Nutrition
+  showSeasonalCalendarTab: boolean; // Seasonality
+  showLocalSpecialtiesTab: boolean; // Seasonality
+  showThisMonthTab: boolean; // Seasonality
+  showMySkillsTab: boolean; // Learning
+  showLibraryTab: boolean; // Learning
+  showLearningPathsTab: boolean; // Learning
+  showCollectionsTab: boolean; // Recipes
+}
 
 interface UserPreferences {
   locale: "en" | "uk";
@@ -11,6 +39,7 @@ interface UserPreferences {
   defaultServings: number;
   firstDayOfWeek: "monday" | "sunday";
   dateFormat: "DD/MM/YYYY" | "MM/DD/YYYY";
+  uiVisibility: UIVisibility;
 }
 
 interface UserState {
@@ -20,9 +49,37 @@ interface UserState {
   setTier: (tier: SubscriptionTier) => void;
   setRole: (role: UserRole) => void;
   setPreferences: (preferences: Partial<UserPreferences>) => void;
+  setUIVisibility: (visibility: Partial<UIVisibility>) => void;
   hasFeature: (feature: "PLUS" | "PRO") => boolean;
   isAdmin: () => boolean;
 }
+
+const defaultUIVisibility: UIVisibility = {
+  showStatsCards: true,
+  showSearchBar: true,
+  showFilters: true,
+  showDateRange: true,
+  showViewSelector: true,
+  showSorting: true,
+  showPageTitle: true,
+  showPageSubtitle: true,
+  showInsights: true,
+  // Common tabs
+  showArchiveTab: true,
+  showWasteTab: true,
+  showAnalysisTab: true,
+  showHistoryTab: true,
+  // Module-specific tabs
+  showMaintenanceTab: true,
+  showGoalsTab: true,
+  showSeasonalCalendarTab: true,
+  showLocalSpecialtiesTab: true,
+  showThisMonthTab: true,
+  showMySkillsTab: true,
+  showLibraryTab: true,
+  showLearningPathsTab: true,
+  showCollectionsTab: true,
+};
 
 const defaultPreferences: UserPreferences = {
   locale: "en",
@@ -31,6 +88,7 @@ const defaultPreferences: UserPreferences = {
   defaultServings: 2,
   firstDayOfWeek: "monday",
   dateFormat: "DD/MM/YYYY",
+  uiVisibility: defaultUIVisibility,
 };
 
 export const useUserStore = create<UserState>()(
@@ -46,6 +104,17 @@ export const useUserStore = create<UserState>()(
       setPreferences: (newPreferences) =>
         set((state) => ({
           preferences: { ...state.preferences, ...newPreferences },
+        })),
+
+      setUIVisibility: (visibility) =>
+        set((state) => ({
+          preferences: {
+            ...state.preferences,
+            uiVisibility: {
+              ...state.preferences.uiVisibility,
+              ...visibility,
+            },
+          },
         })),
 
       hasFeature: (requiredTier) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { FilterBar, FilterDefinition } from "@/components/shared/FilterBar";
+import { FilterBar, FilterDefinition, FilterBarVisibility } from "@/components/shared/FilterBar";
 import {
   PANTRY_CATEGORIES,
   STORAGE_LOCATIONS,
@@ -11,6 +11,7 @@ import {
 interface PantryFiltersProps {
   filters: PantryFilters;
   onFiltersChange: (filters: PantryFilters) => void;
+  visibility?: FilterBarVisibility;
 }
 
 // Default filter values
@@ -25,6 +26,7 @@ const preserveKeys: (keyof PantryFilters)[] = ["per_page", "is_archived"];
 export function PantryFiltersBar({
   filters,
   onFiltersChange,
+  visibility,
 }: PantryFiltersProps) {
   const t = useTranslations("pantry");
 
@@ -106,6 +108,7 @@ export function PantryFiltersBar({
       filterDefinitions={filterDefinitions}
       defaultFilters={defaultFilters}
       preserveKeys={preserveKeys}
+      visibility={visibility}
     />
   );
 }

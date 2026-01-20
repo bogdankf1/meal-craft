@@ -73,6 +73,7 @@ import {
   type RecipeCollection,
   type RecipeFilters as RecipeFilterType,
 } from "@/lib/api/recipes-api";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function RecipesContent() {
   const t = useTranslations("recipes");
@@ -80,6 +81,8 @@ export function RecipesContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // State for active items
   const [filters, setFilters] = useState<RecipeFilterType>({
@@ -162,13 +165,15 @@ export function RecipesContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
+  const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
     { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "collections", label: t("tabs.collections"), icon: <FolderOpen className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
-    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
+    { value: "collections", label: t("tabs.collections"), icon: <FolderOpen className="h-4 w-4" />, visibilityKey: "showCollectionsTab" as const },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
+    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const handleAddClick = () => {
     setEditingItem(null);
@@ -272,35 +277,37 @@ export function RecipesContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard
-              title={t("stats.totalRecipes")}
-              value={analytics?.total_recipes || 0}
-              icon={<BookOpen className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.favorites")}
-              value={analytics?.total_favorites || 0}
-              icon={<Heart className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.timesCooked")}
-              value={analytics?.total_times_cooked || 0}
-              icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.avgCookTime")}
-              value={
-                analytics?.avg_cook_time
-                  ? `${Math.round(analytics.avg_cook_time)} min`
-                  : "-"
-              }
-              icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-            />
-          </div>
+          {uiVisibility.showStatsCards && (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              <StatsCard
+                title={t("stats.totalRecipes")}
+                value={analytics?.total_recipes || 0}
+                icon={<BookOpen className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.favorites")}
+                value={analytics?.total_favorites || 0}
+                icon={<Heart className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.timesCooked")}
+                value={analytics?.total_times_cooked || 0}
+                icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.avgCookTime")}
+                value={
+                  analytics?.avg_cook_time
+                    ? `${Math.round(analytics.avg_cook_time)} min`
+                    : "-"
+                }
+                icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+              />
+            </div>
+          )}
 
           {/* Cross-module Insights */}
-          {recipesData?.items && recipesData.items.length > 0 && (
+          {uiVisibility.showInsights && recipesData?.items && recipesData.items.length > 0 && (
             <div className="mb-6">
               <RecipeInsights
                 recipes={recipesData.items}
@@ -343,7 +350,7 @@ export function RecipesContent() {
                 onIsFavoriteChange={setFavoriteFilter}
               />
             </div>
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-start gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button>
@@ -352,7 +359,7 @@ export function RecipesContent() {
                     <ChevronDown className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="start">
                   <DropdownMenuItem onClick={handleAddClick}>
                     <Plus className="h-4 w-4 mr-2" />
                     {t("addSingle")}

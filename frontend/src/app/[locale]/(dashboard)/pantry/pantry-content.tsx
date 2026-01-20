@@ -77,10 +77,13 @@ import {
 } from "@/lib/api/pantry-api";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function PantryContent() {
   const t = useTranslations("pantry");
   const tCommon = useTranslations("common");
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // State for active items
   const [filters, setFilters] = useState<PantryFilters>({
@@ -146,14 +149,16 @@ export function PantryContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
+  const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
     { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
-    { value: "waste", label: t("tabs.waste"), icon: <Trash2 className="h-4 w-4" /> },
-    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
+    { value: "waste", label: t("tabs.waste"), icon: <Trash2 className="h-4 w-4" />, visibilityKey: "showWasteTab" as const },
+    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const handleAddClick = () => {
     setEditingItem(null);
@@ -253,61 +258,76 @@ export function PantryContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title={t("stats.totalItems")}
-                value={pantryData?.total?.toString() || "0"}
-                icon={<Package className="h-5 w-5 text-primary" />}
-              />
-              <StatsCard
-                title={t("stats.expiringSoon")}
-                value={analytics?.expiring_soon?.toString() || "0"}
-                icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
-                variant={analytics?.expiring_soon ? "warning" : "default"}
-              />
-              <StatsCard
-                title={t("stats.lowStock")}
-                value={analytics?.low_stock_items?.toString() || "0"}
-                icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
-                variant={analytics?.low_stock_items ? "danger" : "default"}
-              />
-              <StatsCard
-                title={t("stats.expired")}
-                value={analytics?.expired?.toString() || "0"}
-                icon={<Clock className="h-5 w-5 text-destructive" />}
-                variant={analytics?.expired ? "danger" : "default"}
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title={t("stats.totalItems")}
+                  value={pantryData?.total?.toString() || "0"}
+                  icon={<Package className="h-5 w-5 text-primary" />}
+                />
+                <StatsCard
+                  title={t("stats.expiringSoon")}
+                  value={analytics?.expiring_soon?.toString() || "0"}
+                  icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+                  variant={analytics?.expiring_soon ? "warning" : "default"}
+                />
+                <StatsCard
+                  title={t("stats.lowStock")}
+                  value={analytics?.low_stock_items?.toString() || "0"}
+                  icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
+                  variant={analytics?.low_stock_items ? "danger" : "default"}
+                />
+                <StatsCard
+                  title={t("stats.expired")}
+                  value={analytics?.expired?.toString() || "0"}
+                  icon={<Clock className="h-5 w-5 text-destructive" />}
+                  variant={analytics?.expired ? "danger" : "default"}
+                />
+              </div>
+            )}
 
             {/* Insights Section - Seasonality & Low Stock */}
-            <PantryInsights
-              pantryItems={pantryData?.items || []}
-              analytics={analytics}
-              onAddToShoppingList={(itemName, quantity, unit) => {
-                setItemsToAddToShoppingList([
-                  { name: itemName, quantity, unit },
-                ]);
-                setShoppingListDialogOpen(true);
-              }}
-              onNavigateToSeasonality={() => {
-                router.push(pathname.replace("/pantry", "/seasonality"));
-              }}
-            />
+            {uiVisibility.showInsights && (
+              <PantryInsights
+                pantryItems={pantryData?.items || []}
+                analytics={analytics}
+                onAddToShoppingList={(itemName, quantity, unit) => {
+                  setItemsToAddToShoppingList([
+                    { name: itemName, quantity, unit },
+                  ]);
+                  setShoppingListDialogOpen(true);
+                }}
+                onNavigateToSeasonality={() => {
+                  router.push(pathname.replace("/pantry", "/seasonality"));
+                }}
+              />
+            )}
 
             {/* Filters and Actions - Two line layout for better responsiveness */}
             <div className="space-y-3">
               {/* First row: Search and filters */}
               <div className="w-full">
-                <PantryFiltersBar filters={filters} onFiltersChange={setFilters} />
+                <PantryFiltersBar
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  visibility={{
+                    showSearch: uiVisibility.showSearchBar,
+                    showFilters: uiVisibility.showFilters,
+                    showDateRange: uiVisibility.showDateRange,
+                    showSorting: uiVisibility.showSorting,
+                  }}
+                />
               </div>
 
               {/* Second row: View selector and actions */}
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <ViewSelector
-                  currentView={currentView}
-                  onViewChange={setCurrentView}
-                  views={viewOptions}
-                />
+              <div className="flex flex-wrap items-center justify-start gap-3">
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={currentView}
+                    onViewChange={setCurrentView}
+                    views={viewOptions}
+                  />
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button>
@@ -316,7 +336,7 @@ export function PantryContent() {
                       <ChevronDown className="h-4 w-4 ml-2" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={handleAddClick}>
                       <Plus className="h-4 w-4 mr-2" />
                       {t("addItem")}
@@ -371,23 +391,25 @@ export function PantryContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <StatsCard
-                title={t("stats.archivedItems")}
-                value={archivedData?.total?.toString() || "0"}
-                icon={<FolderArchive className="h-5 w-5 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("stats.categories")}
-                value={new Set(archivedData?.items?.map((item) => item.category).filter(Boolean)).size.toString()}
-                icon={<Tag className="h-5 w-5 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("stats.locations")}
-                value={new Set(archivedData?.items?.map((item) => item.storage_location).filter(Boolean)).size.toString()}
-                icon={<Home className="h-5 w-5 text-muted-foreground" />}
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <StatsCard
+                  title={t("stats.archivedItems")}
+                  value={archivedData?.total?.toString() || "0"}
+                  icon={<FolderArchive className="h-5 w-5 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("stats.categories")}
+                  value={new Set(archivedData?.items?.map((item) => item.category).filter(Boolean)).size.toString()}
+                  icon={<Tag className="h-5 w-5 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("stats.locations")}
+                  value={new Set(archivedData?.items?.map((item) => item.storage_location).filter(Boolean)).size.toString()}
+                  icon={<Home className="h-5 w-5 text-muted-foreground" />}
+                />
+              </div>
+            )}
 
             {/* Filters and View selector - Two line layout */}
             <div className="space-y-3">
@@ -395,14 +417,22 @@ export function PantryContent() {
                 <PantryFiltersBar
                   filters={archiveFilters}
                   onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
+                  visibility={{
+                    showSearch: uiVisibility.showSearchBar,
+                    showFilters: uiVisibility.showFilters,
+                    showDateRange: uiVisibility.showDateRange,
+                    showSorting: uiVisibility.showSorting,
+                  }}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <ViewSelector
-                  currentView={archiveView}
-                  onViewChange={setArchiveView}
-                  views={viewOptions}
-                />
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={archiveView}
+                    onViewChange={setArchiveView}
+                    views={viewOptions}
+                  />
+                )}
               </div>
             </div>
 
@@ -442,31 +472,33 @@ export function PantryContent() {
               </div>
             ) : wasteAnalytics && wasteAnalytics.total_wasted_items > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("waste.stats.totalWasted")}
-                    value={wasteAnalytics.total_wasted_items.toString()}
-                    icon={<Trash2 className="h-5 w-5 text-red-500" />}
-                    variant="danger"
-                  />
-                  <StatsCard
-                    title={t("waste.stats.wastedThisMonth")}
-                    value={(wasteAnalytics.wasted_this_month ?? 0).toString()}
-                    icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
-                    variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
-                  />
-                  <StatsCard
-                    title={t("waste.stats.wasteRate")}
-                    value={`${wasteAnalytics.waste_rate ?? 0}%`}
-                    icon={<Percent className="h-5 w-5 text-purple-500" />}
-                    variant={(wasteAnalytics.waste_rate ?? 0) > 10 ? "warning" : "default"}
-                  />
-                  <StatsCard
-                    title={t("waste.stats.topLocation")}
-                    value={wasteAnalytics.by_location?.[0]?.location ? translateLocation(wasteAnalytics.by_location[0].location) : "-"}
-                    icon={<Home className="h-5 w-5 text-muted-foreground" />}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("waste.stats.totalWasted")}
+                      value={wasteAnalytics.total_wasted_items.toString()}
+                      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                      variant="danger"
+                    />
+                    <StatsCard
+                      title={t("waste.stats.wastedThisMonth")}
+                      value={(wasteAnalytics.wasted_this_month ?? 0).toString()}
+                      icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+                      variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
+                    />
+                    <StatsCard
+                      title={t("waste.stats.wasteRate")}
+                      value={`${wasteAnalytics.waste_rate ?? 0}%`}
+                      icon={<Percent className="h-5 w-5 text-purple-500" />}
+                      variant={(wasteAnalytics.waste_rate ?? 0) > 10 ? "warning" : "default"}
+                    />
+                    <StatsCard
+                      title={t("waste.stats.topLocation")}
+                      value={wasteAnalytics.by_location?.[0]?.location ? translateLocation(wasteAnalytics.by_location[0].location) : "-"}
+                      icon={<Home className="h-5 w-5 text-muted-foreground" />}
+                    />
+                  </div>
+                )}
 
                 {/* Suggestions card */}
                 {wasteAnalytics.suggestions && wasteAnalytics.suggestions.length > 0 && (
@@ -587,29 +619,31 @@ export function PantryContent() {
           <div className="space-y-6">
             {hasPantryItems && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("analysis.inFridge")}
-                    value={analytics.items_by_location?.fridge?.toString() || "0"}
-                    icon={<Refrigerator className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.inFreezer")}
-                    value={analytics.items_by_location?.freezer?.toString() || "0"}
-                    icon={<ThermometerSnowflake className="h-5 w-5 text-cyan-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.inPantry")}
-                    value={analytics.items_by_location?.pantry?.toString() || "0"}
-                    icon={<Home className="h-5 w-5 text-amber-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.expiryStatus")}
-                    value={`${analytics.expired || 0} / ${analytics.expiring_soon || 0}`}
-                    icon={<Clock className="h-5 w-5 text-orange-500" />}
-                    variant={analytics.expired > 0 ? "danger" : analytics.expiring_soon > 0 ? "warning" : "default"}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("analysis.inFridge")}
+                      value={analytics.items_by_location?.fridge?.toString() || "0"}
+                      icon={<Refrigerator className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.inFreezer")}
+                      value={analytics.items_by_location?.freezer?.toString() || "0"}
+                      icon={<ThermometerSnowflake className="h-5 w-5 text-cyan-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.inPantry")}
+                      value={analytics.items_by_location?.pantry?.toString() || "0"}
+                      icon={<Home className="h-5 w-5 text-amber-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.expiryStatus")}
+                      value={`${analytics.expired || 0} / ${analytics.expiring_soon || 0}`}
+                      icon={<Clock className="h-5 w-5 text-orange-500" />}
+                      variant={analytics.expired > 0 ? "danger" : analytics.expiring_soon > 0 ? "warning" : "default"}
+                    />
+                  </div>
+                )}
 
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analysis.locationDistribution")}>
@@ -754,31 +788,33 @@ export function PantryContent() {
               </div>
             ) : historyData && historyData.total_items_added > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("history.totalAdded")}
-                    value={historyData.total_items_added.toString()}
-                    icon={<Package className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.totalConsumed")}
-                    value={historyData.total_items_consumed.toString()}
-                    icon={<TrendingUp className="h-5 w-5 text-green-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.totalWasted")}
-                    value={historyData.total_items_wasted.toString()}
-                    icon={<Trash2 className="h-5 w-5 text-red-500" />}
-                    variant={historyData.total_items_wasted > 0 ? "danger" : "default"}
-                  />
-                  <StatsCard
-                    title={t("history.wasteRate")}
-                    value={`${historyData.total_items_added > 0
-                      ? Math.round((historyData.total_items_wasted / historyData.total_items_added) * 100)
-                      : 0}%`}
-                    icon={<Percent className="h-5 w-5 text-purple-500" />}
-                  />
-                </div>
+                {uiVisibility.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("history.totalAdded")}
+                      value={historyData.total_items_added.toString()}
+                      icon={<Package className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.totalConsumed")}
+                      value={historyData.total_items_consumed.toString()}
+                      icon={<TrendingUp className="h-5 w-5 text-green-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.totalWasted")}
+                      value={historyData.total_items_wasted.toString()}
+                      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                      variant={historyData.total_items_wasted > 0 ? "danger" : "default"}
+                    />
+                    <StatsCard
+                      title={t("history.wasteRate")}
+                      value={`${historyData.total_items_added > 0
+                        ? Math.round((historyData.total_items_wasted / historyData.total_items_added) * 100)
+                        : 0}%`}
+                      icon={<Percent className="h-5 w-5 text-purple-500" />}
+                    />
+                  </div>
+                )}
 
                 <div className="grid gap-6">
                   <AnalyticsCard

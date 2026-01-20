@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/lib/store/user-store";
 
 interface PageHeaderProps {
   title: string;
@@ -15,6 +16,14 @@ export function PageHeader({
   actions,
   className,
 }: PageHeaderProps) {
+  const { preferences } = useUserStore();
+  const { showPageTitle, showPageSubtitle } = preferences.uiVisibility;
+
+  // If both title and subtitle are hidden and no actions, render nothing
+  if (!showPageTitle && !showPageSubtitle && !actions) {
+    return null;
+  }
+
   return (
     <div
       className={cn(
@@ -23,8 +32,10 @@ export function PageHeader({
       )}
     >
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        {description && (
+        {showPageTitle && (
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        )}
+        {showPageSubtitle && description && (
           <p className="text-muted-foreground mt-1">{description}</p>
         )}
       </div>

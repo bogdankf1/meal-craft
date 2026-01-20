@@ -68,11 +68,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useCurrency } from "@/components/providers/currency-provider";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function KitchenEquipmentContent() {
   const t = useTranslations("kitchenEquipment");
   const tCommon = useTranslations("common");
   const { formatPriceFromUAH } = useCurrency();
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // State for active items
   const [filters, setFilters] = useState<EquipmentFilters>({
@@ -136,13 +139,15 @@ export function KitchenEquipmentContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
+  const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
     { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
-    { value: "maintenance", label: t("tabs.maintenance"), icon: <Wrench className="h-4 w-4" /> },
-    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
+    { value: "maintenance", label: t("tabs.maintenance"), icon: <Wrench className="h-4 w-4" />, visibilityKey: "showMaintenanceTab" as const },
+    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const handleAddClick = () => {
     setEditingItem(null);
@@ -223,37 +228,39 @@ export function KitchenEquipmentContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard
-              title={t("stats.totalItems")}
-              value={analytics?.total_items || 0}
-              icon={<ChefHat className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.needsMaintenance")}
-              value={analytics?.needs_maintenance || 0}
-              icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
-              variant={
-                (analytics?.needs_maintenance || 0) > 0 ? "warning" : "default"
-              }
-            />
-            <StatsCard
-              title={t("stats.needsRepair")}
-              value={analytics?.needs_repair || 0}
-              icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
-              variant={
-                (analytics?.needs_repair || 0) > 0 ? "danger" : "default"
-              }
-            />
-            <StatsCard
-              title={t("stats.totalValue")}
-              value={formatPriceFromUAH(Number(analytics?.total_value || 0))}
-              icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-            />
-          </div>
+          {uiVisibility.showStatsCards && (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              <StatsCard
+                title={t("stats.totalItems")}
+                value={analytics?.total_items || 0}
+                icon={<ChefHat className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.needsMaintenance")}
+                value={analytics?.needs_maintenance || 0}
+                icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
+                variant={
+                  (analytics?.needs_maintenance || 0) > 0 ? "warning" : "default"
+                }
+              />
+              <StatsCard
+                title={t("stats.needsRepair")}
+                value={analytics?.needs_repair || 0}
+                icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
+                variant={
+                  (analytics?.needs_repair || 0) > 0 ? "danger" : "default"
+                }
+              />
+              <StatsCard
+                title={t("stats.totalValue")}
+                value={formatPriceFromUAH(Number(analytics?.total_value || 0))}
+                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
+              />
+            </div>
+          )}
 
           {/* Insights Section - Recipes & Learning Integration */}
-          {equipmentData?.items && equipmentData.items.length > 0 && (
+          {uiVisibility.showInsights && equipmentData?.items && equipmentData.items.length > 0 && (
             <div className="mb-6">
               <KitchenEquipmentInsights
                 equipmentItems={equipmentData.items}
@@ -279,28 +286,34 @@ export function KitchenEquipmentContent() {
 
           {/* Filters Row */}
           <div className="flex flex-col gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t("filters.search")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+            {(uiVisibility.showSearchBar || uiVisibility.showFilters) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {uiVisibility.showSearchBar && (
+                  <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={t("filters.search")}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                )}
+                {uiVisibility.showFilters && (
+                  <KitchenEquipmentFilters
+                    category={categoryFilter}
+                    onCategoryChange={setCategoryFilter}
+                    condition={conditionFilter}
+                    onConditionChange={setConditionFilter}
+                    location={locationFilter}
+                    onLocationChange={setLocationFilter}
+                    needsMaintenance={maintenanceFilter}
+                    onNeedsMaintenanceChange={setMaintenanceFilter}
+                  />
+                )}
               </div>
-              <KitchenEquipmentFilters
-                category={categoryFilter}
-                onCategoryChange={setCategoryFilter}
-                condition={conditionFilter}
-                onConditionChange={setConditionFilter}
-                location={locationFilter}
-                onLocationChange={setLocationFilter}
-                needsMaintenance={maintenanceFilter}
-                onNeedsMaintenanceChange={setMaintenanceFilter}
-              />
-            </div>
-            <div className="flex items-center justify-end gap-2">
+            )}
+            <div className="flex items-center justify-start gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button>
@@ -377,38 +390,40 @@ export function KitchenEquipmentContent() {
         <TabsContent value="maintenance">
           <div className="space-y-6">
             {/* Maintenance Stats */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title={t("maintenance.stats.total")}
-                value={maintenanceOverview?.total_equipment || 0}
-                icon={<Package className="h-4 w-4 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("maintenance.stats.needsMaintenance")}
-                value={maintenanceOverview?.needs_maintenance || 0}
-                icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
-                variant={
-                  (maintenanceOverview?.needs_maintenance || 0) > 0
-                    ? "warning"
-                    : "default"
-                }
-              />
-              <StatsCard
-                title={t("maintenance.stats.rate")}
-                value={`${maintenanceOverview?.maintenance_rate || 0}%`}
-                icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("maintenance.stats.overdue")}
-                value={maintenanceOverview?.overdue_items?.length || 0}
-                icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
-                variant={
-                  (maintenanceOverview?.overdue_items?.length || 0) > 0
-                    ? "danger"
-                    : "default"
-                }
-              />
-            </div>
+            {uiVisibility.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title={t("maintenance.stats.total")}
+                  value={maintenanceOverview?.total_equipment || 0}
+                  icon={<Package className="h-4 w-4 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("maintenance.stats.needsMaintenance")}
+                  value={maintenanceOverview?.needs_maintenance || 0}
+                  icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
+                  variant={
+                    (maintenanceOverview?.needs_maintenance || 0) > 0
+                      ? "warning"
+                      : "default"
+                  }
+                />
+                <StatsCard
+                  title={t("maintenance.stats.rate")}
+                  value={`${maintenanceOverview?.maintenance_rate || 0}%`}
+                  icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("maintenance.stats.overdue")}
+                  value={maintenanceOverview?.overdue_items?.length || 0}
+                  icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
+                  variant={
+                    (maintenanceOverview?.overdue_items?.length || 0) > 0
+                      ? "danger"
+                      : "default"
+                  }
+                />
+              </div>
+            )}
 
             {/* Overdue Items */}
             {maintenanceOverview?.overdue_items &&

@@ -7,6 +7,7 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import { ReduxProvider } from "@/components/providers/redux-provider";
 import { AuthSyncProvider } from "@/components/providers/auth-sync-provider";
 import { CurrencyProvider } from "@/components/providers/currency-provider";
+import { UIPreferencesSyncProvider } from "@/components/providers/ui-preferences-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -40,7 +41,9 @@ export default async function RootLayout({
               >
                 <NextIntlClientProvider messages={messages}>
                   <CurrencyProvider>
-                    {children}
+                    <UIPreferencesSyncProvider>
+                      {children}
+                    </UIPreferencesSyncProvider>
                     <Toaster />
                   </CurrencyProvider>
                 </NextIntlClientProvider>

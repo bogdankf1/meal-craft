@@ -135,6 +135,7 @@ export const baseApi = createApi({
     "Currencies",
     "Support",
     "SupportTopic",
+    "UIPreferences",
   ],
   endpoints: () => ({}),
 });

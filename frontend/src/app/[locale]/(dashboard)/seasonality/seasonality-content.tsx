@@ -69,6 +69,7 @@ import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 import { SeasonalityInsights } from "@/components/modules/seasonality";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useUserStore } from "@/lib/store/user-store";
 
 // Map seasonality categories to shopping list categories
 const mapToShoppingListCategory = (seasonalityCategory: string): string => {
@@ -92,6 +93,8 @@ const MONTHS = [
 export function SeasonalityContent() {
   const t = useTranslations("seasonality");
   const router = useRouter();
+  const { preferences: userPreferences } = useUserStore();
+  const { uiVisibility } = userPreferences;
 
   // Current month
   const currentMonth = new Date().getMonth() + 1;
@@ -150,23 +153,28 @@ export function SeasonalityContent() {
   // Map name to saved produce ID (for favorite toggling)
   const [savedProduceIds, setSavedProduceIds] = useState<Map<string, string>>(new Map());
 
-  const tabs = [
+  const allTabs = [
     {
       value: "thisMonth",
       label: t("tabs.thisMonth"),
       icon: <Leaf className="h-4 w-4" />,
+      visibilityKey: "showThisMonthTab" as const,
     },
     {
       value: "calendar",
       label: t("tabs.calendar"),
       icon: <Calendar className="h-4 w-4" />,
+      visibilityKey: "showSeasonalCalendarTab" as const,
     },
     {
       value: "specialties",
       label: t("tabs.specialties"),
       icon: <MapPin className="h-4 w-4" />,
+      visibilityKey: "showLocalSpecialtiesTab" as const,
     },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const handleToggleFavorite = async (produce: SeasonalProduce) => {
     try {
@@ -342,32 +350,34 @@ export function SeasonalityContent() {
     <>
       <ModuleTabs tabs={tabs} defaultTab="thisMonth">
         {/* Stats Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <StatsCard
-            title={t("stats.inSeason")}
-            value={inSeasonCount}
-            icon={<Leaf className="h-4 w-4 text-green-600" />}
-            trend={{ value: t("stats.itemsAvailable"), label: "", direction: "neutral" }}
-          />
-          <StatsCard
-            title={t("stats.peakSeason")}
-            value={peakCount}
-            icon={<TrendingUp className="h-4 w-4 text-orange-600" />}
-            trend={{ value: t("stats.atTheirBest"), label: "", direction: "neutral" }}
-          />
-          <StatsCard
-            title={t("stats.favorites")}
-            value={favoritesCount}
-            icon={<Heart className="h-4 w-4 text-red-500" />}
-            trend={{ value: t("stats.savedItems"), label: "", direction: "neutral" }}
-          />
-          <StatsCard
-            title={t("stats.localSpecialties")}
-            value={specialtiesCount}
-            icon={<MapPin className="h-4 w-4 text-blue-600" />}
-            trend={{ value: countryInfo?.name || "", label: "", direction: "neutral" }}
-          />
-        </div>
+        {uiVisibility.showStatsCards && (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <StatsCard
+              title={t("stats.inSeason")}
+              value={inSeasonCount}
+              icon={<Leaf className="h-4 w-4 text-green-600" />}
+              trend={{ value: t("stats.itemsAvailable"), label: "", direction: "neutral" }}
+            />
+            <StatsCard
+              title={t("stats.peakSeason")}
+              value={peakCount}
+              icon={<TrendingUp className="h-4 w-4 text-orange-600" />}
+              trend={{ value: t("stats.atTheirBest"), label: "", direction: "neutral" }}
+            />
+            <StatsCard
+              title={t("stats.favorites")}
+              value={favoritesCount}
+              icon={<Heart className="h-4 w-4 text-red-500" />}
+              trend={{ value: t("stats.savedItems"), label: "", direction: "neutral" }}
+            />
+            <StatsCard
+              title={t("stats.localSpecialties")}
+              value={specialtiesCount}
+              icon={<MapPin className="h-4 w-4 text-blue-600" />}
+              trend={{ value: countryInfo?.name || "", label: "", direction: "neutral" }}
+            />
+          </div>
+        )}
 
         {/* This Month Tab */}
         <TabsContent value="thisMonth" className="space-y-6">
@@ -411,7 +421,7 @@ export function SeasonalityContent() {
           </Card>
 
           {/* Cross-module Insights */}
-          {produceData?.items && produceData.items.length > 0 && (
+          {uiVisibility.showInsights && produceData?.items && produceData.items.length > 0 && (
             <SeasonalityInsights
               seasonalProduce={produceData.items}
               currentMonth={currentMonth}

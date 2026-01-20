@@ -64,6 +64,13 @@ export interface SortFilter {
 
 export type FilterDefinition = SelectFilter | SearchFilter | DateRangeFilter | SortFilter;
 
+export interface FilterBarVisibility {
+  showSearch?: boolean;
+  showFilters?: boolean;
+  showDateRange?: boolean;
+  showSorting?: boolean;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FilterBarProps<T extends Record<string, any>> {
   filters: T;
@@ -72,6 +79,7 @@ export interface FilterBarProps<T extends Record<string, any>> {
   defaultFilters?: Partial<T>;
   preserveKeys?: (keyof T)[];
   className?: string;
+  visibility?: FilterBarVisibility;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,8 +90,29 @@ export function FilterBar<T extends Record<string, any>>({
   defaultFilters = {},
   preserveKeys = [],
   className = "",
+  visibility = {},
 }: FilterBarProps<T>) {
-  const hasActiveFilters = filterDefinitions.some((def) => {
+  const {
+    showSearch = true,
+    showFilters = true,
+    showDateRange = true,
+    showSorting = true,
+  } = visibility;
+
+  // Filter definitions based on visibility settings
+  const visibleDefinitions = filterDefinitions.filter((def) => {
+    if (def.type === "search" && !showSearch) return false;
+    if (def.type === "select" && !showFilters) return false;
+    if (def.type === "dateRange" && !showDateRange) return false;
+    if (def.type === "sort" && !showSorting) return false;
+    return true;
+  });
+
+  // If nothing is visible, render nothing
+  if (visibleDefinitions.length === 0) {
+    return null;
+  }
+  const hasActiveFilters = visibleDefinitions.some((def) => {
     if (def.type === "search") {
       return !!filters[def.key];
     }
@@ -157,7 +186,7 @@ export function FilterBar<T extends Record<string, any>>({
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
-        {filterDefinitions.map((def, index) => {
+        {visibleDefinitions.map((def, index) => {
           if (def.type === "search") {
             return (
               <div key={index} className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px] sm:max-w-sm">

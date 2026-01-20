@@ -2924,6 +2924,113 @@
         "description": "Select your preferred currency for displaying prices",
         "placeholder": "Select currency",
         "hint": "Prices will be automatically converted to your selected currency"
+      },
+      "interfaceCustomization": {
+        "title": "Interface Customization",
+        "description": "Show or hide UI elements across all modules",
+        "pageElements": {
+          "title": "Page Elements",
+          "showPageTitle": {
+            "label": "Page Title",
+            "description": "Show the main title on module pages"
+          },
+          "showPageSubtitle": {
+            "label": "Page Subtitle",
+            "description": "Show the description text below page titles"
+          },
+          "showStatsCards": {
+            "label": "Stats Cards",
+            "description": "Show summary statistics at the top of pages"
+          },
+          "showInsights": {
+            "label": "Insights Sections",
+            "description": "Show insights and recommendations cards"
+          }
+        },
+        "toolbarElements": {
+          "title": "Toolbar Elements",
+          "showSearchBar": {
+            "label": "Search Bar",
+            "description": "Show the search input field"
+          },
+          "showFilters": {
+            "label": "Filters",
+            "description": "Show filter dropdowns and selectors"
+          },
+          "showDateRange": {
+            "label": "Date Range Picker",
+            "description": "Show date range selection controls"
+          },
+          "showViewSelector": {
+            "label": "View Selector",
+            "description": "Show grid/list view toggle"
+          },
+          "showSorting": {
+            "label": "Sorting",
+            "description": "Show sort options"
+          }
+        },
+        "tabs": {
+          "title": "Common Tabs",
+          "description": "These tabs appear in multiple modules",
+          "showArchiveTab": {
+            "label": "Archive Tab",
+            "description": "Show the Archive tab in modules"
+          },
+          "showWasteTab": {
+            "label": "Waste Tab",
+            "description": "Show the Waste tab in modules"
+          },
+          "showAnalysisTab": {
+            "label": "Analysis Tab",
+            "description": "Show the Analysis tab in modules"
+          },
+          "showHistoryTab": {
+            "label": "History Tab",
+            "description": "Show the History tab in modules"
+          }
+        },
+        "moduleSpecificTabs": {
+          "title": "Module-Specific Tabs",
+          "description": "These tabs are only available in specific modules",
+          "showMaintenanceTab": {
+            "label": "Maintenance Tab",
+            "description": "Kitchen Equipment module"
+          },
+          "showGoalsTab": {
+            "label": "Goals Tab",
+            "description": "Nutrition module"
+          },
+          "showSeasonalCalendarTab": {
+            "label": "Seasonal Calendar Tab",
+            "description": "Seasonality module"
+          },
+          "showLocalSpecialtiesTab": {
+            "label": "Local Specialties Tab",
+            "description": "Seasonality module"
+          },
+          "showThisMonthTab": {
+            "label": "This Month Tab",
+            "description": "Seasonality module"
+          },
+          "showMySkillsTab": {
+            "label": "My Skills Tab",
+            "description": "Learning module"
+          },
+          "showLibraryTab": {
+            "label": "Library Tab",
+            "description": "Learning module"
+          },
+          "showLearningPathsTab": {
+            "label": "Learning Paths Tab",
+            "description": "Learning module"
+          },
+          "showCollectionsTab": {
+            "label": "Collections Tab",
+            "description": "Recipes module"
+          }
+        },
+        "settingsUpdated": "Interface settings updated"
       }
     },
     "notifications": {

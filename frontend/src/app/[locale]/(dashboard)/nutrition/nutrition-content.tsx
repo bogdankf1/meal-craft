@@ -56,6 +56,7 @@ import {
 import { useGetProfilesQuery, type Profile } from "@/lib/api/profiles-api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function NutritionContent() {
   const t = useTranslations("nutrition");
@@ -63,6 +64,8 @@ export function NutritionContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // Profile filtering (null = All Members)
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
@@ -114,12 +117,14 @@ export function NutritionContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
+  const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
-    { value: "goals", label: t("tabs.goals"), icon: <Target className="h-4 w-4" /> },
-    { value: "analytics", label: t("tabs.analytics"), icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
+    { value: "goals", label: t("tabs.goals"), icon: <Target className="h-4 w-4" />, visibilityKey: "showGoalsTab" as const },
+    { value: "analytics", label: t("tabs.analytics"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
   ];
+
+  const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
   const viewOptions = [
     { ...LIST_VIEW, label: t("views.daily") },
@@ -172,43 +177,45 @@ export function NutritionContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard
-              title={t("stats.todayCalories")}
-              value={dailyData?.total_calories || 0}
-              icon={<Target className="h-4 w-4 text-muted-foreground" />}
-              trend={
-                activeGoal?.daily_calories
-                  ? { value: `${t("stats.of")} ${activeGoal.daily_calories}`, label: t("units.kcal") }
-                  : undefined
-              }
-            />
-            <StatsCard
-              title={t("stats.todayProtein")}
-              value={`${(dailyData?.total_protein_g || 0).toFixed(0)}g`}
-              icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
-              trend={
-                activeGoal?.daily_protein_g
-                  ? { value: `${t("stats.of")} ${activeGoal.daily_protein_g}g`, label: "" }
-                  : undefined
-              }
-            />
-            <StatsCard
-              title={t("stats.todayMeals")}
-              value={dailyData?.meal_count || 0}
-              icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.goalProgress")}
-              value={
-                dailyData?.calories_percent !== null && dailyData?.calories_percent !== undefined
-                  ? `${Math.round(dailyData.calories_percent)}%`
-                  : "-"
-              }
-              icon={<Target className="h-4 w-4 text-muted-foreground" />}
-              trend={{ value: "", label: activeGoal ? t("stats.ofDailyGoal") : t("stats.noGoalSet") }}
-            />
-          </div>
+          {uiVisibility.showStatsCards && (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              <StatsCard
+                title={t("stats.todayCalories")}
+                value={dailyData?.total_calories || 0}
+                icon={<Target className="h-4 w-4 text-muted-foreground" />}
+                trend={
+                  activeGoal?.daily_calories
+                    ? { value: `${t("stats.of")} ${activeGoal.daily_calories}`, label: t("units.kcal") }
+                    : undefined
+                }
+              />
+              <StatsCard
+                title={t("stats.todayProtein")}
+                value={`${(dailyData?.total_protein_g || 0).toFixed(0)}g`}
+                icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
+                trend={
+                  activeGoal?.daily_protein_g
+                    ? { value: `${t("stats.of")} ${activeGoal.daily_protein_g}g`, label: "" }
+                    : undefined
+                }
+              />
+              <StatsCard
+                title={t("stats.todayMeals")}
+                value={dailyData?.meal_count || 0}
+                icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.goalProgress")}
+                value={
+                  dailyData?.calories_percent !== null && dailyData?.calories_percent !== undefined
+                    ? `${Math.round(dailyData.calories_percent)}%`
+                    : "-"
+                }
+                icon={<Target className="h-4 w-4 text-muted-foreground" />}
+                trend={{ value: "", label: activeGoal ? t("stats.ofDailyGoal") : t("stats.noGoalSet") }}
+              />
+            </div>
+          )}
 
           {/* View Controls */}
           <div className="flex flex-col gap-4 mb-6">
@@ -244,11 +251,13 @@ export function NutritionContent() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <ViewSelector
-                  currentView={viewMode}
-                  onViewChange={setViewMode}
-                  views={viewOptions}
-                />
+                {uiVisibility.showViewSelector && (
+                  <ViewSelector
+                    currentView={viewMode}
+                    onViewChange={setViewMode}
+                    views={viewOptions}
+                  />
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button>
