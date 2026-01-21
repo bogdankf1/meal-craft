@@ -5,13 +5,58 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional, Dict, Literal
 
 from app.core.database import get_db
 from app.models.user import User
 from app.api.deps import get_current_user
 
 router = APIRouter()
+
+
+# Onboarding step status type
+OnboardingStepStatus = Literal["pending", "skipped", "completed"]
+
+
+# Onboarding step IDs
+ONBOARDING_STEPS = [
+    "household",
+    "groceries",
+    "pantry",
+    "nutrition",
+    "recipes",
+    "meal_plan",
+]
+
+
+class OnboardingStepState(BaseModel):
+    """State for a single onboarding step."""
+    status: OnboardingStepStatus = "pending"
+
+
+class OnboardingState(BaseModel):
+    """Overall onboarding state."""
+    is_dismissed: bool = False
+    steps: Dict[str, OnboardingStepState] = {}
+
+    class Config:
+        from_attributes = True
+
+
+class OnboardingStepUpdate(BaseModel):
+    """Request body for updating a single step."""
+    step_id: str
+    status: OnboardingStepStatus
+
+
+class OnboardingDismissUpdate(BaseModel):
+    """Request body for dismissing onboarding."""
+    is_dismissed: bool
+
+
+class OnboardingStatusResponse(BaseModel):
+    """Response with derived completion status for all steps."""
+    steps: Dict[str, bool]  # step_id -> is_completed (based on actual data)
 
 
 # Column visibility models for each module
@@ -364,3 +409,136 @@ async def update_ui_preferences(
         uiVisibility=UIVisibility(**merged_visibility),
         columnVisibility=ColumnVisibility(**merged_column_visibility)
     )
+
+
+# Default onboarding state
+DEFAULT_ONBOARDING_STATE = {
+    "is_dismissed": False,
+    "steps": {step: {"status": "pending"} for step in ONBOARDING_STEPS}
+}
+
+
+@router.get("/onboarding", response_model=OnboardingState)
+async def get_onboarding_state(
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get current user's onboarding state.
+    """
+    ui_prefs = current_user.ui_preferences or {}
+    onboarding = ui_prefs.get("onboarding", DEFAULT_ONBOARDING_STATE)
+
+    # Ensure all steps exist with defaults
+    steps = {}
+    for step in ONBOARDING_STEPS:
+        step_data = onboarding.get("steps", {}).get(step, {"status": "pending"})
+        steps[step] = OnboardingStepState(**step_data)
+
+    return OnboardingState(
+        is_dismissed=onboarding.get("is_dismissed", False),
+        steps=steps
+    )
+
+
+@router.put("/onboarding/step", response_model=OnboardingState)
+async def update_onboarding_step(
+    request: OnboardingStepUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Update a single onboarding step status.
+    """
+    if request.step_id not in ONBOARDING_STEPS:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=f"Invalid step_id: {request.step_id}")
+
+    # Get existing preferences
+    existing_prefs = current_user.ui_preferences or {}
+    ui_prefs = dict(existing_prefs)
+
+    # Get or create onboarding state
+    onboarding = ui_prefs.get("onboarding", dict(DEFAULT_ONBOARDING_STATE))
+    onboarding = dict(onboarding)  # Ensure it's a new dict
+
+    if "steps" not in onboarding:
+        onboarding["steps"] = {step: {"status": "pending"} for step in ONBOARDING_STEPS}
+    else:
+        onboarding["steps"] = dict(onboarding["steps"])
+
+    # Update the step
+    onboarding["steps"][request.step_id] = {"status": request.status}
+
+    # Save to database
+    ui_prefs["onboarding"] = onboarding
+    current_user.ui_preferences = ui_prefs
+    attributes.flag_modified(current_user, "ui_preferences")
+    await db.commit()
+    await db.refresh(current_user)
+
+    # Return updated state
+    steps = {}
+    for step in ONBOARDING_STEPS:
+        step_data = onboarding.get("steps", {}).get(step, {"status": "pending"})
+        steps[step] = OnboardingStepState(**step_data)
+
+    return OnboardingState(
+        is_dismissed=onboarding.get("is_dismissed", False),
+        steps=steps
+    )
+
+
+@router.put("/onboarding/dismiss", response_model=OnboardingState)
+async def dismiss_onboarding(
+    request: OnboardingDismissUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Dismiss or un-dismiss the onboarding flow.
+    """
+    # Get existing preferences
+    existing_prefs = current_user.ui_preferences or {}
+    ui_prefs = dict(existing_prefs)
+
+    # Get or create onboarding state
+    onboarding = ui_prefs.get("onboarding", dict(DEFAULT_ONBOARDING_STATE))
+    onboarding = dict(onboarding)
+
+    # Update dismissed state
+    onboarding["is_dismissed"] = request.is_dismissed
+
+    # Save to database
+    ui_prefs["onboarding"] = onboarding
+    current_user.ui_preferences = ui_prefs
+    attributes.flag_modified(current_user, "ui_preferences")
+    await db.commit()
+    await db.refresh(current_user)
+
+    # Return updated state
+    steps = {}
+    for step in ONBOARDING_STEPS:
+        step_data = onboarding.get("steps", {}).get(step, {"status": "pending"})
+        steps[step] = OnboardingStepState(**step_data)
+
+    return OnboardingState(
+        is_dismissed=onboarding.get("is_dismissed", False),
+        steps=steps
+    )
+
+
+@router.get("/onboarding/status", response_model=OnboardingStatusResponse)
+async def get_onboarding_derived_status(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get derived completion status for onboarding steps based on actual user data.
+    This checks if each step would be considered "complete" based on actual data.
+    """
+    from app.services.onboarding_service import OnboardingService
+
+    service = OnboardingService(db, current_user)
+    status = await service.get_derived_status()
+
+    return OnboardingStatusResponse(steps=status)

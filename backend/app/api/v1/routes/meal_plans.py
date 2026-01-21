@@ -228,12 +228,13 @@ async def get_current_week_plan(
 
 @router.get("/current-week/combined", response_model=CombinedWeekPlan)
 async def get_combined_week_plans(
+    target_date: Optional[date] = Query(None, description="Target date to find the week for"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get combined meal plans for all profiles for the current week."""
-    today = date.today()
-    monday, sunday = get_week_bounds(today)
+    """Get combined meal plans for all profiles for a specific week."""
+    reference_date = target_date if target_date else date.today()
+    monday, sunday = get_week_bounds(reference_date)
 
     # Get all meal plans for the current week (all profiles)
     query = (
