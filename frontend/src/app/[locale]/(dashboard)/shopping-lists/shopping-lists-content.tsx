@@ -59,12 +59,15 @@ import {
   type ShoppingListFilters,
 } from "@/lib/api/shopping-lists-api";
 import { useCurrency } from "@/components/providers/currency-provider";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function ShoppingListsContent() {
   const t = useTranslations("shoppingLists");
   const tCommon = useTranslations("common");
   const tGroceries = useTranslations("groceries");
   const { formatPriceFromUAH } = useCurrency();
+  const { preferences } = useUserStore();
+  const uiVisibility = preferences.uiVisibility;
 
   // State for active items
   const [filters, setFilters] = useState<ShoppingListFilters>({
@@ -123,13 +126,19 @@ export function ShoppingListsContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
-    { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
-    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
-    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
+  const allTabs = [
+    { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" />, alwaysShow: true },
+    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" />, alwaysShow: true },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
+    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
   ];
+
+  const tabs = allTabs.filter((tab) => {
+    if (tab.alwaysShow) return true;
+    if (tab.visibilityKey) return uiVisibility?.[tab.visibilityKey];
+    return true;
+  });
 
   const handleAddClick = () => {
     setEditingList(null);
@@ -216,40 +225,53 @@ export function ShoppingListsContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title={t("stats.totalLists")}
-                value={analytics?.total_lists?.toString() || "0"}
-                icon={<ShoppingCart className="h-5 w-5 text-primary" />}
-              />
-              <StatsCard
-                title={t("stats.activeLists")}
-                value={analytics?.active_lists?.toString() || "0"}
-                icon={<ListTodo className="h-5 w-5 text-blue-500" />}
-              />
-              <StatsCard
-                title={t("stats.completedLists")}
-                value={analytics?.completed_lists?.toString() || "0"}
-                icon={<CheckCircle className="h-5 w-5 text-green-500" />}
-                variant="success"
-              />
-              <StatsCard
-                title={t("stats.avgCompletionRate")}
-                value={`${Math.round(analytics?.avg_completion_rate || 0)}%`}
-                icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
-              <div className="flex-1 w-full">
-                <ShoppingListFiltersBar filters={filters} onFiltersChange={setFilters} />
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <ViewSelector
-                  currentView={currentView}
-                  onViewChange={setCurrentView}
-                  views={viewOptions}
+            {uiVisibility?.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title={t("stats.totalLists")}
+                  value={analytics?.total_lists?.toString() || "0"}
+                  icon={<ShoppingCart className="h-5 w-5 text-primary" />}
                 />
+                <StatsCard
+                  title={t("stats.activeLists")}
+                  value={analytics?.active_lists?.toString() || "0"}
+                  icon={<ListTodo className="h-5 w-5 text-blue-500" />}
+                />
+                <StatsCard
+                  title={t("stats.completedLists")}
+                  value={analytics?.completed_lists?.toString() || "0"}
+                  icon={<CheckCircle className="h-5 w-5 text-green-500" />}
+                  variant="success"
+                />
+                <StatsCard
+                  title={t("stats.avgCompletionRate")}
+                  value={`${Math.round(analytics?.avg_completion_rate || 0)}%`}
+                  icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+                />
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div className="w-full">
+                <ShoppingListFiltersBar
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  visibility={{
+                    showSearch: uiVisibility?.showSearchBar,
+                    showFilters: uiVisibility?.showFilters,
+                    showDateRange: uiVisibility?.showDateRange,
+                    showSorting: uiVisibility?.showSorting,
+                  }}
+                />
+              </div>
+              <div className="flex flex-wrap items-center justify-start gap-3">
+                {uiVisibility?.showViewSelector && (
+                  <ViewSelector
+                    currentView={currentView}
+                    onViewChange={setCurrentView}
+                    views={viewOptions}
+                  />
+                )}
                 <Button onClick={handleAddClick}>
                   <Plus className="h-4 w-4 mr-2" />
                   {t("addList")}
@@ -296,43 +318,53 @@ export function ShoppingListsContent() {
         {/* Archive Tab */}
         <TabsContent value="archive">
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-              <StatsCard
-                title={t("stats.archivedLists")}
-                value={archivedData?.total?.toString() || "0"}
-                icon={<FolderArchive className="h-5 w-5 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("stats.archivedItems")}
-                value={archivedData?.items?.reduce((sum, list) => sum + list.total_items, 0)?.toString() || "0"}
-                icon={<Package className="h-5 w-5 text-muted-foreground" />}
-              />
-              <StatsCard
-                title={t("stats.completionRate")}
-                value={`${Math.round(
-                  archivedData?.items?.length
-                    ? archivedData.items.filter((l) => l.status === "completed").length /
-                        archivedData.items.length * 100
-                    : 0
-                )}%`}
-                icon={<CheckCircle className="h-5 w-5 text-muted-foreground" />}
-              />
-            </div>
+            {uiVisibility?.showStatsCards && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <StatsCard
+                  title={t("stats.archivedLists")}
+                  value={archivedData?.total?.toString() || "0"}
+                  icon={<FolderArchive className="h-5 w-5 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("stats.archivedItems")}
+                  value={archivedData?.items?.reduce((sum, list) => sum + list.total_items, 0)?.toString() || "0"}
+                  icon={<Package className="h-5 w-5 text-muted-foreground" />}
+                />
+                <StatsCard
+                  title={t("stats.completionRate")}
+                  value={`${Math.round(
+                    archivedData?.items?.length
+                      ? archivedData.items.filter((l) => l.status === "completed").length /
+                          archivedData.items.length * 100
+                      : 0
+                  )}%`}
+                  icon={<CheckCircle className="h-5 w-5 text-muted-foreground" />}
+                />
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <ShoppingListFiltersBar
                   filters={archiveFilters}
                   onFiltersChange={(f) => setArchiveFilters({ ...f, is_archived: true })}
+                  visibility={{
+                    showSearch: uiVisibility?.showSearchBar,
+                    showFilters: uiVisibility?.showFilters,
+                    showDateRange: uiVisibility?.showDateRange,
+                    showSorting: uiVisibility?.showSorting,
+                  }}
                 />
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <ViewSelector
-                  currentView={archiveView}
-                  onViewChange={setArchiveView}
-                  views={viewOptions}
-                />
-              </div>
+              {uiVisibility?.showViewSelector && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <ViewSelector
+                    currentView={archiveView}
+                    onViewChange={setArchiveView}
+                    views={viewOptions}
+                  />
+                </div>
+              )}
             </div>
 
             {hasArchivedLists ? (
@@ -368,28 +400,30 @@ export function ShoppingListsContent() {
           <div className="space-y-6">
             {hasLists && analytics ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("analysis.listsThisWeek")}
-                    value={analytics.lists_this_week?.toString() || "0"}
-                    icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.listsThisMonth")}
-                    value={analytics.lists_this_month?.toString() || "0"}
-                    icon={<ShoppingCart className="h-5 w-5 text-purple-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.avgItemsPerList")}
-                    value={Math.round(analytics.avg_items_per_list || 0).toString()}
-                    icon={<Package className="h-5 w-5 text-green-500" />}
-                  />
-                  <StatsCard
-                    title={t("analysis.totalItemsPurchased")}
-                    value={analytics.total_items_purchased?.toString() || "0"}
-                    icon={<CheckCircle className="h-5 w-5 text-orange-500" />}
-                  />
-                </div>
+                {uiVisibility?.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("analysis.listsThisWeek")}
+                      value={analytics.lists_this_week?.toString() || "0"}
+                      icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.listsThisMonth")}
+                      value={analytics.lists_this_month?.toString() || "0"}
+                      icon={<ShoppingCart className="h-5 w-5 text-purple-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.avgItemsPerList")}
+                      value={Math.round(analytics.avg_items_per_list || 0).toString()}
+                      icon={<Package className="h-5 w-5 text-green-500" />}
+                    />
+                    <StatsCard
+                      title={t("analysis.totalItemsPurchased")}
+                      value={analytics.total_items_purchased?.toString() || "0"}
+                      icon={<CheckCircle className="h-5 w-5 text-orange-500" />}
+                    />
+                  </div>
+                )}
 
                 <AnalyticsCard title={t("analysis.completionProgress")}>
                   <div className="space-y-4">
@@ -494,28 +528,30 @@ export function ShoppingListsContent() {
               </div>
             ) : historyData && historyData.total_lists > 0 ? (
               <>
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatsCard
-                    title={t("history.totalInPeriod")}
-                    value={historyData.total_lists.toString()}
-                    icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.completedInPeriod")}
-                    value={historyData.completed_lists.toString()}
-                    icon={<CheckCircle className="h-5 w-5 text-green-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.avgMonthlyLists")}
-                    value={Math.round(historyData.avg_monthly_lists).toString()}
-                    icon={<Repeat className="h-5 w-5 text-purple-500" />}
-                  />
-                  <StatsCard
-                    title={t("history.avgCompletionRate")}
-                    value={`${Math.round(historyData.avg_completion_rate)}%`}
-                    icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
-                  />
-                </div>
+                {uiVisibility?.showStatsCards && (
+                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatsCard
+                      title={t("history.totalInPeriod")}
+                      value={historyData.total_lists.toString()}
+                      icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.completedInPeriod")}
+                      value={historyData.completed_lists.toString()}
+                      icon={<CheckCircle className="h-5 w-5 text-green-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.avgMonthlyLists")}
+                      value={Math.round(historyData.avg_monthly_lists).toString()}
+                      icon={<Repeat className="h-5 w-5 text-purple-500" />}
+                    />
+                    <StatsCard
+                      title={t("history.avgCompletionRate")}
+                      value={`${Math.round(historyData.avg_completion_rate)}%`}
+                      icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
+                    />
+                  </div>
+                )}
 
                 <div className="grid gap-6">
                   <AnalyticsCard

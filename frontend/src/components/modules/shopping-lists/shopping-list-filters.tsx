@@ -1,12 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { FilterBar, FilterDefinition } from "@/components/shared/FilterBar";
+import { FilterBar, FilterDefinition, type FilterBarVisibility } from "@/components/shared/FilterBar";
 import { type ShoppingListFilters } from "@/lib/api/shopping-lists-api";
 
 interface ShoppingListFiltersProps {
   filters: ShoppingListFilters;
   onFiltersChange: (filters: ShoppingListFilters) => void;
+  visibility?: FilterBarVisibility;
 }
 
 const defaultFilters: Partial<ShoppingListFilters> = {
@@ -19,6 +20,7 @@ const preserveKeys: (keyof ShoppingListFilters)[] = ["per_page", "is_archived"];
 export function ShoppingListFiltersBar({
   filters,
   onFiltersChange,
+  visibility,
 }: ShoppingListFiltersProps) {
   const t = useTranslations("shoppingLists");
 
@@ -68,6 +70,7 @@ export function ShoppingListFiltersBar({
       filterDefinitions={filterDefinitions}
       defaultFilters={defaultFilters}
       preserveKeys={preserveKeys}
+      visibility={visibility}
     />
   );
 }
