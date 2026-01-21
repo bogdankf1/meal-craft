@@ -43,6 +43,7 @@ import {
   ViewSelector,
   type ViewOption,
 } from "@/components/shared";
+import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -972,6 +973,9 @@ export function PantryContent() {
         onOpenChange={setShoppingListDialogOpen}
         items={itemsToAddToShoppingList}
       />
+
+      {/* Back to Setup button for onboarding */}
+      <BackToSetupButton stepId="pantry" />
     </>
   );
 }

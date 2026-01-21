@@ -66,7 +66,7 @@ export function MoveToPantryDialog({
     try {
       if (isBulk) {
         await moveBulk({
-          grocery_ids: items.map((item) => item.id),
+          ids: items.map((item) => item.id),
           storage_location: storageLocation,
         }).unwrap();
         toast.success(t("bulkSuccess", { count: items.length }));

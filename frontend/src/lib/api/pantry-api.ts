@@ -278,7 +278,7 @@ export interface MoveToPantryInput {
 }
 
 export interface BulkMoveToPantryInput {
-  grocery_ids: string[];
+  ids: string[];
   storage_location?: StorageLocation;
 }
 

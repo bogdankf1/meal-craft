@@ -592,7 +592,7 @@
       },
       "digitalReceipt": {
         "title": "Digital Receipt",
-        "description": "Upload a screenshot of digital receipt"
+        "description": "Paste a link to your digital receipt"
       },
       "deliveryApp": {
         "title": "Delivery App",
@@ -3926,6 +3926,51 @@
       "preferences": "Preferences",
       "none": "No preferences set",
       "editInSettings": "Edit in Settings"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to MealCraft!",
+    "subtitle": "Complete these steps to get started with your meal planning journey.",
+    "progress": "{completed} of {total} complete",
+    "start": "Start",
+    "skip": "Skip",
+    "skipped": "Skipped",
+    "viewAgain": "View Again",
+    "doNow": "Do Now",
+    "completePrevious": "Complete previous step first",
+    "dismiss": "Dismiss",
+    "refresh": "Refresh status",
+    "markComplete": "Mark Complete",
+    "backToSetup": "Back to Setup",
+    "steps": {
+      "household": {
+        "title": "Household Setup",
+        "description": "Add family members and set dietary preferences"
+      },
+      "groceries": {
+        "title": "Add Groceries",
+        "description": "Track your grocery purchases"
+      },
+      "pantry": {
+        "title": "Move to Pantry",
+        "description": "Organize items in your pantry and storage"
+      },
+      "nutrition": {
+        "title": "Set Nutrition Goals",
+        "description": "Define your daily nutrition targets"
+      },
+      "recipes": {
+        "title": "Generate Recipes",
+        "description": "Discover AI-powered recipe suggestions"
+      },
+      "meal_plan": {
+        "title": "Create Meal Plan",
+        "description": "Plan your weekly meals"
+      }
+    },
+    "completed": {
+      "title": "Setup Complete!",
+      "description": "You're all set to start your meal planning journey. Enjoy using MealCraft!"
     }
   }
 }

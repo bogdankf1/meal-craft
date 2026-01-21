@@ -27,6 +27,7 @@ import {
   LIST_VIEW,
   ProfileSelector,
 } from "@/components/shared";
+import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -539,6 +540,9 @@ export function NutritionContent() {
           setDefaultMealType(undefined);
         }}
       />
+
+      {/* Back to Setup button for onboarding */}
+      <BackToSetupButton stepId="nutrition" />
     </div>
   );
 }
@@ -587,7 +591,7 @@ function ProfileGoalCard({ profile, onEditGoal, onCreateGoal }: ProfileGoalCardP
             <span>{profile.name}</span>
           </div>
           {!activeGoal && !isLoading && (
-            <Button size="sm" variant="outline" onClick={onCreateGoal}>
+            <Button size="sm" variant="outline" onClick={onCreateGoal} data-spotlight="set-goal-button">
               <Plus className="h-3 w-3 mr-1" />
               {t("goals.setGoal")}
             </Button>

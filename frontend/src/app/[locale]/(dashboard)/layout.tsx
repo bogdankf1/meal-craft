@@ -5,6 +5,7 @@ import { Link } from "@/i18n/routing";
 import { Sidebar, MobileSidebar } from "@/components/shared/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { OnboardingSpotlightProvider } from "@/components/modules/onboarding";
 
 export default function DashboardLayout({
   children,
@@ -48,6 +49,9 @@ export default function DashboardLayout({
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
+
+      {/* Onboarding spotlight overlay */}
+      <OnboardingSpotlightProvider />
     </div>
   );
 }

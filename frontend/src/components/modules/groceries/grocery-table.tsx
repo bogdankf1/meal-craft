@@ -45,6 +45,7 @@ interface GroceryTableProps {
   onPageChange: (page: number) => void;
   onEdit: (grocery: Grocery) => void;
   isArchiveView?: boolean;
+  defaultSelectAll?: boolean;
 }
 
 function getExpiryStatus(expiryDate: string | null): {
@@ -88,6 +89,7 @@ export function GroceryTable({
   onPageChange,
   onEdit,
   isArchiveView = false,
+  defaultSelectAll = false,
 }: GroceryTableProps) {
   const t = useTranslations("groceries");
   const tCommon = useTranslations("common");
@@ -279,6 +281,7 @@ export function GroceryTable({
             label: t("moveToPantry.title"),
             icon: <Package className="h-4 w-4 mr-1" />,
             variant: "outline" as const,
+            spotlightId: "move-to-pantry-button",
             onClick: async (ids: string[]) => {
               const selectedItems = items
                 .filter((item) => ids.includes(item.id))
@@ -430,6 +433,7 @@ export function GroceryTable({
         }
         onPageChange={onPageChange}
         selectable
+        defaultSelectAll={defaultSelectAll}
         bulkActions={bulkActions}
         rowActions={rowActions}
         deleteConfig={{

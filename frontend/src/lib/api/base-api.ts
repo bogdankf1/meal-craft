@@ -136,6 +136,7 @@ export const baseApi = createApi({
     "Support",
     "SupportTopic",
     "UIPreferences",
+    "Onboarding",
   ],
   endpoints: () => ({}),
 });

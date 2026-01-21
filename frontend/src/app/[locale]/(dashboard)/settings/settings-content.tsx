@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import Cookies from "js-cookie";
 import { useTheme } from "next-themes";
@@ -85,6 +85,7 @@ import {
 import { DietaryRestrictionsEditor } from "@/components/modules/settings/dietary-restrictions-editor";
 import { NutritionalPreferencesEditor } from "@/components/modules/settings/nutritional-preferences-editor";
 import { useUserStore } from "@/lib/store/user-store";
+import { BackToSetupButton } from "@/components/modules/onboarding";
 
 // Supported languages
 const LANGUAGES = [
@@ -112,9 +113,13 @@ export function SettingsContent() {
   const tNutritional = useTranslations("nutritionalPreferences");
   const tCommon = useTranslations("common");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
+
+  // Check if we're in onboarding mode
+  const isOnboarding = searchParams.get("onboarding") === "true";
 
   // Currency
   const { currency, currencies, setCurrency } = useCurrency();
@@ -141,6 +146,8 @@ export function SettingsContent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<Profile | null>(null);
   const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
+  // Expand all profiles when in onboarding mode (initial value from query param)
+  const [expandAllProfiles] = useState(isOnboarding);
 
   // Interface customization section collapse state (all closed by default)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -353,7 +360,7 @@ export function SettingsContent() {
                 </CardTitle>
                 <CardDescription>{t("household.description")}</CardDescription>
               </div>
-              <Button onClick={openCreateProfileDialog}>
+              <Button onClick={openCreateProfileDialog} data-spotlight="add-member-button">
                 <Plus className="h-4 w-4 mr-2" />
                 {t("household.addMember")}
               </Button>
@@ -437,7 +444,7 @@ export function SettingsContent() {
                     </div>
 
                     {/* Expanded dietary preferences section */}
-                    {expandedProfileId === profile.id && (
+                    {(expandedProfileId === profile.id || expandAllProfiles) && (
                       <div className="border-t px-4 py-4 bg-muted/30 space-y-6">
                         {/* Dietary Restrictions */}
                         <div>
@@ -472,7 +479,7 @@ export function SettingsContent() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-muted-foreground" data-spotlight="add-first-member">
                 <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>{t("household.empty")}</p>
                 <Button className="mt-4" onClick={openCreateProfileDialog}>
@@ -1631,6 +1638,9 @@ export function SettingsContent() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Back to Setup button for onboarding */}
+    <BackToSetupButton stepId="household" />
     </>
   );
 }

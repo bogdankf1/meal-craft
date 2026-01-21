@@ -35,7 +35,7 @@ export function ImportMethodSelector({
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-spotlight="import-methods">
         {methods.map((method) => (
           <Card
             key={method.id}

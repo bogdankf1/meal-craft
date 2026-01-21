@@ -40,6 +40,7 @@ import { useCurrency } from "@/components/providers/currency-provider";
 import { useUserStore } from "@/lib/store/user-store";
 import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns";
 import Link from "next/link";
+import { OnboardingFlow } from "@/components/modules/onboarding";
 
 // Icon mapping for activity types
 const activityIcons: Record<string, React.ReactNode> = {
@@ -129,6 +130,9 @@ export default function DashboardPage() {
           </Button>
         }
       />
+
+      {/* Onboarding Flow */}
+      <OnboardingFlow />
 
       {/* Stats Cards */}
       {uiVisibility.showDashboardStats && (

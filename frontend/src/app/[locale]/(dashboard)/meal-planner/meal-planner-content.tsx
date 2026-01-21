@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
@@ -32,6 +32,7 @@ import {
   CALENDAR_VIEW,
   TABLE_VIEW,
 } from "@/components/shared";
+import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -121,6 +122,22 @@ export function MealPlannerContent() {
   const [repeatItem, setRepeatItem] = useState<MealPlanListItem | null>(null);
   const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
   const [shoppingListItem, setShoppingListItem] = useState<MealPlanListItem | null>(null);
+  const [combinedWeekOffset, setCombinedWeekOffset] = useState(0);
+
+  // Calculate target date for combined view based on week offset
+  const getCombinedTargetDate = () => {
+    const today = new Date();
+    today.setDate(today.getDate() + combinedWeekOffset * 7);
+    return format(today, "yyyy-MM-dd");
+  };
+
+  // Reset selected plan and week offset when profile changes
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setSelectedPlanId(null);
+      setCombinedWeekOffset(0);
+    });
+  }, [selectedProfileId]);
 
   // API queries
   const { data: mealPlansData, isLoading: isLoadingPlans } = useGetMealPlansQuery({
@@ -139,7 +156,7 @@ export function MealPlannerContent() {
   );
   // For "All Members": fetch combined plans
   const { data: combinedWeekPlan, isLoading: isLoadingCombined } = useGetCombinedWeekPlanQuery(
-    undefined,
+    { targetDate: getCombinedTargetDate() },
     { skip: selectedProfileId !== null } // Only fetch when "All Members" is selected
   );
   const { data: analytics } = useGetMealPlanAnalyticsQuery();
@@ -396,6 +413,7 @@ export function MealPlannerContent() {
                 value={selectedProfileId}
                 onChange={setSelectedProfileId}
                 className="w-full sm:w-[180px]"
+                data-spotlight="members-selector"
               />
               <ViewSelector
                 currentView={viewMode}
@@ -420,7 +438,7 @@ export function MealPlannerContent() {
               <div className="flex-1" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button>
+                  <Button data-spotlight="create-plan-button">
                     <Plus className="h-4 w-4 mr-2" />
                     {t("createPlan")}
                     <ChevronDown className="h-4 w-4 ml-2" />
@@ -446,9 +464,26 @@ export function MealPlannerContent() {
             selectedProfileId === null && combinedWeekPlan ? (
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center justify-between">
+                  {/* Navigation controls for combined view */}
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span>{t("allMembersWeek")}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCombinedWeekOffset(combinedWeekOffset - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCombinedWeekOffset(combinedWeekOffset + 1)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm font-medium ml-2">
+                        {t("allMembersWeek")}
+                      </span>
                       {/* Profile legend */}
                       {combinedWeekPlan.profiles.length > 0 && (
                         <div className="flex items-center gap-3 ml-4">
@@ -466,11 +501,22 @@ export function MealPlannerContent() {
                         </div>
                       )}
                     </div>
-                    <Badge variant="secondary">
-                      {format(parseISO(combinedWeekPlan.date_start), "MMM d")} -{" "}
-                      {format(parseISO(combinedWeekPlan.date_end), "MMM d, yyyy")}
-                    </Badge>
-                  </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {format(parseISO(combinedWeekPlan.date_start), "MMM d")} -{" "}
+                        {format(parseISO(combinedWeekPlan.date_end), "MMM d, yyyy")}
+                      </Badge>
+                      {combinedWeekOffset !== 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCombinedWeekOffset(0)}
+                        >
+                          {t("navigation.today")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <MealCalendar
@@ -780,6 +826,9 @@ export function MealPlannerContent() {
           setShoppingListItem(null);
         }}
       />
+
+      {/* Back to Setup button for onboarding */}
+      <BackToSetupButton stepId="meal_plan" />
     </div>
   );
 }

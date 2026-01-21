@@ -298,9 +298,17 @@ export const mealPlannerApi = baseApi.injectEndpoints({
       providesTags: [{ type: "MealPlans", id: "CURRENT_WEEK" }],
     }),
 
-    getCombinedWeekPlan: builder.query<CombinedWeekPlan, void>({
-      query: () => "/meal-plans/current-week/combined",
-      providesTags: [{ type: "MealPlans", id: "CURRENT_WEEK_COMBINED" }],
+    getCombinedWeekPlan: builder.query<CombinedWeekPlan, { targetDate?: string } | void>({
+      query: (params) => {
+        const targetDate = params && "targetDate" in params ? params.targetDate : undefined;
+        return {
+          url: "/meal-plans/current-week/combined",
+          params: targetDate ? { target_date: targetDate } : undefined,
+        };
+      },
+      providesTags: (_result, _error, params) => [
+        { type: "MealPlans", id: `COMBINED_WEEK_${params && "targetDate" in params ? params.targetDate : "current"}` },
+      ],
     }),
 
     getMealPlan: builder.query<MealPlanWithMeals, string>({

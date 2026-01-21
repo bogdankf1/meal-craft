@@ -16,6 +16,7 @@ interface ProfileSelectorProps {
   onChange: (profileId: string | null) => void;
   className?: string;
   showAllOption?: boolean;
+  "data-spotlight"?: string;
 }
 
 export function ProfileSelector({
@@ -23,6 +24,7 @@ export function ProfileSelector({
   onChange,
   className,
   showAllOption = true,
+  "data-spotlight": dataSpotlight,
 }: ProfileSelectorProps) {
   const t = useTranslations("profiles");
   const { data, isLoading } = useGetProfilesQuery();
@@ -39,7 +41,7 @@ export function ProfileSelector({
       onValueChange={handleChange}
       disabled={isLoading}
     >
-      <SelectTrigger className={className}>
+      <SelectTrigger className={className} data-spotlight={dataSpotlight}>
         <SelectValue placeholder={t("selectProfile")}>
           <div className="flex items-center gap-2">
             {value === null || value === "all" ? (

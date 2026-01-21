@@ -262,7 +262,7 @@ export function AiRecipeSuggestionsDialog({
           {/* Filters Section */}
           <div className="space-y-4">
             {/* Selects Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-spotlight="ai-recipe-filters">
               {/* Cuisine Type */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">{t("filters.cuisine")}</Label>
@@ -513,6 +513,7 @@ export function AiRecipeSuggestionsDialog({
               onClick={handleGenerate}
               disabled={isGenerating}
               className="gap-2"
+              data-spotlight="generate-recipes-button"
             >
               {isGenerating ? (
                 <>

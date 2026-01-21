@@ -45,6 +45,7 @@ import {
   ViewSelector,
   type ViewOption,
 } from "@/components/shared";
+import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
@@ -142,6 +143,9 @@ export function GroceriesContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Check if we should auto-select all items (from onboarding step 3)
+  const shouldSelectAll = searchParams.get("selectAll") === "true";
 
   const navigateToTab = (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -356,6 +360,7 @@ export function GroceriesContent() {
                   page={filters.page || 1}
                   onPageChange={handlePageChange}
                   onEdit={handleEditClick}
+                  defaultSelectAll={shouldSelectAll}
                 />
               ) : (
                 <GroceryCalendarView
@@ -887,6 +892,9 @@ export function GroceriesContent() {
         open={bulkFormOpen}
         onOpenChange={setBulkFormOpen}
       />
+
+      {/* Back to Setup button for onboarding */}
+      <BackToSetupButton stepId="groceries" />
     </>
   );
 }

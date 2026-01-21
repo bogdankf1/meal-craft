@@ -30,6 +30,7 @@ import {
   AnalyticsCard,
   DistributionList,
 } from "@/components/shared";
+import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -116,7 +117,9 @@ export function RecipesContent() {
   const [selectedRecipeForShoppingList, setSelectedRecipeForShoppingList] = useState<Recipe | null>(null);
   const [simpleShoppingListDialogOpen, setSimpleShoppingListDialogOpen] = useState(false);
   const [simpleShoppingListItems, setSimpleShoppingListItems] = useState<{ name: string; category?: string }[]>([]);
-  const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false);
+  const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(
+    () => searchParams.get("openAiSuggestions") === "true"
+  );
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedRecipeForView, setSelectedRecipeForView] = useState<RecipeListItem | null>(null);
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
@@ -705,6 +708,9 @@ export function RecipesContent() {
         onOpenChange={setViewDialogOpen}
         recipe={selectedRecipeForView}
       />
+
+      {/* Back to Setup button for onboarding */}
+      <BackToSetupButton stepId="recipes" />
     </div>
   );
 }

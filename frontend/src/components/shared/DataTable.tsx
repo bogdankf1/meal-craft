@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, ReactNode } from "react";
+import { useState, useMemo, useEffect, useRef, ReactNode } from "react";
 import {
   MoreHorizontal,
   ChevronLeft,
@@ -55,6 +55,8 @@ export interface BulkAction {
   variant?: "default" | "outline" | "destructive";
   onClick: (ids: string[]) => Promise<void>;
   isLoading?: boolean;
+  /** Optional spotlight ID for onboarding highlights */
+  spotlightId?: string;
 }
 
 // Row action definition
@@ -83,6 +85,7 @@ export interface DataTableProps<T extends DataTableItem> {
 
   // Selection
   selectable?: boolean;
+  defaultSelectAll?: boolean;
 
   // Bulk actions
   bulkActions?: BulkAction[];
@@ -140,6 +143,7 @@ export function DataTable<T extends DataTableItem>({
   pagination,
   onPageChange,
   selectable = true,
+  defaultSelectAll = false,
   bulkActions = [],
   emptySelectionText,
   rowActions = [],
@@ -149,6 +153,20 @@ export function DataTable<T extends DataTableItem>({
   const texts = { ...defaultTexts, ...customTexts };
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Track if we've done the initial auto-select
+  const hasAutoSelectedRef = useRef(false);
+
+  // Auto-select all items when defaultSelectAll is true and items are loaded
+  useEffect(() => {
+    if (defaultSelectAll && items.length > 0 && !hasAutoSelectedRef.current && !isLoading) {
+      hasAutoSelectedRef.current = true;
+      // Use requestAnimationFrame to defer the setState
+      requestAnimationFrame(() => {
+        setSelectedIds(items.map((item) => item.id));
+      });
+    }
+  }, [defaultSelectAll, items, isLoading]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
 
@@ -230,6 +248,7 @@ export function DataTable<T extends DataTableItem>({
                     onClick={() => handleBulkAction(action)}
                     disabled={action.isLoading}
                     className="text-xs sm:text-sm"
+                    {...(action.spotlightId && { "data-spotlight": action.spotlightId })}
                   >
                     {action.icon}
                     <span className="hidden xs:inline sm:inline">{action.label}</span>
