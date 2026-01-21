@@ -329,7 +329,9 @@ export function RecipesContent() {
 
           {/* Filters Row */}
           <div className="flex flex-col gap-4 mb-6">
+            {(uiVisibility.showSearchBar || uiVisibility.showFilters) && (
             <div className="flex flex-wrap items-center gap-2">
+              {uiVisibility.showSearchBar && (
               <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -339,6 +341,8 @@ export function RecipesContent() {
                   className="pl-9"
                 />
               </div>
+              )}
+              {uiVisibility.showFilters && (
               <RecipeFilters
                 category={categoryFilter}
                 onCategoryChange={setCategoryFilter}
@@ -349,7 +353,9 @@ export function RecipesContent() {
                 isFavorite={favoriteFilter}
                 onIsFavoriteChange={setFavoriteFilter}
               />
+              )}
             </div>
+            )}
             <div className="flex items-center justify-start gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -318,7 +318,7 @@ export const useUserStore = create<UserState>()(
           preferences: {
             ...state.preferences,
             uiVisibility: {
-              ...state.preferences.uiVisibility,
+              ...(state.preferences.uiVisibility ?? defaultUIVisibility),
               ...visibility,
             },
           },
@@ -329,9 +329,9 @@ export const useUserStore = create<UserState>()(
           preferences: {
             ...state.preferences,
             columnVisibility: {
-              ...state.preferences.columnVisibility,
+              ...(state.preferences.columnVisibility ?? defaultColumnVisibility),
               [module]: {
-                ...state.preferences.columnVisibility[module],
+                ...((state.preferences.columnVisibility?.[module]) ?? defaultColumnVisibility[module]),
                 ...visibility,
               },
             },
