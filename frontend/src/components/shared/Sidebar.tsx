@@ -35,12 +35,10 @@ import {
   Shield,
   ChevronLeft,
   Menu,
-  LogOut,
-  LogIn,
   X,
   CreditCard,
 } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import { useGetMeQuery } from "@/lib/api/auth-api";
 import { useUserStore, type UIVisibility } from "@/lib/store/user-store";
@@ -183,8 +181,8 @@ export function Sidebar({ onClose }: SidebarProps) {
       className={cn(
         "flex flex-col h-screen bg-background border-r transition-all duration-300",
         // Desktop: static sidebar with collapse
-        "hidden lg:flex",
-        isCollapsed ? "lg:w-16" : "lg:w-64"
+        "hidden xl:flex",
+        isCollapsed ? "xl:w-16" : "xl:w-64"
       )}
     >
       {/* Logo */}
@@ -327,8 +325,9 @@ export function Sidebar({ onClose }: SidebarProps) {
                 <Button
                   variant={isActive("/admin") ? "secondary" : "ghost"}
                   className={cn(
-                    "w-full justify-start gap-3",
-                    isCollapsed && "justify-center px-2"
+                    "w-full justify-start gap-3 text-amber-600 dark:text-amber-500 hover:text-amber-700 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50",
+                    isCollapsed && "justify-center px-2",
+                    isActive("/admin") && "bg-amber-100 dark:bg-amber-950/70"
                   )}
                 >
                   <Shield className="h-5 w-5 shrink-0" />
@@ -362,23 +361,6 @@ export function Sidebar({ onClose }: SidebarProps) {
               </Badge>
             </div>
           )}
-          {/* Logout/Login button */}
-          {session ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="shrink-0"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Link href="/login">
-              <Button variant="ghost" size="icon" className="shrink-0">
-                <LogIn className="h-4 w-4" />
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
     </aside>
@@ -388,25 +370,19 @@ export function Sidebar({ onClose }: SidebarProps) {
 // Mobile Sidebar - Drawer version
 export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   const t = useTranslations("nav");
-  const tTiers = useTranslations("tiers");
   const pathname = usePathname();
-  const { data: session, status: sessionStatus } = useSession();
-
-  // Fetch user data from backend (includes current subscription tier)
-  const { data: userData } = useGetMeQuery(undefined, {
-    skip: sessionStatus !== "authenticated",
-  });
 
   // Get UI visibility settings
   const { preferences } = useUserStore();
   const uiVisibility = preferences.uiVisibility;
 
   // Filter nav items based on visibility settings
+  // Also exclude help link since it's in the navbar on mobile/tablet
   const filteredNavGroups = navGroups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) =>
-        !item.visibilityKey || uiVisibility[item.visibilityKey]
+        item.href !== "/help" && (!item.visibilityKey || uiVisibility[item.visibilityKey])
       ),
     }))
     .filter((group) => group.items.length > 0);
@@ -428,18 +404,6 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  const userInitials =
-    session?.user?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || "U";
-
-  // Get subscription tier - prefer backend data, fallback to session
-  const extendedSession = session as ExtendedSession | null;
-  const subscriptionTier = userData?.subscription_tier || extendedSession?.subscriptionTier || "FREE";
-  const tierKey = subscriptionTier.toLowerCase() as "free" | "plus" | "pro";
-
   // Handle navigation click - close sidebar
   const handleNavClick = () => {
     if (onClose) {
@@ -452,7 +416,7 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 xl:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -461,7 +425,7 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
       {/* Drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-background border-r shadow-xl transition-transform duration-300 ease-in-out lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-background border-r shadow-xl transition-transform duration-300 ease-in-out xl:hidden",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -544,7 +508,7 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
 
             <Separator className="my-2" />
 
-            {/* Pricing & Settings */}
+            {/* Pricing */}
             <div className="px-3 space-y-1">
               <Link href="/pricing" onClick={handleNavClick}>
                 <Button
@@ -555,70 +519,8 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
                   <span>{t("pricing")}</span>
                 </Button>
               </Link>
-              <Link href="/settings" onClick={handleNavClick}>
-                <Button
-                  variant={isActive("/settings") ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-3"
-                >
-                  <Settings className="h-5 w-5 shrink-0" />
-                  <span>{t("settings")}</span>
-                </Button>
-              </Link>
             </div>
-
-            {/* Admin link */}
-            {userData?.role === "ADMIN" && (
-              <>
-                <Separator className="my-2" />
-                <div className="px-3">
-                  <Link href="/admin" onClick={handleNavClick}>
-                    <Button
-                      variant={isActive("/admin") ? "secondary" : "ghost"}
-                      className="w-full justify-start gap-3"
-                    >
-                      <Shield className="h-5 w-5 shrink-0" />
-                      <span>{t("admin")}</span>
-                    </Button>
-                  </Link>
-                </div>
-              </>
-            )}
           </nav>
-
-          {/* User section */}
-          <div className="border-t p-4">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={session?.user?.image || undefined} />
-                <AvatarFallback>{userInitials}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {session?.user?.name || "Guest"}
-                </p>
-                <Badge variant="secondary" className="text-xs">
-                  {tTiers(tierKey)}
-                </Badge>
-              </div>
-              {/* Logout/Login button */}
-              {session ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => signOut({ callbackUrl: "/login" })}
-                  className="shrink-0"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Link href="/login" onClick={handleNavClick}>
-                  <Button variant="ghost" size="icon" className="shrink-0">
-                    <LogIn className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
         </div>
       </aside>
     </>

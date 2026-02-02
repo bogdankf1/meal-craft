@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useGetProfilesQuery, Profile } from "@/lib/api/profiles-api";
 import {
   Select,
@@ -28,6 +29,7 @@ export function ProfileSelector({
 }: ProfileSelectorProps) {
   const t = useTranslations("profiles");
   const { data, isLoading } = useGetProfilesQuery();
+  const [open, setOpen] = useState(false);
 
   const profiles = data?.profiles || [];
 
@@ -35,11 +37,22 @@ export function ProfileSelector({
     onChange(val === "all" ? null : val);
   };
 
+  // Handle pointer down to close dropdown when clicking already-selected item
+  const handleItemPointerDown = (val: string) => {
+    const newValue = val === "all" ? null : val;
+    if (newValue === value) {
+      // Item is already selected, close dropdown
+      setTimeout(() => setOpen(false), 0);
+    }
+  };
+
   return (
     <Select
       value={value ?? "all"}
       onValueChange={handleChange}
       disabled={isLoading}
+      open={open}
+      onOpenChange={setOpen}
     >
       <SelectTrigger className={className} data-spotlight={dataSpotlight}>
         <SelectValue placeholder={t("selectProfile")}>
@@ -66,7 +79,10 @@ export function ProfileSelector({
       </SelectTrigger>
       <SelectContent>
         {showAllOption && (
-          <SelectItem value="all">
+          <SelectItem
+            value="all"
+            onPointerDown={() => handleItemPointerDown("all")}
+          >
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span>{t("allMembers")}</span>
@@ -74,7 +90,11 @@ export function ProfileSelector({
           </SelectItem>
         )}
         {profiles.map((profile) => (
-          <SelectItem key={profile.id} value={profile.id}>
+          <SelectItem
+            key={profile.id}
+            value={profile.id}
+            onPointerDown={() => handleItemPointerDown(profile.id)}
+          >
             <div className="flex items-center gap-2">
               <div
                 className="h-3 w-3 rounded-full"

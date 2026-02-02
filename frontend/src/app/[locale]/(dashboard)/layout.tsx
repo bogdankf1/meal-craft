@@ -4,8 +4,11 @@ import { useState } from "react";
 import { Link } from "@/i18n/routing";
 import { Sidebar, MobileSidebar } from "@/components/shared/Sidebar";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Menu, HelpCircle, Settings, Shield } from "lucide-react";
 import { OnboardingSpotlightProvider } from "@/components/modules/onboarding";
+import { useSession } from "next-auth/react";
+import { useGetMeQuery } from "@/lib/api/auth-api";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +16,22 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: session, status: sessionStatus } = useSession();
+
+  // Fetch user data to check admin role
+  const { data: userData } = useGetMeQuery(undefined, {
+    skip: sessionStatus !== "authenticated",
+  });
+
+  const isAdmin = userData?.role === "ADMIN";
+
+  // Get user initials for avatar fallback
+  const userInitials =
+    session?.user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() || "U";
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -28,20 +47,42 @@ export default function DashboardLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile/Tablet Header */}
-        <header className="lg:hidden bg-background border-b px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <header className="xl:hidden bg-background border-b px-3 py-2 flex items-center justify-between sticky top-0 z-30">
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           </Button>
-          <Link href="/dashboard" className="flex items-center">
-            <span className="text-lg font-bold text-primary">MealCraft</span>
-          </Link>
-          {/* Spacer for centering logo */}
-          <div className="w-10" />
+
+          <div className="flex items-center gap-1">
+            {isAdmin && (
+              <Link href="/admin">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 dark:text-amber-500">
+                  <Shield className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+            <Link href="/help">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/settings">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/settings">
+              <Avatar className="h-8 w-8 cursor-pointer">
+                <AvatarImage src={session?.user?.image || undefined} />
+                <AvatarFallback>{userInitials}</AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
         </header>
 
         {/* Page content */}

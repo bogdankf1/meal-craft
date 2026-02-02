@@ -9,7 +9,6 @@ import {
   Archive,
   LayoutGrid,
   BarChart3,
-  ChevronDown,
   Import,
   Wrench,
   History,
@@ -20,6 +19,7 @@ import {
   Clock,
   CheckCircle2,
   Calendar,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -31,12 +31,7 @@ import {
   DistributionList,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -314,29 +309,23 @@ export function KitchenEquipmentContent() {
               </div>
             )}
             <div className="flex items-center justify-start gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("addItem")}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleAddClick}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("addSingle")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setBulkFormOpen(true)}>
-                    <List className="h-4 w-4 mr-2" />
-                    {t("addMultiple")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateToTab("import")}>
-                    <Import className="h-4 w-4 mr-2" />
-                    {t("importItems")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SplitButton
+                primaryLabel={t("importItems")}
+                primaryIcon={<Sparkles className="h-4 w-4" />}
+                onPrimaryClick={() => navigateToTab("import")}
+                options={[
+                  {
+                    label: t("addSingle"),
+                    onClick: handleAddClick,
+                    icon: <Plus className="h-4 w-4" />,
+                  },
+                  {
+                    label: t("addMultiple"),
+                    onClick: () => setBulkFormOpen(true),
+                    icon: <List className="h-4 w-4" />,
+                  },
+                ]}
+              />
             </div>
           </div>
 

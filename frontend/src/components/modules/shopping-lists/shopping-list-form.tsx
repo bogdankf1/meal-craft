@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -53,6 +53,8 @@ export function ShoppingListForm({
   const isEditing = !!editingList;
   const isLoading = isCreating || isUpdating;
 
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -66,7 +68,17 @@ export function ShoppingListForm({
     },
   });
 
+  const prevOpenRef = useRef(open);
   useEffect(() => {
+    // Only reset when dialog opens (transition from closed to open)
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    if (justOpened) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset local UI state when dialog opens
+      setMoreOptionsOpen(false);
+    }
+
     if (open) {
       if (editingList) {
         reset({
@@ -112,27 +124,26 @@ export function ShoppingListForm({
 
   const handleClose = () => {
     reset();
+    setMoreOptionsOpen(false);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("form.editTitle") : t("form.addTitle")}
           </DialogTitle>
-          <DialogDescription>
-            {isEditing ? t("form.editDescription") : t("form.addDescription")}
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">{t("form.name")} *</Label>
+            <Label htmlFor="name">{t("form.name")}</Label>
             <Input
               id="name"
               placeholder={t("form.namePlaceholder")}
+              autoFocus
               {...register("name")}
             />
             {errors.name && (
@@ -140,17 +151,38 @@ export function ShoppingListForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="estimated_cost">{t("form.estimatedCost")}</Label>
-            <Input
-              id="estimated_cost"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              {...register("estimated_cost", { valueAsNumber: true })}
-            />
-          </div>
+          {/* More Options Toggle */}
+          <button
+            type="button"
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+            onClick={() => setMoreOptionsOpen(!moreOptionsOpen)}
+          >
+            {moreOptionsOpen ? (
+              <>
+                <ChevronUp className="h-3 w-3" />
+                {t("form.fewerOptions")}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" />
+                {t("form.moreOptions")}
+              </>
+            )}
+          </button>
+
+          {moreOptionsOpen && (
+            <div className="space-y-2">
+              <Label htmlFor="estimated_cost">{t("form.estimatedCost")}</Label>
+              <Input
+                id="estimated_cost"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                {...register("estimated_cost", { valueAsNumber: true })}
+              />
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>

@@ -8,7 +8,6 @@ import {
   UtensilsCrossed,
   LayoutGrid,
   BarChart3,
-  ChevronDown,
   Archive,
   History,
   Import,
@@ -21,6 +20,7 @@ import {
   Heart,
   LayoutList,
   List,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -36,12 +36,7 @@ import {
   type ViewOption,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -304,29 +299,15 @@ export function RestaurantsContent() {
                     views={viewOptions}
                   />
                 )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t("addMeal")}
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleAddClick}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t("addMeal")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setBulkFormOpen(true)}>
-                      <List className="h-4 w-4 mr-2" />
-                      {t("bulkForm.addMultiple")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigateToTab("import")}>
-                      <Import className="h-4 w-4 mr-2" />
-                      {t("tabs.import")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <SplitButton
+                  primaryLabel={t("tabs.import")}
+                  primaryIcon={<Sparkles className="h-4 w-4" />}
+                  onPrimaryClick={() => navigateToTab("import")}
+                  options={[
+                    { label: t("addMeal"), onClick: handleAddClick, icon: <Plus className="h-4 w-4" /> },
+                    { label: t("bulkForm.addMultiple"), onClick: () => setBulkFormOpen(true), icon: <List className="h-4 w-4" /> },
+                  ]}
+                />
               </div>
             </div>
 

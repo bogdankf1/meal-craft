@@ -150,7 +150,7 @@ export function RestaurantMealBulkForm({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="!max-w-[95vw] w-[1200px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{t("bulkForm.title")}</DialogTitle>
           <DialogDescription>{t("bulkForm.description")}</DialogDescription>
@@ -161,13 +161,11 @@ export function RestaurantMealBulkForm({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[180px]">{t("form.restaurantName")} *</TableHead>
-                  <TableHead className="min-w-[130px]">{t("form.date")} *</TableHead>
-                  <TableHead className="min-w-[120px]">{t("form.mealType")} *</TableHead>
-                  <TableHead className="min-w-[120px]">{t("form.orderType")} *</TableHead>
-                  <TableHead className="min-w-[200px]">{t("form.itemsOrdered")}</TableHead>
-                  <TableHead className="min-w-[100px]">{t("form.rating")}</TableHead>
-                  <TableHead className="min-w-[90px]"></TableHead>
+                  <TableHead className="min-w-[160px]">{t("form.restaurantName")} *</TableHead>
+                  <TableHead className="min-w-[120px]">{t("form.date")} *</TableHead>
+                  <TableHead className="min-w-[100px]">{t("form.mealType")} *</TableHead>
+                  <TableHead className="min-w-[100px]">{t("form.orderType")} *</TableHead>
+                  <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -220,31 +218,6 @@ export function RestaurantMealBulkForm({
                           {ORDER_TYPES.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                               {t(`orderTypes.${type.value}`)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        {...register(`items.${index}.items_ordered`)}
-                        placeholder={t("form.itemsPlaceholder")}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Select
-                        value={watchedItems[index]?.rating?.toString() || ""}
-                        onValueChange={(value) =>
-                          setValue(`items.${index}.rating`, value ? parseInt(value) : null)
-                        }
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="-" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <SelectItem key={rating} value={rating.toString()}>
-                              {rating} {rating === 1 ? t("form.star") : t("form.stars")}
                             </SelectItem>
                           ))}
                         </SelectContent>

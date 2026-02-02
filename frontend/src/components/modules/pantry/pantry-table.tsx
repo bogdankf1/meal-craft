@@ -119,6 +119,7 @@ export function PantryTable({
   const { preferences } = useUserStore();
   const columnVisibility = preferences.columnVisibility?.pantry ?? defaultColumnVisibility.pantry;
   const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+  const showWasteTab = preferences.uiVisibility?.showWasteTab ?? true;
 
   const [deletePantryItem, { isLoading: isDeleting }] = useDeletePantryItemMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeletePantryItemsMutation();
@@ -289,8 +290,8 @@ export function PantryTable({
         setAddToListOpen(true);
       },
     },
-    // Mark as Wasted action - only show on Overview (not Archive)
-    ...(!isArchiveView
+    // Mark as Wasted action - only show on Overview (not Archive) and when waste tab is visible
+    ...(!isArchiveView && showWasteTab
       ? [
           {
             label: t("waste.markAsWasted"),
@@ -371,8 +372,8 @@ export function PantryTable({
         setAddToListOpen(true);
       },
     },
-    // Mark as Wasted action - only show on Overview (not Archive) and for non-wasted items
-    ...(!isArchiveView
+    // Mark as Wasted action - only show on Overview (not Archive), for non-wasted items, and when waste tab is visible
+    ...(!isArchiveView && showWasteTab
       ? [
           {
             label: t("waste.markAsWasted"),

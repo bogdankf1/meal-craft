@@ -368,7 +368,9 @@
       "store": "Store",
       "storePlaceholder": "e.g., Walmart, Costco",
       "cancel": "Cancel",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "moreOptions": "More options",
+      "fewerOptions": "Fewer options"
     },
     "bulkForm": {
       "title": "Add Multiple Items",
@@ -1023,7 +1025,9 @@
       "namePlaceholder": "e.g., Weekly groceries, Party supplies",
       "estimatedCost": "Estimated Cost",
       "saving": "Saving...",
-      "create": "Create List"
+      "create": "Create List",
+      "moreOptions": "More options",
+      "fewerOptions": "Fewer options"
     },
     "itemForm": {
       "addTitle": "Add Item",
@@ -1320,7 +1324,9 @@
       "minimumQuantityHint": "You'll be notified when stock falls below this level.",
       "notes": "Notes",
       "notesPlaceholder": "Any additional notes...",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "moreOptions": "More options",
+      "fewerOptions": "Fewer options"
     },
     "bulkForm": {
       "title": "Add Multiple Items",
@@ -1825,7 +1831,9 @@
       "notes": "Notes",
       "notesPlaceholder": "Any additional notes...",
       "markAsFavorite": "Mark as favorite",
-      "addRecipe": "Add Recipe"
+      "addRecipe": "Add Recipe",
+      "moreOptions": "More options",
+      "fewerOptions": "Fewer options"
     },
     "actions": {
       "favorite": "Favorite",
@@ -2400,6 +2408,9 @@
       "previous": "Previous",
       "next": "Next"
     },
+    "hints": {
+      "selectMemberToAdd": "Select a member to add meals"
+    },
     "mealTypes": {
       "breakfast": "Breakfast",
       "lunch": "Lunch",
@@ -2485,7 +2496,9 @@
       "namePlaceholder": "e.g., Week of Dec 15, 2024",
       "selectDate": "Select date",
       "templateDescription": "Save as a template to reuse later",
-      "createButton": "Create Plan"
+      "createButton": "Create Plan",
+      "moreOptions": "More options",
+      "fewerOptions": "Fewer options"
     },
     "mealForm": {
       "addTitle": "Add Meal",
@@ -2494,7 +2507,9 @@
       "customMealPlaceholder": "e.g., Leftover pasta, Eating out",
       "notesPlaceholder": "Add notes...",
       "leftoverDescription": "Mark if this is a leftover meal",
-      "addButton": "Add Meal"
+      "addButton": "Add Meal",
+      "moreOptions": "More options",
+      "fewerOptions": "Fewer options"
     },
     "repeat": {
       "title": "Repeat Meal Plan",
@@ -2888,10 +2903,26 @@
       "seasonality": "Seasonality"
     },
     "general": {
+      "title": "General Settings",
+      "description": "Configure your language, location, and account preferences",
       "language": {
         "title": "Language",
         "description": "Choose your preferred language for the application",
         "placeholder": "Select language"
+      },
+      "country": {
+        "title": "Country",
+        "description": "Set your location for seasonal produce data"
+      },
+      "currency": {
+        "title": "Currency",
+        "description": "Select your preferred currency for prices",
+        "placeholder": "Select currency"
+      },
+      "account": {
+        "title": "Account",
+        "description": "Sign out of your account",
+        "logout": "Sign Out"
       }
     },
     "household": {
@@ -3185,8 +3216,8 @@
       "languageChanged": "Language updated successfully",
       "themeChanged": "Theme updated successfully",
       "currencyChanged": "Currency updated successfully",
-      "notificationsUpdated": "Notification preferences updated",
-      "errorUpdatingNotifications": "Failed to update notification preferences"
+      "countryChanged": "Country updated successfully",
+      "errorUpdatingCountry": "Failed to update country"
     }
   },
   "seasonality": {

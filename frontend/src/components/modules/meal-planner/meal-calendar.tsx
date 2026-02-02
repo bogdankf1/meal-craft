@@ -136,19 +136,23 @@ export function MealCalendar({
               // In combined view, show all meals. In single view, show first meal only.
               const displayMeals = showAllMembers ? mealsForSlot : mealsForSlot.slice(0, 1);
 
+              // Determine if the card is clickable
+              const isClickable = (!hasMeals && onAddMeal) || (hasMeals && !showAllMembers && onEditMeal);
+
               return (
                 <Card
                   key={`${dateKey}-${mealType}`}
                   className={cn(
-                    "min-h-[80px] cursor-pointer transition-colors hover:bg-muted/50",
+                    "min-h-[80px] transition-colors",
+                    isClickable && "cursor-pointer hover:bg-muted/50",
                     isSameDay(day, today) && "ring-1 ring-primary/20"
                   )}
                   onClick={() => {
-                    if (!hasMeals) {
-                      onAddMeal?.(day, mealType);
-                    } else if (!showAllMembers && mealsForSlot[0]) {
+                    if (!hasMeals && onAddMeal) {
+                      onAddMeal(day, mealType);
+                    } else if (!showAllMembers && mealsForSlot[0] && onEditMeal) {
                       // In single profile view, clicking edits the meal
-                      onEditMeal?.(mealsForSlot[0]);
+                      onEditMeal(mealsForSlot[0]);
                     }
                     // In combined view with meals, clicking does nothing - user clicks individual meals
                   }}
@@ -210,9 +214,9 @@ export function MealCalendar({
                           );
                         })}
                       </div>
-                    ) : (
+                    ) : onAddMeal ? (
                       <Plus className="h-4 w-4 text-muted-foreground/50" />
-                    )}
+                    ) : null}
                   </CardContent>
                 </Card>
               );

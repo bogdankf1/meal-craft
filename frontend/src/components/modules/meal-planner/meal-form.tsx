@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronDown, ChevronUp } from "lucide-react";
 
 import {
   Dialog,
@@ -85,6 +85,7 @@ export function MealForm({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showRecipeSearch, setShowRecipeSearch] = useState(false);
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
 
   const [createMeal, { isLoading: isCreating }] = useCreateMealMutation();
   const [updateMeal, { isLoading: isUpdating }] = useUpdateMealMutation();
@@ -115,8 +116,21 @@ export function MealForm({
   const selectedRecipeId = form.watch("recipe_id");
   const selectedRecipe = recipesData?.items.find((r) => r.id === selectedRecipeId);
 
+  // Track previous open state to detect when dialog opens
+  const prevOpenRef = useRef(open);
+
   // Update form when editing meal or date changes
   useEffect(() => {
+    // Only reset search/options state when dialog opens (transition from closed to open)
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    if (justOpened) {
+      setSearchQuery("");
+      setShowRecipeSearch(false);
+      setMoreOptionsOpen(false);
+    }
+
     if (editingMeal) {
       form.reset({
         meal_type: editingMeal.meal_type,
@@ -136,10 +150,7 @@ export function MealForm({
         is_leftover: false,
       });
     }
-    // Also reset search state when switching meals
-    setSearchQuery("");
-    setShowRecipeSearch(false);
-  }, [editingMeal, mealType, defaultServings, date, form]);
+  }, [editingMeal, mealType, defaultServings, date, form, open]);
 
   const onSubmit = async (values: MealFormValues) => {
     try {
@@ -206,12 +217,12 @@ export function MealForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("mealForm.editTitle") : t("mealForm.addTitle")}
             <span className="text-muted-foreground font-normal ml-2">
-              {format(date, "EEEE, MMM d")}
+              {format(date, "EEE, MMM d")}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -281,7 +292,7 @@ export function MealForm({
                     />
                   </div>
                   {showRecipeSearch && recipesData && recipesData.items.length > 0 && (
-                    <ScrollArea className="h-[200px] border rounded-lg">
+                    <ScrollArea className="h-[150px] border rounded-lg">
                       <div className="p-2 space-y-1">
                         {recipesData.items.map((recipe) => (
                           <button
@@ -293,7 +304,7 @@ export function MealForm({
                             <div className="font-medium">{recipe.name}</div>
                             {recipe.category && (
                               <div className="text-sm text-muted-foreground">
-                                {recipe.category} • {recipe.prep_time || 0 + (recipe.cook_time || 0)} min
+                                {recipe.category}
                               </div>
                             )}
                           </button>
@@ -326,70 +337,93 @@ export function MealForm({
               />
             )}
 
-            <FormField
-              control={form.control}
-              name="servings"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("fields.servings")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={20}
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) =>
-                        field.onChange(e.target.value ? parseInt(e.target.value) : null)
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            {/* More Options Toggle */}
+            <button
+              type="button"
+              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              onClick={() => setMoreOptionsOpen(!moreOptionsOpen)}
+            >
+              {moreOptionsOpen ? (
+                <>
+                  <ChevronUp className="h-3 w-3" />
+                  {t("mealForm.fewerOptions")}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3 w-3" />
+                  {t("mealForm.moreOptions")}
+                </>
               )}
-            />
+            </button>
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("fields.notes")}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value || ""}
-                      placeholder={t("mealForm.notesPlaceholder")}
-                      rows={2}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {moreOptionsOpen && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="servings"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("fields.servings")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value ? parseInt(e.target.value) : null)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="is_leftover"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <FormLabel>{t("fields.isLeftover")}</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      {t("mealForm.leftoverDescription")}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("fields.notes")}</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value || ""}
+                          placeholder={t("mealForm.notesPlaceholder")}
+                          rows={2}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="flex justify-between pt-4">
+                <FormField
+                  control={form.control}
+                  name="is_leftover"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel>{t("fields.isLeftover")}</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          {t("mealForm.leftoverDescription")}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            <div className="flex justify-between pt-2">
               <div>
                 {isEditing && (
                   <Button

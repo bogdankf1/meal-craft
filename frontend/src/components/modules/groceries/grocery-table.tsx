@@ -99,6 +99,7 @@ export function GroceryTable({
   const { preferences } = useUserStore();
   const columnVisibility = preferences.columnVisibility?.groceries ?? defaultColumnVisibility.groceries;
   const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+  const showWasteTab = preferences.uiVisibility?.showWasteTab ?? true;
 
   const [deleteGrocery, { isLoading: isDeleting }] = useDeleteGroceryMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteGroceriesMutation();
@@ -292,8 +293,8 @@ export function GroceryTable({
           },
         ]
       : []),
-    // Mark as Wasted action - only show on Overview (not Archive)
-    ...(!isArchiveView
+    // Mark as Wasted action - only show on Overview (not Archive) and when waste tab is visible
+    ...(!isArchiveView && showWasteTab
       ? [
           {
             label: t("waste.markAsWasted"),
@@ -386,8 +387,8 @@ export function GroceryTable({
           } as RowAction<Grocery>,
         ]
       : []),
-    // Mark as Wasted action - only show on Overview (not Archive) and for non-wasted items
-    ...(!isArchiveView
+    // Mark as Wasted action - only show on Overview (not Archive), for non-wasted items, and when waste tab is visible
+    ...(!isArchiveView && showWasteTab
       ? [
           {
             label: t("waste.markAsWasted"),

@@ -11,7 +11,6 @@ import {
   Archive,
   LayoutGrid,
   BarChart3,
-  ChevronDown,
   List,
   FolderArchive,
   Tag,
@@ -29,6 +28,7 @@ import {
   Trash2,
   Lightbulb,
   Percent,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -48,12 +48,7 @@ import {
 import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -330,25 +325,23 @@ export function GroceriesContent() {
                     views={viewOptions}
                   />
                 )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t("addItem")}
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={handleAddClick}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t("addItem")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleBulkAddClick}>
-                      <List className="h-4 w-4 mr-2" />
-                      {t("bulkForm.title")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <SplitButton
+                  primaryLabel={t("tabs.import")}
+                  primaryIcon={<Sparkles className="h-4 w-4" />}
+                  onPrimaryClick={() => navigateToTab("import")}
+                  options={[
+                    {
+                      label: t("addItem"),
+                      onClick: handleAddClick,
+                      icon: <Plus className="h-4 w-4" />,
+                    },
+                    {
+                      label: t("bulkForm.title"),
+                      onClick: handleBulkAddClick,
+                      icon: <List className="h-4 w-4" />,
+                    },
+                  ]}
+                />
               </div>
             </div>
 

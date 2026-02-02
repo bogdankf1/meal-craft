@@ -21,6 +21,7 @@ import {
   Tag,
   FolderArchive,
   DollarSign,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -37,6 +38,7 @@ import {
 } from "@/components/shared";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -272,10 +274,18 @@ export function ShoppingListsContent() {
                     views={viewOptions}
                   />
                 )}
-                <Button onClick={handleAddClick}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t("addList")}
-                </Button>
+                <SplitButton
+                  primaryLabel={t("tabs.import")}
+                  primaryIcon={<Sparkles className="h-4 w-4" />}
+                  onPrimaryClick={() => navigateToTab("import")}
+                  options={[
+                    {
+                      label: t("addList"),
+                      onClick: handleAddClick,
+                      icon: <Plus className="h-4 w-4" />,
+                    },
+                  ]}
+                />
               </div>
             </div>
 

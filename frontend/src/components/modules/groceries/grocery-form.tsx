@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -73,6 +73,8 @@ export function GroceryForm({
   const isEditing = !!editingGrocery;
   const isLoading = isCreating || isUpdating;
 
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -94,8 +96,19 @@ export function GroceryForm({
     },
   });
 
+  // Track previous open state to detect when dialog opens
+  const prevOpenRef = useRef(open);
+
   // Reset form when editingGrocery changes or dialog opens
   useEffect(() => {
+    // Only reset moreOptionsOpen when dialog opens (transition from closed to open)
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    if (justOpened) {
+      setMoreOptionsOpen(false);
+    }
+
     if (open) {
       if (editingGrocery) {
         reset({
@@ -169,30 +182,27 @@ export function GroceryForm({
 
   const handleClose = () => {
     reset();
+    setMoreOptionsOpen(false);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("form.editTitle") : t("form.addTitle")}
           </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? t("form.editDescription")
-              : t("form.addDescription")}
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Item Name */}
+          {/* Item Name - Primary field */}
           <div className="space-y-2">
-            <Label htmlFor="item_name">{t("form.itemName")} *</Label>
+            <Label htmlFor="item_name">{t("form.itemName")}</Label>
             <Input
               id="item_name"
               placeholder={t("form.itemNamePlaceholder")}
+              autoFocus
               {...register("item_name")}
             />
             {errors.item_name && (
@@ -200,8 +210,8 @@ export function GroceryForm({
             )}
           </div>
 
-          {/* Quantity and Unit */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Quantity and Unit - Compact row */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="quantity">{t("form.quantity")}</Label>
               <Input
@@ -209,7 +219,7 @@ export function GroceryForm({
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="0"
+                placeholder="1"
                 {...register("quantity", { valueAsNumber: true })}
               />
             </div>
@@ -233,73 +243,92 @@ export function GroceryForm({
             </div>
           </div>
 
-          {/* Category */}
-          <div className="space-y-2">
-            <Label htmlFor="category">{t("form.category")}</Label>
-            <Select
-              value={category || ""}
-              onValueChange={(value) => setValue("category", value || null)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("form.selectCategory")} />
-              </SelectTrigger>
-              <SelectContent>
-                {GROCERY_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {t(`categories.${cat.value}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* More Options Toggle */}
+          <button
+            type="button"
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+            onClick={() => setMoreOptionsOpen(!moreOptionsOpen)}
+          >
+            {moreOptionsOpen ? (
+              <>
+                <ChevronUp className="h-3 w-3" />
+                {t("form.fewerOptions")}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" />
+                {t("form.moreOptions")}
+              </>
+            )}
+          </button>
 
-          {/* Purchase Date and Expiry Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="purchase_date">{t("form.purchaseDate")} *</Label>
-              <Input
-                id="purchase_date"
-                type="date"
-                {...register("purchase_date")}
-              />
-              {errors.purchase_date && (
-                <p className="text-sm text-destructive">
-                  {errors.purchase_date.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="expiry_date">{t("form.expiryDate")}</Label>
-              <Input
-                id="expiry_date"
-                type="date"
-                {...register("expiry_date")}
-              />
-            </div>
-          </div>
+          {/* More Options Content */}
+          {moreOptionsOpen && (
+            <div className="space-y-4">
+              {/* Category */}
+              <div className="space-y-2">
+                <Label htmlFor="category">{t("form.category")}</Label>
+                <Select
+                  value={category || ""}
+                  onValueChange={(value) => setValue("category", value || null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("form.selectCategory")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GROCERY_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {t(`categories.${cat.value}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Cost and Store */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cost">{t("form.cost")}</Label>
-              <Input
-                id="cost"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                {...register("cost", { valueAsNumber: true })}
-              />
+              {/* Purchase Date and Expiry Date */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="purchase_date">{t("form.purchaseDate")}</Label>
+                  <Input
+                    id="purchase_date"
+                    type="date"
+                    {...register("purchase_date")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="expiry_date">{t("form.expiryDate")}</Label>
+                  <Input
+                    id="expiry_date"
+                    type="date"
+                    {...register("expiry_date")}
+                  />
+                </div>
+              </div>
+
+              {/* Cost and Store */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="cost">{t("form.cost")}</Label>
+                  <Input
+                    id="cost"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    {...register("cost", { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="store">{t("form.store")}</Label>
+                  <Input
+                    id="store"
+                    placeholder={t("form.storePlaceholder")}
+                    {...register("store")}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="store">{t("form.store")}</Label>
-              <Input
-                id="store"
-                placeholder={t("form.storePlaceholder")}
-                {...register("store")}
-              />
-            </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>

@@ -10,7 +10,6 @@ import {
   Settings,
   Palette,
   Globe,
-  Bell,
   Leaf,
   DollarSign,
   Sun,
@@ -27,7 +26,9 @@ import {
   Salad,
   LayoutDashboard,
   PanelLeft,
+  LogOut,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 import {
   ModuleTabs,
@@ -72,7 +73,6 @@ import { type CurrencyCode } from "@/lib/currency";
 import {
   useGetUserSeasonalPreferencesQuery,
   useUpdateUserSeasonalPreferencesMutation,
-  useGetSeasonalProduceQuery,
   SUPPORTED_COUNTRIES,
 } from "@/lib/api/seasonality-api";
 import {
@@ -108,7 +108,6 @@ const PROFILE_COLORS = [
 export function SettingsContent() {
   const t = useTranslations("settings");
   const tProfiles = useTranslations("profiles");
-  const tSeasonality = useTranslations("seasonality");
   const tDietary = useTranslations("dietaryRestrictions");
   const tNutritional = useTranslations("nutritionalPreferences");
   const tCommon = useTranslations("common");
@@ -170,13 +169,8 @@ export function SettingsContent() {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Get favorites count
+  // Get selected country for seasonality
   const selectedCountry = seasonalPreferences?.country_code || "UA";
-  const { data: produceData } = useGetSeasonalProduceQuery({
-    country_code: selectedCountry,
-    per_page: 100,
-  });
-  const favoritesCount = produceData?.items.filter(p => p.is_favorite).length || 0;
 
   const tabs = [
     {
@@ -193,16 +187,6 @@ export function SettingsContent() {
       value: "appearance",
       label: t("tabs.appearance"),
       icon: <Palette className="h-4 w-4" />,
-    },
-    {
-      value: "notifications",
-      label: t("tabs.notifications"),
-      icon: <Bell className="h-4 w-4" />,
-    },
-    {
-      value: "seasonality",
-      label: t("tabs.seasonality"),
-      icon: <Leaf className="h-4 w-4" />,
     },
   ];
 
@@ -232,18 +216,9 @@ export function SettingsContent() {
   const handleCountryChange = async (countryCode: string) => {
     try {
       await updateSeasonalPreferences({ country_code: countryCode }).unwrap();
-      toast.success(tSeasonality("messages.countryUpdated"));
+      toast.success(t("messages.countryChanged"));
     } catch {
-      toast.error(tSeasonality("messages.errorUpdatingPreferences"));
-    }
-  };
-
-  const handleNotificationChange = async (enabled: boolean) => {
-    try {
-      await updateSeasonalPreferences({ notification_enabled: enabled }).unwrap();
-      toast.success(t("messages.notificationsUpdated"));
-    } catch {
-      toast.error(t("messages.errorUpdatingNotifications"));
+      toast.error(t("messages.errorUpdatingCountry"));
     }
   };
 
@@ -319,31 +294,122 @@ export function SettingsContent() {
     <ModuleTabs tabs={tabs} defaultTab="general">
       {/* General Tab */}
       <TabsContent value="general" className="space-y-6">
-        {/* Language Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
-              {t("general.language.title")}
+              <Settings className="h-5 w-5" />
+              {t("general.title")}
             </CardTitle>
-            <CardDescription>{t("general.language.description")}</CardDescription>
+            <CardDescription>{t("general.description")}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Select value={currentLocale} onValueChange={handleLanguageChange} disabled={isPending}>
-              <SelectTrigger className="w-full md:w-80">
-                <SelectValue placeholder={t("general.language.placeholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    <span className="flex items-center gap-2">
-                      <span>{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <CardContent className="space-y-6">
+            {/* Language */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  {t("general.language.title")}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("general.language.description")}
+                </p>
+              </div>
+              <Select value={currentLocale} onValueChange={handleLanguageChange} disabled={isPending}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder={t("general.language.placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      <span className="flex items-center gap-2">
+                        <span>{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Country */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <Leaf className="h-4 w-4" />
+                  {t("general.country.title")}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("general.country.description")}
+                </p>
+              </div>
+              {isLoadingSeasonalPrefs ? (
+                <Skeleton className="h-10 w-full sm:w-48" />
+              ) : (
+                <Select value={selectedCountry} onValueChange={handleCountryChange}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_COUNTRIES.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        <span className="flex items-center gap-2">
+                          <span>{country.flag}</span>
+                          <span>{country.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Currency */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  {t("general.currency.title")}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("general.currency.description")}
+                </p>
+              </div>
+              <Select value={currency} onValueChange={handleCurrencyChange}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder={t("general.currency.placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((curr) => (
+                    <SelectItem key={curr.code} value={curr.code}>
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono w-6">{curr.symbol}</span>
+                        <span>{curr.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Account / Logout */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  {t("general.account.title")}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("general.account.description")}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="w-full sm:w-auto text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:text-red-500 dark:border-red-900 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+              >
+                {t("general.account.logout")}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
@@ -566,38 +632,6 @@ export function SettingsContent() {
                 </div>
               </Label>
             </RadioGroup>
-          </CardContent>
-        </Card>
-
-        {/* Currency Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              {t("appearance.currency.title")}
-            </CardTitle>
-            <CardDescription>{t("appearance.currency.description")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={currency} onValueChange={handleCurrencyChange}>
-              <SelectTrigger className="w-full md:w-80">
-                <SelectValue placeholder={t("appearance.currency.placeholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {currencies.map((curr) => (
-                  <SelectItem key={curr.code} value={curr.code}>
-                    <span className="flex items-center gap-2">
-                      <span className="font-mono w-6">{curr.symbol}</span>
-                      <span>{curr.name}</span>
-                      <span className="text-muted-foreground">({curr.code})</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground mt-2">
-              {t("appearance.currency.hint")}
-            </p>
           </CardContent>
         </Card>
 
@@ -1423,148 +1457,6 @@ export function SettingsContent() {
         </Card>
       </TabsContent>
 
-      {/* Notifications Tab */}
-      <TabsContent value="notifications" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              {t("notifications.title")}
-            </CardTitle>
-            <CardDescription>{t("notifications.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Email Notifications */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{t("notifications.email.title")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("notifications.email.description")}
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            {/* Push Notifications */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{t("notifications.push.title")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("notifications.push.description")}
-                </p>
-              </div>
-              <Switch />
-            </div>
-
-            {/* Weekly Digest */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{t("notifications.weeklyDigest.title")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("notifications.weeklyDigest.description")}
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-
-            {/* Meal Reminders */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{t("notifications.mealReminders.title")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("notifications.mealReminders.description")}
-                </p>
-              </div>
-              <Switch />
-            </div>
-
-            {/* Shopping List Reminders */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{t("notifications.shoppingReminders.title")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("notifications.shoppingReminders.description")}
-                </p>
-              </div>
-              <Switch />
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Seasonality Tab */}
-      <TabsContent value="seasonality" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Leaf className="h-5 w-5" />
-              {tSeasonality("preferences.title")}
-            </CardTitle>
-            <CardDescription>{tSeasonality("preferences.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {isLoadingSeasonalPrefs ? (
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-80" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : (
-              <>
-                {/* Country Selection */}
-                <div className="space-y-2">
-                  <Label>{tSeasonality("preferences.selectCountry")}</Label>
-                  <Select value={selectedCountry} onValueChange={handleCountryChange}>
-                    <SelectTrigger className="w-full md:w-80">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUPPORTED_COUNTRIES.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          <span className="flex items-center gap-2">
-                            <span>{country.flag}</span>
-                            <span>{country.name}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    {tSeasonality("preferences.countryHint")}
-                  </p>
-                </div>
-
-                {/* Seasonal Notifications */}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>{tSeasonality("preferences.notifications")}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {tSeasonality("preferences.notificationsHint")}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={seasonalPreferences?.notification_enabled || false}
-                    onCheckedChange={handleNotificationChange}
-                  />
-                </div>
-
-                {/* Favorites Summary */}
-                <div className="space-y-2">
-                  <Label>{tSeasonality("preferences.yourFavorites")}</Label>
-                  {favoritesCount > 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      {tSeasonality("preferences.favoritesCount", { count: favoritesCount })}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {tSeasonality("preferences.noFavorites")}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
     </ModuleTabs>
 
     {/* Profile Create/Edit Dialog */}

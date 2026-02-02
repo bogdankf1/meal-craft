@@ -152,7 +152,7 @@ export function GroceryBulkForm({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="!max-w-[95vw] w-[1400px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{t("bulkForm.title")}</DialogTitle>
           <DialogDescription>{t("bulkForm.description")}</DialogDescription>
@@ -163,15 +163,11 @@ export function GroceryBulkForm({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">{t("form.itemName")} *</TableHead>
-                  <TableHead className="min-w-[100px]">{t("form.quantity")}</TableHead>
-                  <TableHead className="min-w-[120px]">{t("form.unit")}</TableHead>
-                  <TableHead className="min-w-[140px]">{t("form.category")}</TableHead>
-                  <TableHead className="min-w-[150px]">{t("form.purchaseDate")} *</TableHead>
-                  <TableHead className="min-w-[150px]">{t("form.expiryDate")}</TableHead>
-                  <TableHead className="min-w-[100px]">{t("form.cost")}</TableHead>
-                  <TableHead className="min-w-[150px]">{t("form.store")}</TableHead>
-                  <TableHead className="min-w-[90px]"></TableHead>
+                  <TableHead className="min-w-[180px]">{t("form.itemName")} *</TableHead>
+                  <TableHead className="min-w-[80px]">{t("form.quantity")}</TableHead>
+                  <TableHead className="min-w-[100px]">{t("form.unit")}</TableHead>
+                  <TableHead className="min-w-[130px]">{t("form.purchaseDate")} *</TableHead>
+                  <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -190,7 +186,7 @@ export function GroceryBulkForm({
                         step="0.01"
                         min="0"
                         {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-                        placeholder="0"
+                        placeholder="1"
                       />
                     </TableCell>
                     <TableCell className="p-1">
@@ -213,50 +209,10 @@ export function GroceryBulkForm({
                       </Select>
                     </TableCell>
                     <TableCell className="p-1">
-                      <Select
-                        value={watchedItems[index]?.category || ""}
-                        onValueChange={(value) =>
-                          setValue(`items.${index}.category`, value || null)
-                        }
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="-" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {GROCERY_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat.value} value={cat.value}>
-                              {t(`categories.${cat.value}`)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="p-1">
                       <Input
                         type="date"
                         {...register(`items.${index}.purchase_date`)}
                         className={errors.items?.[index]?.purchase_date ? "border-destructive" : ""}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="date"
-                        {...register(`items.${index}.expiry_date`)}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        {...register(`items.${index}.cost`, { valueAsNumber: true })}
-                        placeholder="0.00"
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        {...register(`items.${index}.store`)}
-                        placeholder={t("form.storePlaceholder")}
                       />
                     </TableCell>
                     <TableCell className="p-1">

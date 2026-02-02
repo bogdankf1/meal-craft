@@ -136,6 +136,7 @@ export function RecipeTable({
   const { preferences } = useUserStore();
   const columnVisibility = preferences.columnVisibility?.recipes ?? defaultColumnVisibility.recipes;
   const showColumnSelector = preferences.uiVisibility?.showColumnSelector ?? true;
+  const showCollectionsTab = preferences.uiVisibility?.showCollectionsTab ?? true;
 
   const [deleteRecipe, { isLoading: isDeleting }] = useDeleteRecipeMutation();
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteRecipesMutation();
@@ -278,7 +279,7 @@ export function RecipeTable({
         }
       },
     },
-    ...(onAddToCollection
+    ...(onAddToCollection && showCollectionsTab
       ? [
           {
             label: t("actions.addToCollection"),
@@ -388,7 +389,7 @@ export function RecipeTable({
           },
         ]
       : []),
-    ...(onAddToCollection
+    ...(onAddToCollection && showCollectionsTab
       ? [
           {
             label: t("actions.addToCollection"),

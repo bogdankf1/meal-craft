@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { format, addDays, startOfWeek } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
 
 import {
   Dialog,
@@ -73,6 +73,8 @@ export function MealPlanForm({
   const isEditing = !!editingItem;
   const isLoading = isCreating || isUpdating;
 
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+
   // Get next Monday as default start date
   const getDefaultStartDate = () => {
     const today = new Date();
@@ -92,7 +94,17 @@ export function MealPlanForm({
   });
 
   // Update form when editing item changes
+  const prevOpenRef = useRef(open);
   useEffect(() => {
+    // Only reset moreOptionsOpen when dialog opens (transition from closed to open)
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    if (justOpened) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset local UI state when dialog opens
+      setMoreOptionsOpen(false);
+    }
+
     if (editingItem) {
       form.reset({
         name: editingItem.name,
@@ -111,7 +123,7 @@ export function MealPlanForm({
         is_template: false,
       });
     }
-  }, [editingItem, form]);
+  }, [editingItem, form, open]);
 
   const onSubmit = async (values: MealPlanFormValues) => {
     try {
@@ -153,7 +165,7 @@ export function MealPlanForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("form.editTitle") : t("form.createTitle")}
@@ -169,14 +181,14 @@ export function MealPlanForm({
                 <FormItem>
                   <FormLabel>{t("fields.name")}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder={t("form.namePlaceholder")} />
+                    <Input {...field} placeholder={t("form.namePlaceholder")} autoFocus />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="date_start"
@@ -256,48 +268,71 @@ export function MealPlanForm({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="servings"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("fields.servings")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={20}
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 2)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            {/* More Options Toggle */}
+            <button
+              type="button"
+              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              onClick={() => setMoreOptionsOpen(!moreOptionsOpen)}
+            >
+              {moreOptionsOpen ? (
+                <>
+                  <ChevronUp className="h-3 w-3" />
+                  {t("form.fewerOptions")}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3 w-3" />
+                  {t("form.moreOptions")}
+                </>
               )}
-            />
+            </button>
 
-            <FormField
-              control={form.control}
-              name="is_template"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <FormLabel>{t("fields.isTemplate")}</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      {t("form.templateDescription")}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {moreOptionsOpen && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="servings"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("fields.servings")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 2)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="flex justify-end gap-2 pt-4">
+                <FormField
+                  control={form.control}
+                  name="is_template"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel>{t("fields.isTemplate")}</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          {t("form.templateDescription")}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"

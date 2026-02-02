@@ -368,7 +368,9 @@
       "store": "Магазин",
       "storePlaceholder": "напр., АТБ, Сільпо",
       "cancel": "Скасувати",
-      "saving": "Збереження..."
+      "saving": "Збереження...",
+      "moreOptions": "Більше параметрів",
+      "fewerOptions": "Менше параметрів"
     },
     "bulkForm": {
       "title": "Додати декілька товарів",
@@ -1023,7 +1025,9 @@
       "namePlaceholder": "напр., Тижневі продукти, Для вечірки",
       "estimatedCost": "Орієнтовна вартість",
       "saving": "Збереження...",
-      "create": "Створити список"
+      "create": "Створити список",
+      "moreOptions": "Більше параметрів",
+      "fewerOptions": "Менше параметрів"
     },
     "itemForm": {
       "addTitle": "Додати товар",
@@ -1320,7 +1324,9 @@
       "minimumQuantityHint": "Ви отримаєте сповіщення, коли запас впаде нижче цього рівня.",
       "notes": "Нотатки",
       "notesPlaceholder": "Додаткові нотатки...",
-      "saving": "Збереження..."
+      "saving": "Збереження...",
+      "moreOptions": "Більше параметрів",
+      "fewerOptions": "Менше параметрів"
     },
     "bulkForm": {
       "title": "Додати кілька товарів",
@@ -1825,7 +1831,9 @@
       "notes": "Примітки",
       "notesPlaceholder": "Додаткові примітки...",
       "markAsFavorite": "Позначити як улюблений",
-      "addRecipe": "Додати рецепт"
+      "addRecipe": "Додати рецепт",
+      "moreOptions": "Більше опцій",
+      "fewerOptions": "Менше опцій"
     },
     "actions": {
       "favorite": "Улюблене",
@@ -2400,6 +2408,9 @@
       "previous": "Попередній",
       "next": "Наступний"
     },
+    "hints": {
+      "selectMemberToAdd": "Оберіть учасника, щоб додати страви"
+    },
     "mealTypes": {
       "breakfast": "Сніданок",
       "lunch": "Обід",
@@ -2485,7 +2496,9 @@
       "namePlaceholder": "напр., Тиждень 15 грудня 2024",
       "selectDate": "Оберіть дату",
       "templateDescription": "Зберегти як шаблон для повторного використання",
-      "createButton": "Створити план"
+      "createButton": "Створити план",
+      "moreOptions": "Більше параметрів",
+      "fewerOptions": "Менше параметрів"
     },
     "mealForm": {
       "addTitle": "Додати страву",
@@ -2494,7 +2507,9 @@
       "customMealPlaceholder": "напр., Залишки пасти, Їжа на виніс",
       "notesPlaceholder": "Додати нотатки...",
       "leftoverDescription": "Позначте, якщо це залишки",
-      "addButton": "Додати страву"
+      "addButton": "Додати страву",
+      "moreOptions": "Більше параметрів",
+      "fewerOptions": "Менше параметрів"
     },
     "repeat": {
       "title": "Повторити план меню",
@@ -2921,10 +2936,26 @@
       "seasonality": "Сезонність"
     },
     "general": {
+      "title": "Загальні налаштування",
+      "description": "Налаштуйте мову, місцезнаходження та обліковий запис",
       "language": {
         "title": "Мова",
         "description": "Оберіть бажану мову застосунку",
         "placeholder": "Оберіть мову"
+      },
+      "country": {
+        "title": "Країна",
+        "description": "Встановіть місцезнаходження для сезонних продуктів"
+      },
+      "currency": {
+        "title": "Валюта",
+        "description": "Оберіть валюту для відображення цін",
+        "placeholder": "Оберіть валюту"
+      },
+      "account": {
+        "title": "Обліковий запис",
+        "description": "Вийти з облікового запису",
+        "logout": "Вийти"
       }
     },
     "household": {
@@ -3218,8 +3249,8 @@
       "languageChanged": "Мову успішно змінено",
       "themeChanged": "Тему успішно змінено",
       "currencyChanged": "Валюту успішно змінено",
-      "notificationsUpdated": "Налаштування сповіщень оновлено",
-      "errorUpdatingNotifications": "Не вдалося оновити налаштування сповіщень"
+      "countryChanged": "Країну успішно змінено",
+      "errorUpdatingCountry": "Не вдалося оновити країну"
     }
   },
   "seasonality": {

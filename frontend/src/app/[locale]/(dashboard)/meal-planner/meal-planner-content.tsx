@@ -9,7 +9,6 @@ import {
   Archive,
   LayoutGrid,
   BarChart3,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Import,
@@ -19,6 +18,8 @@ import {
   Clock,
   Search,
   History,
+  Sparkles,
+  Info,
 } from "lucide-react";
 
 import {
@@ -34,12 +35,7 @@ import {
 } from "@/components/shared";
 import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -78,10 +74,13 @@ import {
   type MealWithProfile,
 } from "@/lib/api/meal-planner-api";
 import { toast } from "sonner";
+import { useUserStore } from "@/lib/store/user-store";
 
 export function MealPlannerContent() {
   const t = useTranslations("mealPlanner");
   const tCommon = useTranslations("common");
+  const { preferences } = useUserStore();
+  const { uiVisibility } = preferences;
 
   // View mode: calendar or table
   const [viewMode, setViewMode] = useState<string>("calendar");
@@ -183,13 +182,19 @@ export function MealPlannerContent() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const tabs = [
-    { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
-    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" /> },
-    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" /> },
-    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" /> },
-    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" /> },
+  const allTabs = [
+    { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" />, alwaysShow: true },
+    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" />, alwaysShow: true },
+    { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
+    { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
   ];
+
+  const tabs = allTabs.filter((tab) => {
+    if (tab.alwaysShow) return true;
+    if (tab.visibilityKey) return uiVisibility[tab.visibilityKey];
+    return true;
+  });
 
   const viewOptions = [
     { ...CALENDAR_VIEW, label: t("views.calendar") },
@@ -374,52 +379,58 @@ export function MealPlannerContent() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard
-              title={t("stats.totalPlans")}
-              value={analytics?.total_meal_plans || 0}
-              icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.totalMeals")}
-              value={analytics?.total_meals || 0}
-              icon={<UtensilsCrossed className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.avgMealsPerPlan")}
-              value={analytics?.avg_meals_per_plan?.toFixed(1) || "-"}
-              icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatsCard
-              title={t("stats.recipeVariety")}
-              value={analytics?.recipe_variety_score || 0}
-              icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-            />
-          </div>
+          {uiVisibility.showStatsCards && (
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              <StatsCard
+                title={t("stats.totalPlans")}
+                value={analytics?.total_meal_plans || 0}
+                icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.totalMeals")}
+                value={analytics?.total_meals || 0}
+                icon={<UtensilsCrossed className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.avgMealsPerPlan")}
+                value={analytics?.avg_meals_per_plan?.toFixed(1) || "-"}
+                icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />}
+              />
+              <StatsCard
+                title={t("stats.recipeVariety")}
+                value={analytics?.recipe_variety_score || 0}
+                icon={<Clock className="h-4 w-4 text-muted-foreground" />}
+              />
+            </div>
+          )}
 
           {/* Filters and Actions Row */}
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t("filters.search")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+              {uiVisibility.showSearchBar && (
+                <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t("filters.search")}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              )}
               <ProfileSelector
                 value={selectedProfileId}
                 onChange={setSelectedProfileId}
                 className="w-full sm:w-[180px]"
                 data-spotlight="members-selector"
               />
-              <ViewSelector
-                currentView={viewMode}
-                onViewChange={setViewMode}
-                views={viewOptions}
-              />
+              {uiVisibility.showViewSelector && (
+                <ViewSelector
+                  currentView={viewMode}
+                  onViewChange={setViewMode}
+                  views={viewOptions}
+                />
+              )}
             </div>
             <div className="flex items-center justify-between gap-2">
               {selectedPlanId && displayPlan && (
@@ -436,25 +447,19 @@ export function MealPlannerContent() {
                 </div>
               )}
               <div className="flex-1" />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button data-spotlight="create-plan-button">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("createPlan")}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleAddClick}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("createNew")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateToTab("import")}>
-                    <Import className="h-4 w-4 mr-2" />
-                    {t("importPlan")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SplitButton
+                primaryLabel={t("createNew")}
+                primaryIcon={<Plus className="h-4 w-4" />}
+                onPrimaryClick={handleAddClick}
+                options={[
+                  {
+                    label: t("importPlan"),
+                    onClick: () => navigateToTab("import"),
+                    icon: <Sparkles className="h-4 w-4" />,
+                  },
+                ]}
+                data-spotlight="create-plan-button"
+              />
             </div>
           </div>
 
@@ -518,7 +523,7 @@ export function MealPlannerContent() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <MealCalendar
                     startDate={parseISO(combinedWeekPlan.date_start)}
                     meals={combinedWeekPlan.meals}
@@ -526,6 +531,10 @@ export function MealPlannerContent() {
                     onEditMeal={handleEditMeal}
                     showAllMembers
                   />
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Info className="h-3 w-3" />
+                    <span>{t("hints.selectMemberToAdd")}</span>
+                  </div>
                 </CardContent>
               </Card>
             ) : displayPlan ? (
@@ -712,7 +721,7 @@ export function MealPlannerContent() {
             </div>
 
             {/* History stats */}
-            {historyData && (
+            {uiVisibility.showStatsCards && historyData && (
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
                 <StatsCard
                   title={t("history.totalPlans")}

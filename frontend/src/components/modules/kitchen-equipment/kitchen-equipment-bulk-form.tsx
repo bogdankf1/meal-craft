@@ -156,7 +156,7 @@ export function KitchenEquipmentBulkForm({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="!max-w-[95vw] w-[1400px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{t("bulkForm.title")}</DialogTitle>
           <DialogDescription>{t("bulkForm.description")}</DialogDescription>
@@ -167,15 +167,11 @@ export function KitchenEquipmentBulkForm({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">{t("form.name")} *</TableHead>
-                  <TableHead className="min-w-[140px]">{t("form.category")}</TableHead>
-                  <TableHead className="min-w-[120px]">{t("form.brand")}</TableHead>
-                  <TableHead className="min-w-[120px]">{t("form.model")}</TableHead>
-                  <TableHead className="min-w-[130px]">{t("form.condition")}</TableHead>
-                  <TableHead className="min-w-[130px]">{t("form.location")}</TableHead>
-                  <TableHead className="min-w-[140px]">{t("form.purchaseDate")}</TableHead>
-                  <TableHead className="min-w-[100px]">{t("form.purchasePrice")}</TableHead>
-                  <TableHead className="min-w-[90px]"></TableHead>
+                  <TableHead className="min-w-[180px]">{t("form.name")} *</TableHead>
+                  <TableHead className="min-w-[120px]">{t("form.category")}</TableHead>
+                  <TableHead className="min-w-[110px]">{t("form.condition")}</TableHead>
+                  <TableHead className="min-w-[110px]">{t("form.location")}</TableHead>
+                  <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -206,18 +202,6 @@ export function KitchenEquipmentBulkForm({
                           ))}
                         </SelectContent>
                       </Select>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        {...register(`items.${index}.brand`)}
-                        placeholder={t("form.brandPlaceholder")}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        {...register(`items.${index}.model`)}
-                        placeholder={t("form.modelPlaceholder")}
-                      />
                     </TableCell>
                     <TableCell className="p-1">
                       <Select
@@ -256,21 +240,6 @@ export function KitchenEquipmentBulkForm({
                           ))}
                         </SelectContent>
                       </Select>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="date"
-                        {...register(`items.${index}.purchase_date`)}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        {...register(`items.${index}.purchase_price`, { valueAsNumber: true })}
-                        placeholder="0.00"
-                      />
                     </TableCell>
                     <TableCell className="p-1">
                       <div className="flex gap-1">

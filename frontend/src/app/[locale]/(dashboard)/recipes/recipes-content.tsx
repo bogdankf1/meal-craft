@@ -9,7 +9,6 @@ import {
   Archive,
   LayoutGrid,
   BarChart3,
-  ChevronDown,
   Import,
   BookOpen,
   Heart,
@@ -32,12 +31,7 @@ import {
 } from "@/components/shared";
 import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -360,29 +354,23 @@ export function RecipesContent() {
             </div>
             )}
             <div className="flex items-center justify-start gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("addRecipe")}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={handleAddClick}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("addSingle")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAiSuggestionsOpen(true)}>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {t("aiSuggestions.title")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateToTab("import")}>
-                    <Import className="h-4 w-4 mr-2" />
-                    {t("importRecipes")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SplitButton
+                primaryLabel={t("aiSuggestions.title")}
+                primaryIcon={<Sparkles className="h-4 w-4" />}
+                onPrimaryClick={() => setAiSuggestionsOpen(true)}
+                options={[
+                  {
+                    label: t("addSingle"),
+                    onClick: handleAddClick,
+                    icon: <Plus className="h-4 w-4" />,
+                  },
+                  {
+                    label: t("importRecipes"),
+                    onClick: () => navigateToTab("import"),
+                    icon: <Import className="h-4 w-4" />,
+                  },
+                ]}
+              />
             </div>
           </div>
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 import {
   Dialog,
@@ -33,7 +33,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
   useCreateRecipesMutation,
@@ -96,6 +95,8 @@ export function RecipeForm({
   const isLoading = isCreating || isUpdating;
   const isEditing = !!editingItem;
 
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeSchema),
     defaultValues: {
@@ -122,7 +123,17 @@ export function RecipeForm({
   });
 
   // Reset form when editing item changes
+  const prevOpenRef = useRef(open);
   useEffect(() => {
+    // Only reset moreOptionsOpen when dialog opens (transition from closed to open)
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+
+    if (justOpened) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset local UI state when dialog opens
+      setMoreOptionsOpen(false);
+    }
+
     if (editingItem) {
       form.reset({
         name: editingItem.name,
@@ -163,7 +174,7 @@ export function RecipeForm({
         ingredients: [{ ingredient_name: "", quantity: null, unit: null, category: null }],
       });
     }
-  }, [editingItem, form]);
+  }, [editingItem, form, open]);
 
   const onSubmit = async (values: RecipeFormValues) => {
     try {
@@ -212,7 +223,7 @@ export function RecipeForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("form.editTitle") : t("form.addTitle")}
@@ -221,210 +232,36 @@ export function RecipeForm({
 
         <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <h3 className="font-medium">{t("form.basicInfo")}</h3>
-
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("form.name")} *</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t("form.namePlaceholder")} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("form.description")}</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder={t("form.descriptionPlaceholder")}
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.category")}</FormLabel>
-                        <Select
-                          value={field.value || ""}
-                          onValueChange={(value) => field.onChange(value || null)}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("form.selectCategory")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {RECIPE_CATEGORIES.map((cat) => (
-                              <SelectItem key={cat.value} value={cat.value}>
-                                {t(`categories.${cat.value}`)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="cuisine_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.cuisineType")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t("form.cuisinePlaceholder")}
-                            {...field}
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Time & Servings */}
-              <div className="space-y-4">
-                <h3 className="font-medium">{t("form.timeServings")}</h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="prep_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.prepTime")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="min"
-                            {...field}
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value ? Number(e.target.value) : null)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="cook_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.cookTime")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="min"
-                            {...field}
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value ? Number(e.target.value) : null)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="servings"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.servings")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            {...field}
-                            value={field.value ?? ""}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="difficulty"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.difficulty")}</FormLabel>
-                        <Select
-                          value={field.value || ""}
-                          onValueChange={(value) => field.onChange(value || null)}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("form.selectDifficulty")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {RECIPE_DIFFICULTIES.map((diff) => (
-                              <SelectItem key={diff.value} value={diff.value}>
-                                {t(`difficulties.${diff.value}`)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <Separator />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Recipe Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("form.name")} *</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t("form.namePlaceholder")} autoFocus {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Ingredients */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium">{t("form.ingredients")} *</h3>
+                  <FormLabel>{t("form.ingredients")} *</FormLabel>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="h-7 text-xs"
                     onClick={() =>
                       append({ ingredient_name: "", quantity: null, unit: null, category: null })
                     }
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-3 w-3 mr-1" />
                     {t("form.addIngredient")}
                   </Button>
                 </div>
@@ -432,18 +269,17 @@ export function RecipeForm({
                 <div className="space-y-2">
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex items-center gap-2">
-                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-
                       <FormField
                         control={form.control}
                         name={`ingredients.${index}.quantity`}
                         render={({ field }) => (
-                          <FormItem className="w-20">
+                          <FormItem className="w-16">
                             <FormControl>
                               <Input
                                 type="number"
                                 placeholder={t("form.qty")}
                                 step="0.1"
+                                className="h-9"
                                 {...field}
                                 value={field.value ?? ""}
                                 onChange={(e) =>
@@ -459,13 +295,13 @@ export function RecipeForm({
                         control={form.control}
                         name={`ingredients.${index}.unit`}
                         render={({ field }) => (
-                          <FormItem className="w-28">
+                          <FormItem className="w-24">
                             <Select
                               value={field.value || ""}
                               onValueChange={(value) => field.onChange(value || null)}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-9">
                                   <SelectValue placeholder={t("form.unit")} />
                                 </SelectTrigger>
                               </FormControl>
@@ -489,6 +325,7 @@ export function RecipeForm({
                             <FormControl>
                               <Input
                                 placeholder={t("form.ingredientName")}
+                                className="h-9"
                                 {...field}
                               />
                             </FormControl>
@@ -500,6 +337,7 @@ export function RecipeForm({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="h-9 w-9"
                         onClick={() => fields.length > 1 && remove(index)}
                         disabled={fields.length === 1}
                       >
@@ -510,46 +348,258 @@ export function RecipeForm({
                 </div>
               </div>
 
-              <Separator />
-
               {/* Instructions */}
-              <div className="space-y-4">
-                <h3 className="font-medium">{t("form.instructions")} *</h3>
+              <FormField
+                control={form.control}
+                name="instructions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("form.instructions")} *</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t("form.instructionsPlaceholder")}
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="instructions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          placeholder={t("form.instructionsPlaceholder")}
-                          className="min-h-[150px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* More Options Toggle */}
+              <button
+                type="button"
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                onClick={() => setMoreOptionsOpen(!moreOptionsOpen)}
+              >
+                {moreOptionsOpen ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" />
+                    {t("form.fewerOptions")}
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" />
+                    {t("form.moreOptions")}
+                  </>
+                )}
+              </button>
 
-              <Separator />
-
-              {/* Source & Notes */}
-              <div className="space-y-4">
-                <h3 className="font-medium">{t("form.sourceNotes")}</h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* More Options Content */}
+              {moreOptionsOpen && (
+                <div className="space-y-4 pt-2">
                   <FormField
                     control={form.control}
-                    name="source"
+                    name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("form.source")}</FormLabel>
+                        <FormLabel>{t("form.description")}</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder={t("form.sourcePlaceholder")}
+                          <Textarea
+                            placeholder={t("form.descriptionPlaceholder")}
+                            rows={2}
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.category")}</FormLabel>
+                          <Select
+                            value={field.value || ""}
+                            onValueChange={(value) => field.onChange(value || null)}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("form.selectCategory")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {RECIPE_CATEGORIES.map((cat) => (
+                                <SelectItem key={cat.value} value={cat.value}>
+                                  {t(`categories.${cat.value}`)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cuisine_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.cuisineType")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t("form.cuisinePlaceholder")}
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="prep_time"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.prepTime")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="min"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value ? Number(e.target.value) : null)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cook_time"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.cookTime")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="min"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value ? Number(e.target.value) : null)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="servings"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.servings")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="1"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="difficulty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.difficulty")}</FormLabel>
+                          <Select
+                            value={field.value || ""}
+                            onValueChange={(value) => field.onChange(value || null)}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("form.selectDifficulty")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {RECIPE_DIFFICULTIES.map((diff) => (
+                                <SelectItem key={diff.value} value={diff.value}>
+                                  {t(`difficulties.${diff.value}`)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="source"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.source")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t("form.sourcePlaceholder")}
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="source_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("form.sourceUrl")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="https://..."
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("form.notes")}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={t("form.notesPlaceholder")}
+                            rows={2}
                             {...field}
                             value={field.value || ""}
                           />
@@ -561,60 +611,24 @@ export function RecipeForm({
 
                   <FormField
                     control={form.control}
-                    name="source_url"
+                    name="is_favorite"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("form.sourceUrl")}</FormLabel>
+                      <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                        <FormLabel>{t("form.markAsFavorite")}</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="https://..."
-                            {...field}
-                            value={field.value || ""}
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("form.notes")}</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder={t("form.notesPlaceholder")}
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="is_favorite"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="!mt-0">{t("form.markAsFavorite")}</FormLabel>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              )}
 
               {/* Actions */}
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"
                   variant="outline"
