@@ -596,3 +596,45 @@ class RecipeSuggestionResponse(BaseModel):
     filters_applied: dict
     success: bool
     message: Optional[str] = None
+
+
+# ============ Recipe Availability Schemas ============
+
+class RecipeIngredientAvailability(BaseModel):
+    """Availability info for a single ingredient."""
+    ingredient_name: str
+    needed_quantity: Optional[float] = None
+    needed_unit: Optional[str] = None
+    available_quantity: Optional[float] = None
+    pantry_item_id: Optional[UUID] = None
+    pantry_item_name: Optional[str] = None
+    is_available: bool = False
+    is_fully_available: bool = False
+    missing_quantity: Optional[float] = None
+
+
+class RecipeAvailabilityStatus(BaseModel):
+    """Availability status for a recipe based on pantry stock."""
+    recipe_id: UUID
+    can_make: bool = False
+    available_servings: int = 0  # Max servings possible with current pantry
+    servings_checked: int = 2
+    total_ingredients: int = 0
+    available_count: int = 0  # Ingredients at least partially available
+    fully_available_count: int = 0  # Ingredients fully available
+    missing_count: int = 0  # Ingredients completely missing
+    ingredients: List[RecipeIngredientAvailability] = []
+
+
+class RecipeListItemWithAvailability(RecipeListItem):
+    """Recipe list item with availability information."""
+    availability: Optional[RecipeAvailabilityStatus] = None
+
+
+class RecipeListWithAvailabilityResponse(BaseModel):
+    """Schema for paginated recipe list with availability info."""
+    items: List[RecipeListItemWithAvailability]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int

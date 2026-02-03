@@ -305,3 +305,130 @@ class MoveToPantryResponse(BaseModel):
     moved_count: int
     pantry_items: List[PantryItemResponse]
     message: str
+
+
+# ============ Transaction Schemas ============
+
+class PantryTransactionType(str, Enum):
+    """Type of pantry inventory transaction."""
+    ADD = "add"
+    DEDUCT = "deduct"
+    WASTE = "waste"
+    ADJUST = "adjust"
+    EXPIRE = "expire"
+
+
+class PantryTransactionResponse(BaseModel):
+    """Schema for pantry transaction response."""
+    id: UUID
+    user_id: UUID
+    pantry_item_id: UUID
+    transaction_type: str
+    quantity_change: float
+    quantity_before: float
+    quantity_after: float
+    unit: Optional[str] = None
+    source_type: Optional[str] = None
+    source_id: Optional[UUID] = None
+    notes: Optional[str] = None
+    transaction_date: datetime
+    created_at: datetime
+    # Include pantry item name for display
+    item_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PantryTransactionListResponse(BaseModel):
+    """Schema for paginated pantry transaction list response."""
+    items: List[PantryTransactionResponse]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+
+
+class PantryTransactionCreate(BaseModel):
+    """Schema for manually creating a pantry transaction (adjustment)."""
+    pantry_item_id: UUID
+    transaction_type: PantryTransactionType = PantryTransactionType.ADJUST
+    quantity_change: float = Field(..., description="Amount to add (positive) or deduct (negative)")
+    notes: Optional[str] = Field(None, max_length=500)
+
+
+# ============ Deduction Schemas ============
+
+class IngredientDeductionResult(BaseModel):
+    """Result of deducting a single ingredient from pantry."""
+    ingredient_name: str
+    needed_quantity: float
+    needed_unit: Optional[str] = None
+    deducted_quantity: float
+    deducted_unit: Optional[str] = None
+    pantry_item_id: Optional[UUID] = None
+    pantry_item_name: Optional[str] = None
+    fully_satisfied: bool
+    missing_quantity: float
+    match_score: float = 0.0
+    notes: Optional[str] = None
+
+
+class RecipeDeductionResult(BaseModel):
+    """Result of deducting all recipe ingredients from pantry."""
+    recipe_id: UUID
+    recipe_name: str
+    servings: int
+    total_ingredients: int
+    fully_satisfied: int
+    partially_satisfied: int
+    not_found: int
+    deductions: List[IngredientDeductionResult]
+    transactions: List[PantryTransactionResponse] = []
+    success: bool
+    message: Optional[str] = None
+
+
+# ============ Availability Schemas ============
+
+class IngredientAvailability(BaseModel):
+    """Availability info for a single ingredient."""
+    ingredient_name: str
+    needed_quantity: Optional[float] = None
+    needed_unit: Optional[str] = None
+    available_quantity: Optional[float] = None
+    available_unit: Optional[str] = None
+    pantry_item_id: Optional[UUID] = None
+    pantry_item_name: Optional[str] = None
+    is_available: bool
+    is_fully_available: bool
+    missing_quantity: Optional[float] = None
+    match_score: float = 0.0
+
+
+class RecipeAvailability(BaseModel):
+    """Recipe availability based on current pantry stock."""
+    recipe_id: UUID
+    recipe_name: str
+    servings_checked: int
+    can_make: bool
+    available_servings: int = 0  # Max servings possible with current pantry
+    total_ingredients: int
+    available_count: int  # Ingredients at least partially available
+    fully_available_count: int  # Ingredients fully available
+    missing_count: int  # Ingredients completely missing
+    ingredients: List[IngredientAvailability] = []
+
+
+class MealAvailability(BaseModel):
+    """Meal availability based on current pantry stock."""
+    meal_id: UUID
+    meal_plan_id: UUID
+    recipe_id: Optional[UUID] = None
+    recipe_name: Optional[str] = None
+    custom_name: Optional[str] = None
+    servings: int
+    can_make: bool
+    available_servings: int = 0
+    missing_ingredients: int = 0
+    ingredients: List[IngredientAvailability] = []

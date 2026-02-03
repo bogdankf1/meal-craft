@@ -271,14 +271,42 @@ class GenerateShoppingListRequest(BaseModel):
     shopping_list_id: Optional[UUID] = None  # Create new if not provided
     shopping_list_name: Optional[str] = None  # Name for new list
     exclude_recipe_ids: Optional[List[UUID]] = None  # Recipes to skip
+    check_pantry: bool = True  # Check pantry stock and subtract available items
+    include_low_stock: bool = False  # Include low-stock pantry items in list
+
+
+class ShoppingListItemPreview(BaseModel):
+    """Preview of a shopping list item with pantry info."""
+    ingredient_name: str
+    total_needed: float
+    unit: Optional[str] = None
+    category: Optional[str] = None
+    in_pantry: float = 0  # How much already available in pantry
+    to_buy: float = 0  # How much to add to list
+    pantry_item_id: Optional[UUID] = None
+    pantry_item_name: Optional[str] = None
 
 
 class GenerateShoppingListResponse(BaseModel):
     """Response from shopping list generation."""
     shopping_list_id: UUID
     items_added: int
+    items_skipped: int = 0  # Items already in pantry (not added)
+    items_reduced: int = 0  # Items with reduced quantity due to pantry stock
+    total_ingredients: int = 0
     success: bool
     message: Optional[str] = None
+
+
+class ShoppingListPreviewResponse(BaseModel):
+    """Preview of what shopping list would look like before creating."""
+    meal_plan_id: UUID
+    meal_plan_name: str
+    items: List[ShoppingListItemPreview]
+    total_items: int
+    items_from_pantry: int  # Ingredients already in pantry
+    items_to_buy: int  # Ingredients that need to be purchased
+    low_stock_items: List[ShoppingListItemPreview] = []  # Pantry items below minimum
 
 
 # ============ Parse Schemas (Import) ============
@@ -335,3 +363,68 @@ class CombinedWeekPlan(BaseModel):
     meals: List[MealWithProfile] = []
     profiles: List[ProfileInfo] = []
     plan_count: int = 0
+
+
+# ============ Cook/Availability Schemas ============
+
+class MarkMealCookedRequest(BaseModel):
+    """Request to mark a meal as cooked."""
+    deduct_from_pantry: bool = True
+    servings: Optional[int] = None  # Override meal servings if needed
+    notes: Optional[str] = None
+
+
+class IngredientDeductionSummary(BaseModel):
+    """Summary of a single ingredient deduction."""
+    ingredient_name: str
+    needed_quantity: Optional[float] = None
+    needed_unit: Optional[str] = None
+    deducted_quantity: float = 0
+    missing_quantity: float = 0
+    pantry_item_name: Optional[str] = None
+    fully_satisfied: bool = False
+
+
+class MarkMealCookedResponse(BaseModel):
+    """Response after marking a meal as cooked."""
+    success: bool
+    meal_id: UUID
+    recipe_id: Optional[UUID] = None
+    recipe_name: Optional[str] = None
+    servings: int
+    pantry_deducted: bool
+    deductions: List[IngredientDeductionSummary] = []
+    total_ingredients: int = 0
+    fully_satisfied: int = 0
+    partially_satisfied: int = 0
+    not_found: int = 0
+    message: Optional[str] = None
+    cooking_history_id: Optional[UUID] = None
+
+
+class MealIngredientAvailability(BaseModel):
+    """Availability info for a single ingredient."""
+    ingredient_name: str
+    needed_quantity: Optional[float] = None
+    needed_unit: Optional[str] = None
+    available_quantity: Optional[float] = None
+    pantry_item_name: Optional[str] = None
+    is_available: bool = False
+    is_fully_available: bool = False
+    missing_quantity: Optional[float] = None
+
+
+class MealAvailabilityResponse(BaseModel):
+    """Response for meal availability check."""
+    meal_id: UUID
+    meal_plan_id: UUID
+    recipe_id: Optional[UUID] = None
+    recipe_name: Optional[str] = None
+    custom_name: Optional[str] = None
+    servings: int
+    can_make: bool
+    available_servings: int = 0
+    total_ingredients: int = 0
+    available_count: int = 0
+    missing_count: int = 0
+    ingredients: List[MealIngredientAvailability] = []

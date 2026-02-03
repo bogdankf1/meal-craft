@@ -11,7 +11,8 @@ from dateutil.relativedelta import relativedelta
 from app.core.database import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
-from app.models.pantry import PantryItem
+from app.models.pantry import PantryItem, PantryTransaction
+from app.services.pantry_service import PantryService
 from app.schemas.pantry import (
     PantryItemCreate,
     PantryItemBatchCreate,
@@ -35,6 +36,9 @@ from app.schemas.pantry import (
     MonthlyWasteData,
     ParseTextRequest,
     ParseTextResponse,
+    PantryTransactionResponse,
+    PantryTransactionListResponse,
+    PantryTransactionCreate,
 )
 from app.services.ai_service import AIService
 
@@ -964,3 +968,166 @@ async def unmark_as_wasted(
     await db.refresh(item)
 
     return PantryItemResponse.model_validate(item)
+
+
+# ============ Pantry Transactions ============
+
+@router.get("/transactions/all", response_model=PantryTransactionListResponse)
+async def list_all_transactions(
+    transaction_type: Optional[str] = Query(None, description="Filter by type: add, deduct, waste, adjust, expire"),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all pantry transactions for the user."""
+    pantry_service = PantryService(db)
+    offset = (page - 1) * per_page
+
+    transactions, total = await pantry_service.get_pantry_transactions(
+        user_id=current_user.id,
+        transaction_type=transaction_type,
+        limit=per_page,
+        offset=offset,
+    )
+
+    items = []
+    for t in transactions:
+        items.append(PantryTransactionResponse(
+            id=t.id,
+            user_id=t.user_id,
+            pantry_item_id=t.pantry_item_id,
+            transaction_type=t.transaction_type,
+            quantity_change=float(t.quantity_change),
+            quantity_before=float(t.quantity_before),
+            quantity_after=float(t.quantity_after),
+            unit=t.unit,
+            source_type=t.source_type,
+            source_id=t.source_id,
+            notes=t.notes,
+            transaction_date=t.transaction_date,
+            created_at=t.created_at,
+            item_name=t.pantry_item.item_name if t.pantry_item else None,
+        ))
+
+    total_pages = (total + per_page - 1) // per_page
+
+    return PantryTransactionListResponse(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+    )
+
+
+@router.get("/{item_id}/transactions", response_model=PantryTransactionListResponse)
+async def get_item_transactions(
+    item_id: UUID,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get transaction history for a specific pantry item."""
+    # Verify item belongs to user
+    item_result = await db.execute(
+        select(PantryItem).where(
+            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
+        )
+    )
+    item = item_result.scalar_one_or_none()
+
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pantry item not found"
+        )
+
+    pantry_service = PantryService(db)
+    offset = (page - 1) * per_page
+
+    transactions, total = await pantry_service.get_pantry_transactions(
+        user_id=current_user.id,
+        pantry_item_id=item_id,
+        limit=per_page,
+        offset=offset,
+    )
+
+    items = []
+    for t in transactions:
+        items.append(PantryTransactionResponse(
+            id=t.id,
+            user_id=t.user_id,
+            pantry_item_id=t.pantry_item_id,
+            transaction_type=t.transaction_type,
+            quantity_change=float(t.quantity_change),
+            quantity_before=float(t.quantity_before),
+            quantity_after=float(t.quantity_after),
+            unit=t.unit,
+            source_type=t.source_type,
+            source_id=t.source_id,
+            notes=t.notes,
+            transaction_date=t.transaction_date,
+            created_at=t.created_at,
+            item_name=item.item_name,
+        ))
+
+    total_pages = (total + per_page - 1) // per_page
+
+    return PantryTransactionListResponse(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
+    )
+
+
+@router.post("/{item_id}/adjust", response_model=PantryTransactionResponse)
+async def adjust_pantry_quantity(
+    item_id: UUID,
+    new_quantity: float = Query(..., ge=0, description="New quantity to set"),
+    notes: Optional[str] = Query(None, max_length=500, description="Notes for the adjustment"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Manually adjust a pantry item's quantity.
+
+    Creates an 'adjust' transaction recording the change.
+    Use this for inventory corrections (e.g., after manual count).
+    """
+    pantry_service = PantryService(db)
+
+    try:
+        transaction = await pantry_service.adjust_pantry_quantity(
+            user_id=current_user.id,
+            pantry_item_id=item_id,
+            new_quantity=new_quantity,
+            notes=notes,
+        )
+
+        # Get item name
+        item = await db.get(PantryItem, item_id)
+
+        return PantryTransactionResponse(
+            id=transaction.id,
+            user_id=transaction.user_id,
+            pantry_item_id=transaction.pantry_item_id,
+            transaction_type=transaction.transaction_type,
+            quantity_change=float(transaction.quantity_change),
+            quantity_before=float(transaction.quantity_before),
+            quantity_after=float(transaction.quantity_after),
+            unit=transaction.unit,
+            source_type=transaction.source_type,
+            source_id=transaction.source_id,
+            notes=transaction.notes,
+            transaction_date=transaction.transaction_date,
+            created_at=transaction.created_at,
+            item_name=item.item_name if item else None,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )

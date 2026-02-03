@@ -40,15 +40,25 @@ from app.schemas.meal_plan import (
     MonthlyMealPlanData,
     GenerateShoppingListRequest,
     GenerateShoppingListResponse,
+    ShoppingListPreviewResponse,
+    ShoppingListItemPreview,
     ParseMealPlanTextRequest,
     ParseMealPlanResponse,
     ParsedMealPlanMeal,
     CombinedWeekPlan,
     MealWithProfile,
     ProfileInfo,
+    MarkMealCookedRequest,
+    MarkMealCookedResponse,
+    IngredientDeductionSummary,
+    MealAvailabilityResponse,
+    MealIngredientAvailability,
 )
 from app.models.profile import Profile
+from app.models.recipe import CookingHistory
+from app.models.pantry import PantryItem
 from app.services.ai_service import ai_service
+from app.services.pantry_service import PantryService
 
 router = APIRouter(prefix="/meal-plans")
 
@@ -1076,7 +1086,16 @@ async def generate_shopping_list(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Generate a shopping list from a meal plan's recipes."""
+    """Generate a shopping list from a meal plan's recipes.
+
+    When check_pantry is True (default), subtracts available pantry stock
+    from needed quantities so you only buy what you actually need.
+    """
+    from app.utils.ingredient_matcher import (
+        find_pantry_match,
+        calculate_available_quantity,
+    )
+
     # Get meal plan with meals and recipes
     query = (
         select(MealPlan)
@@ -1093,15 +1112,26 @@ async def generate_shopping_list(
     if not plan:
         raise HTTPException(status_code=404, detail="Meal plan not found")
 
+    # Get pantry items if checking pantry
+    pantry_items = []
+    if data.check_pantry:
+        pantry_query = select(PantryItem).where(
+            PantryItem.user_id == current_user.id,
+            PantryItem.is_archived == False,
+            PantryItem.is_wasted == False,
+        )
+        pantry_result = await db.execute(pantry_query)
+        pantry_items = list(pantry_result.scalars().all())
+
     # Collect all ingredients from recipes
     exclude_recipe_ids = set(data.exclude_recipe_ids or [])
-    ingredients_map = {}  # {ingredient_name: {quantity, unit}}
+    ingredients_map = {}  # {key: {name, quantity, unit, category}}
 
     for meal in plan.meals:
         if not meal.recipe or meal.recipe.id in exclude_recipe_ids:
             continue
 
-        scale_factor = (meal.servings or plan.servings) / meal.recipe.servings
+        scale_factor = (meal.servings or plan.servings) / (meal.recipe.servings or 1)
 
         for ing in meal.recipe.ingredients:
             key = f"{ing.ingredient_name.lower()}|{ing.unit or ''}"
@@ -1137,26 +1167,202 @@ async def generate_shopping_list(
         db.add(shopping_list)
         await db.flush()
 
-    # Add items to shopping list
+    # Add items to shopping list (checking pantry if enabled)
     items_added = 0
+    items_skipped = 0
+    items_reduced = 0
+    total_ingredients = len(ingredients_map)
+
     for ing_data in ingredients_map.values():
+        needed_qty = ing_data["quantity"]
+        to_buy_qty = needed_qty
+
+        # Check pantry stock
+        if data.check_pantry and pantry_items and needed_qty:
+            pantry_match = find_pantry_match(ing_data["name"], pantry_items)
+            if pantry_match:
+                available = calculate_available_quantity(pantry_match, ing_data["unit"])
+                if available is not None and available > 0:
+                    if available >= needed_qty:
+                        # Have enough in pantry, skip this item
+                        items_skipped += 1
+                        continue
+                    else:
+                        # Reduce quantity by what's available
+                        to_buy_qty = needed_qty - available
+                        items_reduced += 1
+
         item = ShoppingListItem(
             shopping_list_id=shopping_list.id,
             ingredient_name=ing_data["name"],
-            quantity=ing_data["quantity"],
+            quantity=to_buy_qty,
             unit=ing_data["unit"],
             category=ing_data["category"],
         )
         db.add(item)
         items_added += 1
 
+    # Optionally add low-stock pantry items
+    if data.include_low_stock and pantry_items:
+        for pantry_item in pantry_items:
+            if (pantry_item.minimum_quantity and
+                pantry_item.quantity is not None and
+                float(pantry_item.quantity) < float(pantry_item.minimum_quantity)):
+                # Add low stock item to shopping list
+                item = ShoppingListItem(
+                    shopping_list_id=shopping_list.id,
+                    ingredient_name=pantry_item.item_name,
+                    quantity=float(pantry_item.minimum_quantity) - float(pantry_item.quantity),
+                    unit=pantry_item.unit,
+                    category=pantry_item.category,
+                )
+                db.add(item)
+                items_added += 1
+
     await db.commit()
+
+    message_parts = [f"Added {items_added} items to shopping list"]
+    if items_skipped > 0:
+        message_parts.append(f"{items_skipped} already in pantry")
+    if items_reduced > 0:
+        message_parts.append(f"{items_reduced} reduced by pantry stock")
 
     return GenerateShoppingListResponse(
         shopping_list_id=shopping_list.id,
         items_added=items_added,
+        items_skipped=items_skipped,
+        items_reduced=items_reduced,
+        total_ingredients=total_ingredients,
         success=True,
-        message=f"Added {items_added} items to shopping list",
+        message=", ".join(message_parts),
+    )
+
+
+@router.post("/{plan_id}/shopping-list-preview", response_model=ShoppingListPreviewResponse)
+async def preview_shopping_list(
+    plan_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Preview what shopping list would look like before creating.
+
+    Shows which items are already in pantry vs need to be purchased.
+    """
+    from app.utils.ingredient_matcher import (
+        find_pantry_match,
+        calculate_available_quantity,
+    )
+
+    # Get meal plan with meals and recipes
+    query = (
+        select(MealPlan)
+        .where(MealPlan.id == plan_id, MealPlan.user_id == current_user.id)
+        .options(
+            selectinload(MealPlan.meals)
+            .selectinload(Meal.recipe)
+            .selectinload(Recipe.ingredients)
+        )
+    )
+    result = await db.execute(query)
+    plan = result.scalar_one_or_none()
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Meal plan not found")
+
+    # Get pantry items
+    pantry_query = select(PantryItem).where(
+        PantryItem.user_id == current_user.id,
+        PantryItem.is_archived == False,
+        PantryItem.is_wasted == False,
+    )
+    pantry_result = await db.execute(pantry_query)
+    pantry_items = list(pantry_result.scalars().all())
+
+    # Collect all ingredients from recipes
+    ingredients_map = {}
+
+    for meal in plan.meals:
+        if not meal.recipe:
+            continue
+
+        scale_factor = (meal.servings or plan.servings) / (meal.recipe.servings or 1)
+
+        for ing in meal.recipe.ingredients:
+            key = f"{ing.ingredient_name.lower()}|{ing.unit or ''}"
+            if key in ingredients_map:
+                if ing.quantity and ingredients_map[key]["quantity"]:
+                    ingredients_map[key]["quantity"] += float(ing.quantity) * scale_factor
+            else:
+                ingredients_map[key] = {
+                    "name": ing.ingredient_name,
+                    "quantity": float(ing.quantity) * scale_factor if ing.quantity else 0,
+                    "unit": ing.unit,
+                    "category": ing.category,
+                }
+
+    # Build preview with pantry info
+    items = []
+    items_from_pantry = 0
+    items_to_buy = 0
+
+    for key, ing_data in ingredients_map.items():
+        needed_qty = ing_data["quantity"] or 0
+        in_pantry = 0.0
+        pantry_item_id = None
+        pantry_item_name = None
+
+        if pantry_items:
+            pantry_match = find_pantry_match(ing_data["name"], pantry_items)
+            if pantry_match:
+                available = calculate_available_quantity(pantry_match, ing_data["unit"])
+                if available is not None:
+                    in_pantry = min(available, needed_qty)
+                    pantry_item_id = pantry_match.id
+                    pantry_item_name = pantry_match.item_name
+
+        to_buy = max(0, needed_qty - in_pantry)
+
+        if to_buy > 0:
+            items_to_buy += 1
+        else:
+            items_from_pantry += 1
+
+        items.append(ShoppingListItemPreview(
+            ingredient_name=ing_data["name"],
+            total_needed=needed_qty,
+            unit=ing_data["unit"],
+            category=ing_data["category"],
+            in_pantry=in_pantry,
+            to_buy=to_buy,
+            pantry_item_id=pantry_item_id,
+            pantry_item_name=pantry_item_name,
+        ))
+
+    # Get low stock pantry items
+    low_stock_items = []
+    for pantry_item in pantry_items:
+        if (pantry_item.minimum_quantity and
+            pantry_item.quantity is not None and
+            float(pantry_item.quantity) < float(pantry_item.minimum_quantity)):
+            low_stock_items.append(ShoppingListItemPreview(
+                ingredient_name=pantry_item.item_name,
+                total_needed=float(pantry_item.minimum_quantity),
+                unit=pantry_item.unit,
+                category=pantry_item.category,
+                in_pantry=float(pantry_item.quantity),
+                to_buy=float(pantry_item.minimum_quantity) - float(pantry_item.quantity),
+                pantry_item_id=pantry_item.id,
+                pantry_item_name=pantry_item.item_name,
+            ))
+
+    return ShoppingListPreviewResponse(
+        meal_plan_id=plan_id,
+        meal_plan_name=plan.name,
+        items=items,
+        total_items=len(items),
+        items_from_pantry=items_from_pantry,
+        items_to_buy=items_to_buy,
+        low_stock_items=low_stock_items,
     )
 
 
@@ -1285,3 +1491,195 @@ async def parse_meal_plan_image(
             success=False,
             message=str(e),
         )
+
+
+# ============ Cooking & Pantry Integration ============
+
+@router.post("/{plan_id}/meals/{meal_id}/cook", response_model=MarkMealCookedResponse)
+async def mark_meal_cooked(
+    plan_id: UUID,
+    meal_id: UUID,
+    data: MarkMealCookedRequest = MarkMealCookedRequest(),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Mark a meal as cooked and optionally deduct ingredients from pantry.
+
+    This endpoint:
+    1. Records the meal in cooking history
+    2. Optionally deducts recipe ingredients from pantry
+    3. Updates recipe's times_cooked counter
+    """
+    # Verify meal exists and belongs to user's plan
+    query = (
+        select(Meal)
+        .join(MealPlan)
+        .where(
+            Meal.id == meal_id,
+            Meal.meal_plan_id == plan_id,
+            MealPlan.user_id == current_user.id
+        )
+        .options(selectinload(Meal.recipe).selectinload(Recipe.ingredients))
+    )
+    result = await db.execute(query)
+    meal = result.scalar_one_or_none()
+
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+
+    servings = data.servings or meal.servings or (meal.recipe.servings if meal.recipe else 2)
+
+    # If no recipe, just acknowledge cooking
+    if not meal.recipe_id or not meal.recipe:
+        return MarkMealCookedResponse(
+            success=True,
+            meal_id=meal_id,
+            servings=servings,
+            pantry_deducted=False,
+            message="Meal marked as cooked (no recipe to deduct from pantry)",
+        )
+
+    recipe = meal.recipe
+
+    # Create cooking history record
+    cooking_history = CookingHistory(
+        user_id=current_user.id,
+        recipe_id=recipe.id,
+        cooked_at=datetime.utcnow(),
+        servings_made=servings,
+        notes=data.notes,
+    )
+    db.add(cooking_history)
+
+    # Update recipe times_cooked
+    recipe.times_cooked = (recipe.times_cooked or 0) + 1
+
+    # Deduct from pantry if requested
+    deductions = []
+    fully_satisfied = 0
+    partially_satisfied = 0
+    not_found = 0
+
+    if data.deduct_from_pantry and recipe.ingredients:
+        pantry_service = PantryService(db)
+        deduction_result = await pantry_service.deduct_recipe_ingredients(
+            user_id=current_user.id,
+            recipe_id=recipe.id,
+            servings=servings,
+            meal_id=meal_id,
+        )
+
+        fully_satisfied = deduction_result.fully_satisfied
+        partially_satisfied = deduction_result.partially_satisfied
+        not_found = deduction_result.not_found
+
+        for d in deduction_result.deductions:
+            deductions.append(IngredientDeductionSummary(
+                ingredient_name=d.ingredient_name,
+                needed_quantity=d.needed_quantity,
+                needed_unit=d.needed_unit,
+                deducted_quantity=d.deducted_quantity,
+                missing_quantity=d.missing_quantity,
+                pantry_item_name=d.pantry_item_name,
+                fully_satisfied=d.fully_satisfied,
+            ))
+
+    await db.commit()
+    await db.refresh(cooking_history)
+
+    return MarkMealCookedResponse(
+        success=True,
+        meal_id=meal_id,
+        recipe_id=recipe.id,
+        recipe_name=recipe.name,
+        servings=servings,
+        pantry_deducted=data.deduct_from_pantry,
+        deductions=deductions,
+        total_ingredients=len(recipe.ingredients),
+        fully_satisfied=fully_satisfied,
+        partially_satisfied=partially_satisfied,
+        not_found=not_found,
+        message=f"Meal cooked! {fully_satisfied + partially_satisfied} of {len(recipe.ingredients)} ingredients deducted from pantry." if data.deduct_from_pantry else "Meal marked as cooked.",
+        cooking_history_id=cooking_history.id,
+    )
+
+
+@router.get("/{plan_id}/meals/{meal_id}/availability", response_model=MealAvailabilityResponse)
+async def check_meal_availability(
+    plan_id: UUID,
+    meal_id: UUID,
+    servings: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Check if pantry has enough ingredients to make this meal.
+
+    Returns availability status for each ingredient, including:
+    - Whether the ingredient is available in pantry
+    - How much is needed vs available
+    - Maximum servings possible with current pantry
+    """
+    # Verify meal exists and belongs to user's plan
+    query = (
+        select(Meal)
+        .join(MealPlan)
+        .where(
+            Meal.id == meal_id,
+            Meal.meal_plan_id == plan_id,
+            MealPlan.user_id == current_user.id
+        )
+        .options(selectinload(Meal.recipe).selectinload(Recipe.ingredients))
+    )
+    result = await db.execute(query)
+    meal = result.scalar_one_or_none()
+
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+
+    # If no recipe, always "available"
+    if not meal.recipe_id or not meal.recipe:
+        return MealAvailabilityResponse(
+            meal_id=meal_id,
+            meal_plan_id=plan_id,
+            custom_name=meal.custom_name,
+            servings=servings or meal.servings or 1,
+            can_make=True,
+            available_servings=servings or meal.servings or 1,
+        )
+
+    recipe = meal.recipe
+    check_servings = servings or meal.servings or recipe.servings or 2
+
+    pantry_service = PantryService(db)
+    availability = await pantry_service.check_recipe_availability(
+        user_id=current_user.id,
+        recipe_id=recipe.id,
+        servings=check_servings,
+    )
+
+    ingredients = []
+    for ing in availability.ingredients:
+        ingredients.append(MealIngredientAvailability(
+            ingredient_name=ing.ingredient_name,
+            needed_quantity=ing.needed_quantity,
+            needed_unit=ing.needed_unit,
+            available_quantity=ing.available_quantity,
+            pantry_item_name=ing.pantry_item_name,
+            is_available=ing.is_available,
+            is_fully_available=ing.is_fully_available,
+            missing_quantity=ing.missing_quantity,
+        ))
+
+    return MealAvailabilityResponse(
+        meal_id=meal_id,
+        meal_plan_id=plan_id,
+        recipe_id=recipe.id,
+        recipe_name=recipe.name,
+        servings=check_servings,
+        can_make=availability.can_make,
+        available_servings=availability.available_servings,
+        total_ingredients=availability.total_ingredients,
+        available_count=availability.available_count,
+        missing_count=availability.missing_count,
+        ingredients=ingredients,
+    )

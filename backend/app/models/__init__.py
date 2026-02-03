@@ -55,6 +55,8 @@ from app.models.grocery import (
 # Pantry
 from app.models.pantry import (
     PantryItem,
+    PantryTransaction,
+    PantryTransactionType,
     StorageLocation,
     PantryCategory,
     PantryWasteReason,
@@ -153,6 +155,8 @@ __all__ = [
     "ShoppingListItem",
     # Pantry
     "PantryItem",
+    "PantryTransaction",
+    "PantryTransactionType",
     "StorageLocation",
     "PantryCategory",
     "PantryWasteReason",

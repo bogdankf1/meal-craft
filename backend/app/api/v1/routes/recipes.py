@@ -58,8 +58,12 @@ from app.schemas.recipe import (
     RecipeSuggestionRequest,
     RecipeSuggestionItem,
     RecipeSuggestionResponse,
+    RecipeAvailabilityStatus,
+    RecipeIngredientAvailability,
 )
 from app.services.ai_service import ai_service
+from app.services.pantry_service import PantryService
+from app.models.pantry import PantryItem
 
 router = APIRouter(prefix="/recipes")
 
@@ -247,6 +251,59 @@ async def get_recipe_history(
         total_recipes_added=total_added,
         total_times_cooked=total_cooked,
         monthly_data=monthly_data,
+    )
+
+
+# ============ Recipe Availability ============
+
+@router.get("/{recipe_id}/availability", response_model=RecipeAvailabilityStatus)
+async def get_recipe_availability(
+    recipe_id: UUID,
+    servings: Optional[int] = Query(None, description="Check for this many servings (default: recipe servings)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Check if pantry has enough ingredients to make this recipe.
+
+    Returns availability status for each ingredient, including:
+    - Whether the ingredient is available in pantry
+    - How much is needed vs available
+    - Maximum servings possible with current pantry
+    """
+    pantry_service = PantryService(db)
+    availability = await pantry_service.check_recipe_availability(
+        user_id=current_user.id,
+        recipe_id=recipe_id,
+        servings=servings or 2,
+    )
+
+    if availability.recipe_name == "Unknown":
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    ingredients = []
+    for ing in availability.ingredients:
+        ingredients.append(RecipeIngredientAvailability(
+            ingredient_name=ing.ingredient_name,
+            needed_quantity=ing.needed_quantity,
+            needed_unit=ing.needed_unit,
+            available_quantity=ing.available_quantity,
+            pantry_item_id=ing.pantry_item_id,
+            pantry_item_name=ing.pantry_item_name,
+            is_available=ing.is_available,
+            is_fully_available=ing.is_fully_available,
+            missing_quantity=ing.missing_quantity,
+        ))
+
+    return RecipeAvailabilityStatus(
+        recipe_id=recipe_id,
+        can_make=availability.can_make,
+        available_servings=availability.available_servings,
+        servings_checked=availability.servings_checked,
+        total_ingredients=availability.total_ingredients,
+        available_count=availability.available_count,
+        fully_available_count=availability.fully_available_count,
+        missing_count=availability.missing_count,
+        ingredients=ingredients,
     )
 
 

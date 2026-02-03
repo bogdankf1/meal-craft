@@ -58,6 +58,7 @@ class Grocery(Base):
 
     # Relationships
     user = relationship("User", back_populates="groceries")
+    pantry_items = relationship("PantryItem", back_populates="source_grocery")
 
 
 class ShoppingList(Base):
