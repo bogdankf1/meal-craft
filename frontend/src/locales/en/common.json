@@ -3258,6 +3258,12 @@
             "description": "Show your nutrition goals and progress"
           }
         }
+      },
+      "touchGestures": {
+        "swipeToOpenSidebar": {
+          "label": "Swipe to Open Sidebar",
+          "description": "Swipe from the left edge of the screen to open the sidebar on mobile and tablet devices"
+        }
       }
     },
     "notifications": {

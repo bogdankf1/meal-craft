@@ -105,6 +105,9 @@ const navGroups: NavGroup[] = [
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  sidebarRef?: React.RefObject<HTMLDivElement | null>;
+  backdropRef?: React.RefObject<HTMLDivElement | null>;
+  isDragging?: boolean;
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
@@ -368,7 +371,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 }
 
 // Mobile Sidebar - Drawer version
-export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
+export function MobileSidebar({ isOpen, onClose, sidebarRef, backdropRef, isDragging }: SidebarProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
 
@@ -414,19 +417,23 @@ export function MobileSidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 xl:hidden"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        ref={backdropRef}
+        className={cn(
+          "fixed inset-0 z-40 bg-black xl:hidden transition-opacity duration-300",
+          isOpen && !isDragging ? "opacity-50 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Drawer */}
       <aside
+        ref={sidebarRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-background border-r shadow-xl transition-transform duration-300 ease-in-out xl:hidden",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 w-72 bg-background border-r shadow-xl xl:hidden",
+          !isDragging && "transition-transform duration-300 ease-in-out",
+          !isDragging && (isOpen ? "translate-x-0" : "-translate-x-full")
         )}
       >
         <div className="flex flex-col h-full">

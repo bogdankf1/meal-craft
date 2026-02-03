@@ -139,6 +139,8 @@ interface UIVisibility {
   showDashboardSkillsProgress: boolean;
   showDashboardSeasonalInsights: boolean;
   showDashboardNutrition: boolean;
+  // Touch gestures
+  enableSidebarSwipeGesture: boolean;
 }
 
 interface UserPreferences {
@@ -224,6 +226,8 @@ const defaultUIVisibility: UIVisibility = {
   showDashboardSkillsProgress: true,
   showDashboardSeasonalInsights: true,
   showDashboardNutrition: true,
+  // Touch gestures
+  enableSidebarSwipeGesture: false,
 };
 
 // Minimal UI visibility preset (hides most UI elements for a cleaner view)
@@ -281,6 +285,8 @@ export const minimalUIVisibility: UIVisibility = {
   showDashboardSkillsProgress: false,
   showDashboardSeasonalInsights: false,
   showDashboardNutrition: false,
+  // Touch gestures
+  enableSidebarSwipeGesture: false,
 };
 
 // Minimal column visibility preset

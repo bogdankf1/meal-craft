@@ -9,6 +9,8 @@ import { Menu, HelpCircle, Settings, Shield } from "lucide-react";
 import { OnboardingSpotlightProvider } from "@/components/modules/onboarding";
 import { useSession } from "next-auth/react";
 import { useGetMeQuery } from "@/lib/api/auth-api";
+import { useSidebarSwipe } from "@/lib/hooks/use-sidebar-swipe";
+import { useUserStore } from "@/lib/store/user-store";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +23,18 @@ export default function DashboardLayout({
   // Fetch user data to check admin role
   const { data: userData } = useGetMeQuery(undefined, {
     skip: sessionStatus !== "authenticated",
+  });
+
+  // Get swipe gesture setting
+  const { preferences } = useUserStore();
+  const swipeEnabled = preferences.uiVisibility.enableSidebarSwipeGesture;
+
+  // Sidebar swipe gesture (only active when enabled in settings)
+  const { sidebarRef, backdropRef, isDragging } = useSidebarSwipe({
+    isOpen: sidebarOpen,
+    setIsOpen: setSidebarOpen,
+    sidebarWidth: 288, // w-72 = 18rem = 288px
+    enabled: swipeEnabled,
   });
 
   const isAdmin = userData?.role === "ADMIN";
@@ -42,6 +56,9 @@ export default function DashboardLayout({
       <MobileSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        sidebarRef={sidebarRef}
+        backdropRef={backdropRef}
+        isDragging={isDragging}
       />
 
       {/* Main content area */}

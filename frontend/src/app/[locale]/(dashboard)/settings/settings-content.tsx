@@ -1473,6 +1473,24 @@ export function SettingsContent() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Touch Gestures */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base font-medium">{t("appearance.touchGestures.swipeToOpenSidebar.label")}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("appearance.touchGestures.swipeToOpenSidebar.description")}
+                </p>
+              </div>
+              <Switch
+                checked={uiVisibility.enableSidebarSwipeGesture}
+                onCheckedChange={(checked) => handleUIVisibilityChange("enableSidebarSwipeGesture", checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
 
     </ModuleTabs>
