@@ -56,3 +56,7 @@ export { FeatureGate } from "./FeatureGate";
 // Column Visibility
 export { ColumnVisibilitySelector } from "./ColumnVisibilitySelector";
 export type { ColumnConfig } from "./ColumnVisibilitySelector";
+
+// Availability Badge
+export { AvailabilityBadge, getAvailabilityStatus } from "./availability-badge";
+export type { AvailabilityStatus } from "./availability-badge";

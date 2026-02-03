@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import {
   useOnboardingStore,
   ONBOARDING_STEPS,
@@ -13,6 +12,7 @@ import {
   useDismissOnboardingMutation,
   useLazyGetOnboardingDerivedStatusQuery,
 } from "@/lib/api/onboarding-api";
+import { useIsAuthenticated } from "@/lib/hooks/use-is-authenticated";
 
 const POLL_INTERVAL = 30000; // 30 seconds
 
@@ -30,7 +30,7 @@ export function OnboardingSyncProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useSession();
+  const isAuthenticated = useIsAuthenticated();
   const {
     isDismissed,
     steps,
@@ -50,7 +50,7 @@ export function OnboardingSyncProvider({
   // Fetch state from backend (only when authenticated)
   const { data: backendState, isSuccess: fetchSuccess } =
     useGetOnboardingStateQuery(undefined, {
-      skip: status !== "authenticated",
+      skip: !isAuthenticated,
     });
 
   // Mutations
@@ -60,7 +60,7 @@ export function OnboardingSyncProvider({
 
   // Poll for derived status to auto-complete steps
   const pollDerivedStatus = useCallback(async () => {
-    if (status !== "authenticated") return;
+    if (!isAuthenticated) return;
 
     try {
       const result = await triggerGetDerivedStatus().unwrap();
@@ -81,7 +81,7 @@ export function OnboardingSyncProvider({
     } catch {
       // Silently fail - we'll retry on next poll
     }
-  }, [status, steps, markStepCompleted, triggerGetDerivedStatus, updateStep]);
+  }, [isAuthenticated, steps, markStepCompleted, triggerGetDerivedStatus, updateStep]);
 
   // Effect to sync backend state to local store on initial load
   useEffect(() => {
@@ -98,7 +98,7 @@ export function OnboardingSyncProvider({
   // Effect to sync local store changes to backend (debounced)
   useEffect(() => {
     // Skip if not authenticated or initial sync not done yet
-    if (status !== "authenticated" || !initialSyncDone.current) {
+    if (!isAuthenticated || !initialSyncDone.current) {
       return;
     }
 
@@ -149,11 +149,11 @@ export function OnboardingSyncProvider({
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [status, isDismissed, steps, dismissOnboarding, updateStep]);
+  }, [isAuthenticated, isDismissed, steps, dismissOnboarding, updateStep]);
 
   // Effect to set up polling for derived status
   useEffect(() => {
-    if (status !== "authenticated" || !initialSyncDone.current) {
+    if (!isAuthenticated || !initialSyncDone.current) {
       return;
     }
 
@@ -168,18 +168,18 @@ export function OnboardingSyncProvider({
         clearInterval(pollTimer.current);
       }
     };
-  }, [status, pollDerivedStatus]);
+  }, [isAuthenticated, pollDerivedStatus]);
 
   // Reset sync state on logout
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!isAuthenticated) {
       initialSyncDone.current = false;
       lastSyncedState.current = null;
       if (pollTimer.current) {
         clearInterval(pollTimer.current);
       }
     }
-  }, [status]);
+  }, [isAuthenticated]);
 
   return <>{children}</>;
 }

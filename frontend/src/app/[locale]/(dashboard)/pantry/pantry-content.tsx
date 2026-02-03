@@ -61,6 +61,7 @@ import {
   PantryImport,
   PantryCalendarView,
   PantryInsights,
+  PantryTransactions,
 } from "@/components/modules/pantry";
 import { AddToShoppingListDialog } from "@/components/modules/shopping-lists";
 import {
@@ -151,6 +152,7 @@ export function PantryContent() {
     { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
     { value: "waste", label: t("tabs.waste"), icon: <Trash2 className="h-4 w-4" />, visibilityKey: "showWasteTab" as const },
     { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
+    { value: "transactions", label: t("tabs.transactions"), icon: <List className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
     { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
   ];
 
@@ -748,6 +750,17 @@ export function PantryContent() {
                 action={{ label: t("addItem"), onClick: handleAddClick }}
               />
             )}
+          </div>
+        </TabsContent>
+
+        {/* Transactions Tab */}
+        <TabsContent value="transactions">
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold">{t("transactions.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("transactions.description")}</p>
+            </div>
+            <PantryTransactions />
           </div>
         </TabsContent>
 

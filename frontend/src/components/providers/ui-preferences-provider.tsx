@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
 import { useUserStore, type UIVisibility } from "@/lib/store/user-store";
 import {
   useGetUIPreferencesQuery,
   useUpdateUIPreferencesMutation,
 } from "@/lib/api/preferences-api";
+import { useIsAuthenticated } from "@/lib/hooks/use-is-authenticated";
 
 /**
  * UIPreferencesSyncProvider - Syncs UI preferences between local Zustand store and backend.
@@ -17,7 +17,7 @@ import {
  * 3. Updates the backend when local store changes (debounced)
  */
 export function UIPreferencesSyncProvider({ children }: { children: React.ReactNode }) {
-  const { status } = useSession();
+  const isAuthenticated = useIsAuthenticated();
   const { preferences, setUIVisibility } = useUserStore();
   const uiVisibility = preferences.uiVisibility;
 
@@ -30,7 +30,7 @@ export function UIPreferencesSyncProvider({ children }: { children: React.ReactN
 
   // Fetch preferences from backend (only when authenticated)
   const { data: backendPrefs, isSuccess: fetchSuccess } = useGetUIPreferencesQuery(undefined, {
-    skip: status !== "authenticated",
+    skip: !isAuthenticated,
   });
 
   // Mutation to update backend
@@ -50,7 +50,7 @@ export function UIPreferencesSyncProvider({ children }: { children: React.ReactN
   // Effect to sync local store changes to backend (debounced)
   useEffect(() => {
     // Skip if not authenticated or initial sync not done yet
-    if (status !== "authenticated" || !initialSyncDone.current) {
+    if (!isAuthenticated || !initialSyncDone.current) {
       return;
     }
 
@@ -77,15 +77,15 @@ export function UIPreferencesSyncProvider({ children }: { children: React.ReactN
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [status, uiVisibility, updateBackend]);
+  }, [isAuthenticated, uiVisibility, updateBackend]);
 
   // Reset sync state on logout
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!isAuthenticated) {
       initialSyncDone.current = false;
       lastSyncedState.current = null;
     }
-  }, [status]);
+  }, [isAuthenticated]);
 
   return <>{children}</>;
 }

@@ -290,6 +290,77 @@ export interface MoveToPantryResponse {
   pantry_item_ids: string[];
 }
 
+// ============ Pantry Transaction Types ============
+
+export type PantryTransactionType = "add" | "deduct" | "waste" | "adjust" | "expire";
+
+export interface PantryTransaction {
+  id: string;
+  user_id: string;
+  pantry_item_id: string;
+  transaction_type: PantryTransactionType;
+  quantity_change: number;
+  quantity_before: number;
+  quantity_after: number;
+  unit: string | null;
+  source_type: string | null;
+  source_id: string | null;
+  notes: string | null;
+  transaction_date: string;
+  created_at: string;
+  // Joined data
+  item_name?: string;
+}
+
+export interface PantryTransactionListResponse {
+  items: PantryTransaction[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}
+
+export interface PantryTransactionFilters {
+  transaction_type?: PantryTransactionType;
+  source_type?: string;
+  date_from?: string;
+  date_to?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface AdjustPantryQuantityInput {
+  quantity_change: number;
+  notes?: string | null;
+}
+
+// ============ Recipe Availability Types ============
+
+export interface IngredientAvailability {
+  ingredient_name: string;
+  needed_quantity: number;
+  needed_unit: string | null;
+  available_quantity: number;
+  available_unit: string | null;
+  is_available: boolean;
+  is_partial: boolean;
+  pantry_item_id: string | null;
+  pantry_item_name: string | null;
+}
+
+export interface RecipeAvailability {
+  recipe_id: string;
+  recipe_name: string;
+  servings_checked: number;
+  can_make: boolean;
+  available_servings: number;
+  missing_count: number;
+  partial_count: number;
+  available_count: number;
+  total_ingredients: number;
+  ingredients: IngredientAvailability[];
+}
+
 export const pantryApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // List pantry items with filters
@@ -533,6 +604,50 @@ export const pantryApi = baseApi.injectEndpoints({
         { type: "Groceries", id: "ANALYTICS" },
       ],
     }),
+
+    // ============ Pantry Transactions ============
+
+    // Get all pantry transactions
+    getPantryTransactions: builder.query<PantryTransactionListResponse, PantryTransactionFilters>({
+      query: (params) => ({
+        url: "/pantry/transactions/all",
+        params,
+      }),
+      providesTags: [{ type: "Pantry", id: "TRANSACTIONS" }],
+    }),
+
+    // Get transactions for a specific pantry item
+    getPantryItemTransactions: builder.query<
+      PantryTransactionListResponse,
+      { itemId: string; page?: number; per_page?: number }
+    >({
+      query: ({ itemId, ...params }) => ({
+        url: `/pantry/${itemId}/transactions`,
+        params,
+      }),
+      providesTags: (_result, _error, { itemId }) => [
+        { type: "Pantry", id: `TRANSACTIONS_${itemId}` },
+      ],
+    }),
+
+    // Manually adjust pantry quantity
+    adjustPantryQuantity: builder.mutation<
+      PantryTransaction,
+      { itemId: string; data: AdjustPantryQuantityInput }
+    >({
+      query: ({ itemId, data }) => ({
+        url: `/pantry/${itemId}/adjust`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { itemId }) => [
+        { type: "Pantry", id: itemId },
+        { type: "Pantry", id: "LIST" },
+        { type: "Pantry", id: "ANALYTICS" },
+        { type: "Pantry", id: "TRANSACTIONS" },
+        { type: "Pantry", id: `TRANSACTIONS_${itemId}` },
+      ],
+    }),
   }),
 });
 
@@ -558,4 +673,8 @@ export const {
   // Move to pantry hooks
   useMoveGroceryToPantryMutation,
   useBulkMoveGroceriesToPantryMutation,
+  // Transaction hooks
+  useGetPantryTransactionsQuery,
+  useGetPantryItemTransactionsQuery,
+  useAdjustPantryQuantityMutation,
 } = pantryApi;

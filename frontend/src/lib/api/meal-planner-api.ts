@@ -193,13 +193,97 @@ export interface GenerateShoppingListRequest {
   shopping_list_id?: string | null;
   shopping_list_name?: string | null;
   exclude_recipe_ids?: string[];
+  check_pantry?: boolean;
+  include_low_stock?: boolean;
 }
 
 export interface GenerateShoppingListResponse {
   shopping_list_id: string;
   items_added: number;
+  items_skipped: number;
+  items_reduced: number;
+  total_ingredients: number;
   success: boolean;
   message: string | null;
+}
+
+// ============ Mark as Cooked Types ============
+
+export interface MarkMealCookedRequest {
+  deduct_from_pantry?: boolean;
+  notes?: string | null;
+}
+
+export interface IngredientDeductionSummary {
+  ingredient_name: string;
+  needed_quantity: number;
+  needed_unit: string | null;
+  deducted_quantity: number;
+  deducted_unit: string | null;
+  pantry_item_id: string | null;
+  was_partial: boolean;
+  was_missing: boolean;
+}
+
+export interface MarkMealCookedResponse {
+  success: boolean;
+  message: string;
+  meal_id: string;
+  recipe_id: string | null;
+  cooked_at: string;
+  pantry_deducted: boolean;
+  deductions: IngredientDeductionSummary[];
+  total_deducted: number;
+  total_missing: number;
+  total_partial: number;
+}
+
+// ============ Meal Availability Types ============
+
+export interface MealIngredientAvailability {
+  ingredient_name: string;
+  needed_quantity: number;
+  needed_unit: string | null;
+  available_quantity: number;
+  available_unit: string | null;
+  is_available: boolean;
+  is_partial: boolean;
+  pantry_item_id: string | null;
+  pantry_item_name: string | null;
+}
+
+export interface MealAvailabilityResponse {
+  meal_id: string;
+  recipe_id: string | null;
+  recipe_name: string | null;
+  servings: number;
+  can_make: boolean;
+  available_servings: number;
+  missing_count: number;
+  partial_count: number;
+  available_count: number;
+  total_ingredients: number;
+  ingredients: MealIngredientAvailability[];
+}
+
+// ============ Shopping List Preview Types ============
+
+export interface ShoppingListItemPreview {
+  ingredient_name: string;
+  total_needed: number;
+  unit: string | null;
+  in_pantry: number;
+  to_buy: number;
+  pantry_item_id: string | null;
+  recipe_ids: string[];
+}
+
+export interface ShoppingListPreviewResponse {
+  items: ShoppingListItemPreview[];
+  total_items: number;
+  items_from_pantry: number;
+  items_to_buy: number;
+  items_partial: number;
 }
 
 // ============ Parse Types ============
@@ -517,6 +601,48 @@ export const mealPlannerApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "ShoppingLists", id: "LIST" }],
     }),
 
+    getShoppingListPreview: builder.query<
+      ShoppingListPreviewResponse,
+      { planId: string; excludeRecipeIds?: string[] }
+    >({
+      query: ({ planId, excludeRecipeIds }) => ({
+        url: `/meal-plans/${planId}/shopping-list-preview`,
+        method: "POST",
+        body: { exclude_recipe_ids: excludeRecipeIds || [] },
+      }),
+    }),
+
+    // ============ Meal Cooking & Availability ============
+
+    markMealCooked: builder.mutation<
+      MarkMealCookedResponse,
+      { planId: string; mealId: string; data?: MarkMealCookedRequest }
+    >({
+      query: ({ planId, mealId, data }) => ({
+        url: `/meal-plans/${planId}/meals/${mealId}/cook`,
+        method: "POST",
+        body: data || {},
+      }),
+      invalidatesTags: (_result, _error, { planId }) => [
+        { type: "MealPlans", id: planId },
+        { type: "MealPlans", id: "CURRENT_WEEK" },
+        { type: "Pantry", id: "LIST" },
+        { type: "Pantry", id: "ANALYTICS" },
+        { type: "Recipes", id: "COOKING_HISTORY" },
+      ],
+    }),
+
+    getMealAvailability: builder.query<
+      MealAvailabilityResponse,
+      { planId: string; mealId: string }
+    >({
+      query: ({ planId, mealId }) => `/meal-plans/${planId}/meals/${mealId}/availability`,
+      providesTags: (_result, _error, { planId, mealId }) => [
+        { type: "MealPlans", id: `AVAILABILITY_${planId}_${mealId}` },
+        { type: "Pantry", id: "LIST" },
+      ],
+    }),
+
     // ============ Parse/Import ============
 
     parseMealPlanText: builder.mutation<
@@ -570,6 +696,11 @@ export const {
   useGetMealPlanAnalyticsQuery,
   useGetMealPlanHistoryQuery,
   useGenerateShoppingListMutation,
+  useGetShoppingListPreviewQuery,
+  useLazyGetShoppingListPreviewQuery,
+  useMarkMealCookedMutation,
+  useGetMealAvailabilityQuery,
+  useLazyGetMealAvailabilityQuery,
   useParseMealPlanTextMutation,
   useParseMealPlanVoiceMutation,
   useParseMealPlanImageMutation,

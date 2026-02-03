@@ -48,6 +48,7 @@
   "dashboard": {
     "title": "Dashboard",
     "description": "Welcome back! Here's an overview of your meal planning journey.",
+    "welcomeDescription": "Complete the setup steps below to get started with MealCraft.",
     "noData": "Unable to load dashboard data. Please try again.",
     "refresh": "Refresh",
     "viewAll": "View All",
@@ -1154,7 +1155,42 @@
       "archive": "Archive",
       "waste": "Waste",
       "analysis": "Analysis",
+      "transactions": "Transactions",
       "history": "History"
+    },
+    "transactions": {
+      "title": "Transaction History",
+      "description": "View all inventory changes, deductions, and adjustments",
+      "date": "Date",
+      "item": "Item",
+      "type": "Type",
+      "change": "Change",
+      "balance": "Balance",
+      "source": "Source",
+      "notes": "Notes",
+      "unknownItem": "Unknown Item",
+      "allTypes": "All Types",
+      "allSources": "All Sources",
+      "types": {
+        "add": "Added",
+        "deduct": "Deducted",
+        "waste": "Wasted",
+        "adjust": "Adjusted",
+        "expire": "Expired"
+      },
+      "sources": {
+        "manual": "Manual",
+        "meal": "Meal Cooked",
+        "grocery": "From Grocery",
+        "waste": "Waste",
+        "expiry": "Expiry",
+        "import": "Import"
+      },
+      "pageInfo": "Page {page} of {totalPages} ({total} transactions)",
+      "empty": {
+        "title": "No Transactions Yet",
+        "description": "Transactions will appear here when you add, use, or adjust pantry items."
+      }
     },
     "fields": {
       "itemName": "Item Name",
@@ -1771,6 +1807,7 @@
       "time": "Time",
       "servings": "Servings",
       "difficulty": "Difficulty",
+      "availability": "Availability",
       "rating": "Rating",
       "cooked": "Cooked",
       "addedOn": "Added On",
@@ -2533,7 +2570,19 @@
       "generating": "Generating...",
       "generateButton": "Generate List",
       "success": "{count} items added to shopping list",
-      "error": "Failed to generate shopping list"
+      "skippedFromPantry": "{count} skipped (in pantry)",
+      "reducedFromPantry": "{count} reduced",
+      "error": "Failed to generate shopping list",
+      "checkPantry": "Check pantry stock",
+      "checkPantryDescription": "Only add items you don't already have",
+      "includeLowStock": "Include low stock items",
+      "includeLowStockDescription": "Add pantry items below minimum quantity",
+      "preview": "Preview",
+      "toBuy": "to buy",
+      "inPantry": "in pantry",
+      "have": "have",
+      "haveEnough": "Have enough",
+      "noIngredients": "No ingredients found in recipes"
     },
     "actions": {
       "view": "View Plan",
@@ -2567,6 +2616,25 @@
     "import": {
       "title": "Import Meal Plan",
       "description": "Import meal plans from text, voice, or image."
+    },
+    "markCooked": {
+      "title": "Mark as Cooked",
+      "description": "Mark \"{name}\" as cooked",
+      "deductFromPantry": "Deduct from Pantry",
+      "deductDescription": "Automatically subtract ingredients from your pantry inventory",
+      "ingredientStatus": "Ingredient Status",
+      "available": "{count, plural, one {# available} other {# available}}",
+      "partial": "{count, plural, one {# partial} other {# partial}}",
+      "missing": "{count, plural, one {# missing} other {# missing}}",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "How did it turn out?",
+      "noIngredients": "No ingredients to check",
+      "confirm": "Mark as Cooked",
+      "success": "Meal marked as cooked",
+      "successNoDeduct": "Meal marked as cooked",
+      "deductedIngredients": "{count, plural, one {# ingredient deducted} other {# ingredients deducted}}",
+      "missingIngredients": "{count, plural, one {# ingredient missing} other {# ingredients missing}}",
+      "error": "Failed to mark meal as cooked"
     }
   },
   "nutrition": {
@@ -2943,6 +3011,10 @@
       }
     },
     "appearance": {
+      "minimalView": {
+        "label": "Minimal View",
+        "description": "Switch to a simplified interface with fewer elements and essential columns only"
+      },
       "theme": {
         "title": "Theme",
         "description": "Customize the look and feel of the application",
@@ -3966,6 +4038,7 @@
     "start": "Start",
     "skip": "Skip",
     "skipped": "Skipped",
+    "completed": "Completed",
     "viewAgain": "View Again",
     "doNow": "Do Now",
     "completePrevious": "Complete previous step first",

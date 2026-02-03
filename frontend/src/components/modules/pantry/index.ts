@@ -6,3 +6,4 @@ export { PantryImport } from "./pantry-import";
 export { PantryCalendarView } from "./pantry-calendar-view";
 export { MarkAsWastedPantryDialog } from "./mark-as-wasted-pantry-dialog";
 export { PantryInsights } from "./pantry-insights";
+export { PantryTransactions } from "./pantry-transactions";

@@ -27,12 +27,37 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
+// Helper to clear auth tokens
+const clearAuthTokens = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+  }
+};
+
 // Custom base query with automatic token refresh on 401
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
+  // Skip requests if no auth token exists (except for auth endpoints)
+  const requestUrl = typeof args === "string" ? args : args.url;
+  const isAuthEndpoint = requestUrl?.includes("/auth/");
+
+  if (typeof window !== "undefined" && !isAuthEndpoint) {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      // No token - skip the request and return a 401-like error
+      return {
+        error: {
+          status: 401,
+          data: { message: "No authentication token" },
+        },
+      };
+    }
+  }
+
   // Wait if another refresh is in progress
   await refreshMutex.waitForUnlock();
 
@@ -74,9 +99,8 @@ const baseQueryWithReauth: BaseQueryFn<
           // Retry the original request with new token
           result = await rawBaseQuery(args, api, extraOptions);
         } else {
-          // Refresh failed - clear tokens and redirect to login
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("refresh_token");
+          // Refresh failed - clear tokens
+          clearAuthTokens();
 
           // Only redirect if we're in the browser and not already on login page
           if (
@@ -93,6 +117,9 @@ const baseQueryWithReauth: BaseQueryFn<
       // Another refresh is in progress, wait and retry
       await refreshMutex.waitForUnlock();
       result = await rawBaseQuery(args, api, extraOptions);
+    } else {
+      // No refresh token available - clear any stale auth tokens
+      clearAuthTokens();
     }
   }
 

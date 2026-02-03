@@ -6,3 +6,4 @@ export { MealForm } from "./meal-form";
 export { RepeatMealPlanDialog } from "./repeat-meal-plan-dialog";
 export { GenerateShoppingListDialog } from "./generate-shopping-list-dialog";
 export { MealPlanImport } from "./meal-plan-import";
+export { MarkCookedDialog } from "./mark-cooked-dialog";

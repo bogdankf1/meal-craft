@@ -124,7 +124,7 @@ export function SettingsContent() {
   const { currency, currencies, setCurrency } = useCurrency();
 
   // UI Visibility
-  const { preferences, setUIVisibility } = useUserStore();
+  const { preferences, setUIVisibility, minimalView, toggleMinimalView } = useUserStore();
   const uiVisibility = preferences.uiVisibility;
 
   // Seasonality preferences
@@ -560,6 +560,24 @@ export function SettingsContent() {
 
       {/* Appearance Tab */}
       <TabsContent value="appearance" className="space-y-6">
+        {/* Minimal View Toggle */}
+        <Card>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base font-medium">{t("appearance.minimalView.label")}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("appearance.minimalView.description")}
+                </p>
+              </div>
+              <Switch
+                checked={minimalView}
+                onCheckedChange={toggleMinimalView}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Theme Settings */}
         <Card>
           <CardHeader>

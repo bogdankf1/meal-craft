@@ -13,6 +13,7 @@ interface RecipesColumnVisibility {
   time: boolean;
   servings: boolean;
   difficulty: boolean;
+  availability: boolean;
   rating: boolean;
   times_cooked: boolean;
   created_at: boolean;
@@ -155,6 +156,7 @@ interface UserState {
   tier: SubscriptionTier;
   role: UserRole;
   preferences: UserPreferences;
+  minimalView: boolean;
   setTier: (tier: SubscriptionTier) => void;
   setRole: (role: UserRole) => void;
   setPreferences: (preferences: Partial<UserPreferences>) => void;
@@ -163,6 +165,7 @@ interface UserState {
     module: T,
     visibility: Partial<ColumnVisibility[T]>
   ) => void;
+  toggleMinimalView: (enabled: boolean) => void;
   hasFeature: (feature: "PLUS" | "PRO") => boolean;
   isAdmin: () => boolean;
 }
@@ -223,6 +226,129 @@ const defaultUIVisibility: UIVisibility = {
   showDashboardNutrition: true,
 };
 
+// Minimal UI visibility preset (hides most UI elements for a cleaner view)
+export const minimalUIVisibility: UIVisibility = {
+  showStatsCards: false,
+  showSearchBar: true, // Keep search functional
+  showFilters: false,
+  showDateRange: false,
+  showViewSelector: false,
+  showSorting: false,
+  showPageTitle: true, // Keep page context
+  showPageSubtitle: false,
+  showInsights: false,
+  showColumnSelector: false,
+  // Common tabs
+  showArchiveTab: false,
+  showWasteTab: false,
+  showAnalysisTab: false,
+  showHistoryTab: false,
+  // Module-specific tabs
+  showMaintenanceTab: false,
+  showGoalsTab: false,
+  showSeasonalCalendarTab: false,
+  showLocalSpecialtiesTab: false,
+  showThisMonthTab: false,
+  showMySkillsTab: false,
+  showLibraryTab: false,
+  showLearningPathsTab: false,
+  showCollectionsTab: false,
+  // Sidebar navigation - Planning (keep core navigation)
+  showSidebarMealPlanner: true,
+  showSidebarRecipes: true,
+  showSidebarShoppingLists: true,
+  // Sidebar navigation - Inventory
+  showSidebarGroceries: true,
+  showSidebarPantry: true,
+  showSidebarKitchenEquipment: false,
+  // Sidebar navigation - Tracking
+  showSidebarRestaurants: false,
+  showSidebarNutrition: true,
+  // Sidebar navigation - Lifestyle
+  showSidebarSeasonality: false,
+  showSidebarLearning: false,
+  // Sidebar navigation - Tools
+  showSidebarExport: false,
+  showSidebarBackups: false,
+  showSidebarHelp: false,
+  // Dashboard content
+  showDashboardStats: false,
+  showDashboardUpcomingMeals: true,
+  showDashboardExpiringSoon: true,
+  showDashboardRecentActivity: false,
+  showDashboardQuickActions: true,
+  showDashboardWasteAnalytics: false,
+  showDashboardSkillsProgress: false,
+  showDashboardSeasonalInsights: false,
+  showDashboardNutrition: false,
+};
+
+// Minimal column visibility preset
+export const minimalColumnVisibility: ColumnVisibility = {
+  recipes: {
+    name: true,
+    category: true,
+    cuisine_type: true,
+    time: true,
+    servings: false,
+    difficulty: false,
+    availability: false,
+    rating: false,
+    times_cooked: false,
+    created_at: false,
+  },
+  groceries: {
+    item_name: true,
+    category: true,
+    quantity: true,
+    purchase_date: false,
+    expiry_date: false,
+    cost: false,
+    store: false,
+  },
+  pantry: {
+    item_name: true,
+    storage_location: true,
+    category: true,
+    quantity: true,
+    expiry_date: false,
+    created_at: false,
+  },
+  mealPlans: {
+    name: true,
+    date_range: true,
+    meals: true,
+    servings: false,
+    status: false,
+  },
+  shoppingLists: {
+    name: true,
+    status: true,
+    progress: true,
+    estimated_cost: false,
+    created_at: false,
+    completed_at: false,
+  },
+  restaurantMeals: {
+    restaurant: true,
+    date: true,
+    meal_type: true,
+    order_type: false,
+    items: false,
+    rating: false,
+    feeling: false,
+  },
+  kitchenEquipment: {
+    name: true,
+    category: true,
+    brand: false,
+    condition: false,
+    location: false,
+    maintenance: false,
+    created_at: false,
+  },
+};
+
 export const defaultColumnVisibility: ColumnVisibility = {
   recipes: {
     name: true,
@@ -231,6 +357,7 @@ export const defaultColumnVisibility: ColumnVisibility = {
     time: true,
     servings: true,
     difficulty: true,
+    availability: false, // Default to false since it requires on-demand API calls
     rating: true,
     times_cooked: true,
     created_at: true,
@@ -304,6 +431,7 @@ export const useUserStore = create<UserState>()(
       tier: "HOME_COOK",
       role: "USER",
       preferences: defaultPreferences,
+      minimalView: false,
 
       setTier: (tier) => set({ tier }),
       setRole: (role) => set({ role }),
@@ -335,6 +463,16 @@ export const useUserStore = create<UserState>()(
                 ...visibility,
               },
             },
+          },
+        })),
+
+      toggleMinimalView: (enabled) =>
+        set((state) => ({
+          minimalView: enabled,
+          preferences: {
+            ...state.preferences,
+            uiVisibility: enabled ? minimalUIVisibility : defaultUIVisibility,
+            columnVisibility: enabled ? minimalColumnVisibility : defaultColumnVisibility,
           },
         })),
 

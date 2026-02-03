@@ -38,6 +38,7 @@ import {
 import { useGetDashboardQuery } from "@/lib/api/dashboard-api";
 import { useCurrency } from "@/components/providers/currency-provider";
 import { useUserStore } from "@/lib/store/user-store";
+import { useOnboardingStore } from "@/lib/store/onboarding-store";
 import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns";
 import Link from "next/link";
 import { OnboardingFlow } from "@/components/modules/onboarding";
@@ -66,6 +67,10 @@ export default function DashboardPage() {
   const { formatPriceFromUAH } = useCurrency();
   const { preferences } = useUserStore();
   const uiVisibility = preferences.uiVisibility;
+  const { isDismissed, isAllComplete } = useOnboardingStore();
+
+  // Show only onboarding if it's active (not dismissed and not complete)
+  const showOnboardingOnly = !isDismissed && !isAllComplete();
 
   const getTrendIcon = (current: number, previous: number) => {
     if (current > previous) return <TrendingUp className="h-3 w-3 text-green-500" />;
@@ -85,6 +90,16 @@ export default function DashboardPage() {
     if (isTomorrow(date)) return t("tomorrow");
     return format(date, "EEE, MMM d");
   };
+
+  // Show only onboarding flow when active
+  if (showOnboardingOnly) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title={t("title")} description={t("welcomeDescription")} />
+        <OnboardingFlow />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -131,7 +146,7 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Onboarding Flow */}
+      {/* Onboarding Completed Banner (shows only when just completed) */}
       <OnboardingFlow />
 
       {/* Stats Cards */}

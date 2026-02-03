@@ -76,93 +76,173 @@ export function OnboardingStepCard({
         isLocked && "opacity-50 border-dashed"
       )}
     >
-      {/* Step number indicator */}
-      <div
-        className={cn(
-          "absolute top-2 left-2 sm:top-3 sm:left-3 h-5 w-5 rounded-full flex items-center justify-center text-xs font-medium",
-          isCompleted && "bg-green-500 text-white",
-          isSkipped && "bg-muted-foreground/30 text-muted-foreground",
-          isActive && "bg-primary text-primary-foreground",
-          isLocked && "bg-muted text-muted-foreground"
-        )}
-      >
-        {isCompleted ? <Check className="h-3 w-3" /> : stepNumber}
-      </div>
-
-      {/* Skipped badge */}
-      {isSkipped && (
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-          <span className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wide">
-            {t("skipped")}
-          </span>
+      {/* Mobile horizontal layout (< sm) */}
+      <div className="sm:hidden flex items-center gap-2 p-2">
+        {/* Step number */}
+        <div
+          className={cn(
+            "flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-medium",
+            isCompleted && "bg-green-500 text-white",
+            isSkipped && "bg-muted-foreground/30 text-muted-foreground",
+            isActive && "bg-primary text-primary-foreground",
+            isLocked && "bg-muted text-muted-foreground"
+          )}
+        >
+          {isCompleted ? <Check className="h-2.5 w-2.5" /> : stepNumber}
         </div>
-      )}
 
-      {/* Main content */}
-      <div className="pt-8 sm:pt-10 pb-3 sm:pb-4 px-2 sm:px-4">
         {/* Icon */}
         <div
           className={cn(
-            "mx-auto w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mb-2 sm:mb-3",
+            "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
             isCompleted && "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400",
             isSkipped && "bg-muted text-muted-foreground",
             isActive && "bg-primary/10 text-primary",
             isLocked && "bg-muted/50 text-muted-foreground"
           )}
         >
-          {isLocked ? <Lock className="h-4 w-4 sm:h-5 sm:w-5" /> : <Icon className="h-4 w-4 sm:h-5 sm:w-5" />}
+          {isLocked ? <Lock className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
         </div>
 
-        {/* Title */}
-        <h3 className="font-medium text-xs sm:text-sm text-center mb-1 leading-tight">
-          {t(`steps.${stepId}.title`)}
-        </h3>
+        {/* Title & Status */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-xs leading-tight truncate">
+            {t(`steps.${stepId}.title`)}
+          </h3>
+          {isLocked && (
+            <p className="text-[10px] text-muted-foreground">{t("completePrevious")}</p>
+          )}
+          {isSkipped && (
+            <p className="text-[10px] text-muted-foreground">{t("skipped")}</p>
+          )}
+          {isCompleted && (
+            <p className="text-[10px] text-green-600 dark:text-green-400">{t("completed")}</p>
+          )}
+        </div>
 
-        {/* Description - hidden on locked cards and on very small screens */}
-        {!isLocked && (
-          <p className="hidden sm:block text-[11px] text-muted-foreground text-center leading-snug mb-3 line-clamp-2 min-h-[2.5em]">
-            {t(`steps.${stepId}.description`)}
-          </p>
-        )}
-
-        {/* Locked message */}
-        {isLocked && (
-          <p className="text-[10px] sm:text-[11px] text-muted-foreground text-center mb-2 sm:mb-3">
-            {t("completePrevious")}
-          </p>
-        )}
-
-        {/* Action buttons */}
-        {isActive && (
-          <div className="space-y-1 sm:space-y-1.5 mt-2 sm:mt-0">
-            <Button size="sm" onClick={handleStart} className="w-full h-7 sm:h-8 text-[11px] sm:text-xs">
-              {t("start")}
-            </Button>
-            {config.canSkip && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleSkip}
-                className="w-full h-6 sm:h-7 text-[10px] sm:text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                <SkipForward className="h-3 w-3 mr-1" />
-                {t("skip")}
+        {/* Action button */}
+        <div className="flex-shrink-0">
+          {isActive && (
+            <div className="flex items-center gap-0.5">
+              <Button size="sm" onClick={handleStart} className="h-7 text-[11px] px-2.5">
+                {t("start")}
               </Button>
-            )}
+              {config.canSkip && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleSkip}
+                  className="h-7 w-7 text-muted-foreground"
+                  title={t("skip")}
+                >
+                  <SkipForward className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          )}
+          {(isCompleted || isSkipped) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleStart}
+              className="h-7 text-[11px] text-muted-foreground px-2"
+            >
+              {isCompleted ? t("viewAgain") : t("doNow")}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Tablet/Desktop vertical layout (>= sm) */}
+      <div className="hidden sm:block">
+        {/* Step number indicator */}
+        <div
+          className={cn(
+            "absolute top-3 left-3 lg:top-3 lg:left-3 h-6 w-6 lg:h-5 lg:w-5 rounded-full flex items-center justify-center text-xs font-medium",
+            isCompleted && "bg-green-500 text-white",
+            isSkipped && "bg-muted-foreground/30 text-muted-foreground",
+            isActive && "bg-primary text-primary-foreground",
+            isLocked && "bg-muted text-muted-foreground"
+          )}
+        >
+          {isCompleted ? <Check className="h-3 w-3" /> : stepNumber}
+        </div>
+
+        {/* Skipped badge */}
+        {isSkipped && (
+          <div className="absolute top-3 right-3">
+            <span className="text-[10px] lg:text-[10px] text-muted-foreground uppercase tracking-wide">
+              {t("skipped")}
+            </span>
           </div>
         )}
 
-        {/* Completed/Skipped action */}
-        {(isCompleted || isSkipped) && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleStart}
-            className="w-full h-6 sm:h-7 text-[10px] sm:text-[11px] text-muted-foreground hover:text-foreground mt-2 sm:mt-0"
+        {/* Main content */}
+        <div className="pt-12 pb-5 px-4 lg:pt-10 lg:pb-4">
+          {/* Icon */}
+          <div
+            className={cn(
+              "mx-auto w-12 h-12 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center mb-3",
+              isCompleted && "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400",
+              isSkipped && "bg-muted text-muted-foreground",
+              isActive && "bg-primary/10 text-primary",
+              isLocked && "bg-muted/50 text-muted-foreground"
+            )}
           >
-            {isCompleted ? t("viewAgain") : t("doNow")}
-          </Button>
-        )}
+            {isLocked ? <Lock className="h-6 w-6 lg:h-5 lg:w-5" /> : <Icon className="h-6 w-6 lg:h-5 lg:w-5" />}
+          </div>
+
+          {/* Title */}
+          <h3 className="font-medium text-base lg:text-sm text-center mb-1.5 lg:mb-1 leading-tight">
+            {t(`steps.${stepId}.title`)}
+          </h3>
+
+          {/* Description - hidden on locked cards */}
+          {!isLocked && (
+            <p className="text-xs lg:text-[11px] text-muted-foreground text-center leading-snug mb-4 lg:mb-3 line-clamp-2 min-h-[2.5em]">
+              {t(`steps.${stepId}.description`)}
+            </p>
+          )}
+
+          {/* Locked message */}
+          {isLocked && (
+            <p className="text-xs lg:text-[11px] text-muted-foreground text-center mb-4 lg:mb-3">
+              {t("completePrevious")}
+            </p>
+          )}
+
+          {/* Action buttons */}
+          {isActive && (
+            <div className="space-y-2 lg:space-y-1.5">
+              <Button size="sm" onClick={handleStart} className="w-full h-9 lg:h-8 text-sm lg:text-xs">
+                {t("start")}
+              </Button>
+              {config.canSkip && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleSkip}
+                  className="w-full h-8 lg:h-7 text-xs lg:text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  <SkipForward className="h-3.5 w-3.5 lg:h-3 lg:w-3 mr-1" />
+                  {t("skip")}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Completed/Skipped action */}
+          {(isCompleted || isSkipped) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleStart}
+              className="w-full h-8 lg:h-7 text-xs lg:text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              {isCompleted ? t("viewAgain") : t("doNow")}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );

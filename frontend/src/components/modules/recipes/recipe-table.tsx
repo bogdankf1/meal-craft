@@ -38,9 +38,12 @@ import {
   useBulkUnarchiveRecipesMutation,
   useBulkFavoriteRecipesMutation,
   useToggleFavoriteMutation,
+  useLazyGetRecipeAvailabilityQuery,
   type RecipeListItem,
   type RecipeListResponse,
+  type RecipeAvailabilityStatus,
 } from "@/lib/api/recipes-api";
+import { AvailabilityBadge, getAvailabilityStatus, type AvailabilityStatus } from "@/components/shared";
 import { useUserStore, defaultColumnVisibility } from "@/lib/store/user-store";
 
 interface RecipeTableProps {
@@ -118,6 +121,60 @@ function getRatingStars(rating: number | null) {
   );
 }
 
+// Availability cell component with lazy loading
+function AvailabilityCell({ recipeId, servings }: { recipeId: string; servings: number }) {
+  const [fetchAvailability, { data, isLoading, isFetching }] = useLazyGetRecipeAvailabilityQuery();
+  const [hasChecked, setHasChecked] = useState(false);
+
+  const handleCheck = () => {
+    if (!hasChecked) {
+      fetchAvailability({ recipeId, servings });
+      setHasChecked(true);
+    }
+  };
+
+  if (!hasChecked) {
+    return (
+      <button
+        onClick={handleCheck}
+        className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+      >
+        Check
+      </button>
+    );
+  }
+
+  if (isLoading || isFetching) {
+    return (
+      <span className="text-xs text-muted-foreground animate-pulse">
+        Checking...
+      </span>
+    );
+  }
+
+  if (!data) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const status: AvailabilityStatus = getAvailabilityStatus(
+    data.can_make,
+    data.missing_count,
+    data.partial_count,
+    data.total_ingredients
+  );
+
+  return (
+    <AvailabilityBadge
+      status={status}
+      missingCount={data.missing_count}
+      partialCount={data.partial_count}
+      availableServings={data.available_servings}
+      totalIngredients={data.total_ingredients}
+      compact
+    />
+  );
+}
+
 export function RecipeTable({
   data,
   isLoading,
@@ -155,6 +212,7 @@ export function RecipeTable({
     { key: "time", label: t("table.time") },
     { key: "servings", label: t("table.servings") },
     { key: "difficulty", label: t("table.difficulty") },
+    { key: "availability", label: t("table.availability") },
     { key: "rating", label: t("table.rating") },
     { key: "times_cooked", label: t("table.cooked") },
     { key: "created_at", label: t("table.addedOn") },
@@ -233,6 +291,11 @@ export function RecipeTable({
       key: "difficulty",
       header: t("table.difficulty"),
       render: (item) => getDifficultyBadge(item.difficulty, t),
+    },
+    {
+      key: "availability",
+      header: t("table.availability"),
+      render: (item) => <AvailabilityCell recipeId={item.id} servings={item.servings} />,
     },
     {
       key: "rating",

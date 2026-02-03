@@ -3,13 +3,21 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { Plus, ShoppingCart, Check } from "lucide-react";
+import { Plus, ShoppingCart, Check, Package, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +29,7 @@ import {
 import { useGetShoppingListsQuery } from "@/lib/api/shopping-lists-api";
 import {
   useGenerateShoppingListMutation,
+  useLazyGetShoppingListPreviewQuery,
   type MealPlanListItem,
 } from "@/lib/api/meal-planner-api";
 
@@ -49,6 +58,12 @@ export function GenerateShoppingListDialog({
   const [selectedListId, setSelectedListId] = useState<string>("");
   const [createNew, setCreateNew] = useState(true);
   const [newListName, setNewListName] = useState(getDefaultListName(mealPlan));
+  const [checkPantry, setCheckPantry] = useState(true);
+  const [includeLowStock, setIncludeLowStock] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Fetch preview when dialog opens
+  const [fetchPreview, { data: previewData, isLoading: isLoadingPreview }] = useLazyGetShoppingListPreviewQuery();
 
   // Handle dialog open/close with state reset
   const handleOpenChange = useCallback((newOpen: boolean) => {
@@ -57,9 +72,14 @@ export function GenerateShoppingListDialog({
       setSelectedListId("");
       setCreateNew(true);
       setNewListName(getDefaultListName(mealPlan));
+      setCheckPantry(true);
+      setIncludeLowStock(false);
+      setPreviewOpen(false);
+      // Fetch preview
+      fetchPreview({ planId: mealPlan.id });
     }
     onOpenChange(newOpen);
-  }, [mealPlan, onOpenChange]);
+  }, [mealPlan, onOpenChange, fetchPreview]);
 
   const { data: shoppingLists, isLoading: isLoadingLists } = useGetShoppingListsQuery({
     is_archived: false,
@@ -95,9 +115,24 @@ export function GenerateShoppingListDialog({
         meal_plan_id: mealPlan.id,
         shopping_list_id: targetListId || undefined,
         shopping_list_name: targetListName,
+        check_pantry: checkPantry,
+        include_low_stock: includeLowStock,
       }).unwrap();
 
-      toast.success(t("generateShoppingList.success", { count: result.items_added }));
+      // Build success message with details
+      let message = t("generateShoppingList.success", { count: result.items_added });
+      if (checkPantry && (result.items_skipped > 0 || result.items_reduced > 0)) {
+        const details: string[] = [];
+        if (result.items_skipped > 0) {
+          details.push(t("generateShoppingList.skippedFromPantry", { count: result.items_skipped }));
+        }
+        if (result.items_reduced > 0) {
+          details.push(t("generateShoppingList.reducedFromPantry", { count: result.items_reduced }));
+        }
+        message = details.length > 0 ? `${message}. ${details.join(", ")}` : message;
+      }
+
+      toast.success(message);
       handleOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -129,6 +164,115 @@ export function GenerateShoppingListDialog({
                 {t("fields.meals")}: {mealPlan.meal_count} | {t("fields.servings")}: {mealPlan.servings}
               </p>
             </div>
+          )}
+
+          {/* Pantry awareness options */}
+          <div className="space-y-3 rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="check-pantry" className="font-medium">
+                  {t("generateShoppingList.checkPantry")}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t("generateShoppingList.checkPantryDescription")}
+                </p>
+              </div>
+              <Switch
+                id="check-pantry"
+                checked={checkPantry}
+                onCheckedChange={setCheckPantry}
+              />
+            </div>
+
+            {checkPantry && (
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="space-y-0.5">
+                  <Label htmlFor="include-low-stock" className="font-medium">
+                    {t("generateShoppingList.includeLowStock")}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("generateShoppingList.includeLowStockDescription")}
+                  </p>
+                </div>
+                <Switch
+                  id="include-low-stock"
+                  checked={includeLowStock}
+                  onCheckedChange={setIncludeLowStock}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Preview section */}
+          {checkPantry && (
+            <Collapsible open={previewOpen} onOpenChange={setPreviewOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-3 h-auto">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    <span className="font-medium">{t("generateShoppingList.preview")}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {previewData && (
+                      <div className="flex gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {previewData.items_to_buy} {t("generateShoppingList.toBuy")}
+                        </Badge>
+                        {previewData.items_from_pantry > 0 && (
+                          <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                            {previewData.items_from_pantry} {t("generateShoppingList.inPantry")}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    {previewOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3">
+                {isLoadingPreview ? (
+                  <div className="space-y-2 py-2">
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-3/4" />
+                  </div>
+                ) : previewData && previewData.items.length > 0 ? (
+                  <ScrollArea className="h-[150px] border rounded-md">
+                    <div className="p-2 space-y-1">
+                      {previewData.items.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between py-1.5 text-sm"
+                        >
+                          <span className="truncate flex-1">{item.ingredient_name}</span>
+                          <div className="flex items-center gap-2 ml-2 shrink-0">
+                            {item.in_pantry > 0 && (
+                              <span className="text-xs text-green-600">
+                                {item.in_pantry} {item.unit} {t("generateShoppingList.have")}
+                              </span>
+                            )}
+                            {item.to_buy > 0 ? (
+                              <Badge variant="outline" className="text-xs">
+                                {item.to_buy} {item.unit}
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                                <Check className="h-3 w-3 mr-0.5" />
+                                {t("generateShoppingList.haveEnough")}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="py-4 text-center text-sm text-muted-foreground">
+                    {t("generateShoppingList.noIngredients")}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
           )}
 
           {/* Shopping list selection */}

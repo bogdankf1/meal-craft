@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { format, addDays, isSameDay } from "date-fns";
-import { Plus, UtensilsCrossed, Coffee, Moon, Cookie } from "lucide-react";
+import { Plus, UtensilsCrossed, Coffee, Moon, Cookie, ChefHat } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ interface MealCalendarProps {
   onAddMeal?: (date: Date, mealType: MealType) => void;
   onEditMeal?: (meal: Meal | MealWithProfile) => void;
   onDeleteMeal?: (meal: Meal | MealWithProfile) => void;
+  onMarkCooked?: (meal: Meal | MealWithProfile) => void;
   /** When true, shows all meals per slot (combined view for all members) */
   showAllMembers?: boolean;
 }
@@ -48,6 +49,7 @@ export function MealCalendar({
   onAddMeal,
   onEditMeal,
   onDeleteMeal,
+  onMarkCooked,
   showAllMembers = false,
 }: MealCalendarProps) {
   const t = useTranslations("mealPlanner");
@@ -172,7 +174,7 @@ export function MealCalendar({
                             <div
                               key={meal.id}
                               className={cn(
-                                "space-y-0.5",
+                                "space-y-0.5 group/meal relative",
                                 showAllMembers && "p-1.5 rounded-md hover:bg-muted/80 cursor-pointer"
                               )}
                               onClick={(e) => {
@@ -186,8 +188,24 @@ export function MealCalendar({
                                 paddingLeft: '6px',
                               } : undefined}
                             >
-                              <div className="text-xs font-medium truncate">
-                                {meal.recipe_name || meal.custom_name || t("noMeal")}
+                              <div className="flex items-center gap-1">
+                                <div className="text-xs font-medium truncate flex-1">
+                                  {meal.recipe_name || meal.custom_name || t("noMeal")}
+                                </div>
+                                {/* Mark as Cooked button */}
+                                {onMarkCooked && !showAllMembers && (
+                                  <button
+                                    type="button"
+                                    className="opacity-0 group-hover/meal:opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onMarkCooked(meal);
+                                    }}
+                                    title={t("markCooked.title")}
+                                  >
+                                    <ChefHat className="h-3 w-3 text-primary" />
+                                  </button>
+                                )}
                               </div>
                               {showAllMembers && profileName && (
                                 <div

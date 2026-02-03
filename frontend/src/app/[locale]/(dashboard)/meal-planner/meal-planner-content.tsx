@@ -54,6 +54,7 @@ import {
   RepeatMealPlanDialog,
   GenerateShoppingListDialog,
   MealPlanImport,
+  MarkCookedDialog,
 } from "@/components/modules/meal-planner";
 import { ProfileSelector } from "@/components/shared/ProfileSelector";
 import {
@@ -122,6 +123,8 @@ export function MealPlannerContent() {
   const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
   const [shoppingListItem, setShoppingListItem] = useState<MealPlanListItem | null>(null);
   const [combinedWeekOffset, setCombinedWeekOffset] = useState(0);
+  const [markCookedDialogOpen, setMarkCookedDialogOpen] = useState(false);
+  const [markCookedMeal, setMarkCookedMeal] = useState<Meal | null>(null);
 
   // Calculate target date for combined view based on week offset
   const getCombinedTargetDate = () => {
@@ -290,6 +293,11 @@ export function MealPlannerContent() {
     setSelectedDate(parseISO(meal.date));
     setSelectedMealType(meal.meal_type);
     setMealFormOpen(true);
+  };
+
+  const handleMarkCooked = (meal: Meal) => {
+    setMarkCookedMeal(meal);
+    setMarkCookedDialogOpen(true);
   };
 
   const handlePageChange = (page: number) => {
@@ -598,6 +606,7 @@ export function MealPlannerContent() {
                     servings={displayPlan.servings}
                     onAddMeal={handleAddMeal}
                     onEditMeal={handleEditMeal}
+                    onMarkCooked={handleMarkCooked}
                   />
                 </CardContent>
               </Card>
@@ -835,6 +844,20 @@ export function MealPlannerContent() {
           setShoppingListItem(null);
         }}
       />
+
+      {/* Mark as Cooked Dialog */}
+      {displayPlan && (
+        <MarkCookedDialog
+          open={markCookedDialogOpen}
+          onOpenChange={setMarkCookedDialogOpen}
+          meal={markCookedMeal}
+          planId={displayPlan.id}
+          onSuccess={() => {
+            setMarkCookedDialogOpen(false);
+            setMarkCookedMeal(null);
+          }}
+        />
+      )}
 
       {/* Back to Setup button for onboarding */}
       <BackToSetupButton stepId="meal_plan" />

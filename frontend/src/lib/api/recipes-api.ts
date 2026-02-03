@@ -554,6 +554,33 @@ export interface RecipeSuggestionResponse {
   message: string | null;
 }
 
+// ============ Recipe Availability Types ============
+
+export interface RecipeIngredientAvailability {
+  ingredient_name: string;
+  needed_quantity: number;
+  needed_unit: string | null;
+  available_quantity: number;
+  available_unit: string | null;
+  is_available: boolean;
+  is_partial: boolean;
+  pantry_item_id: string | null;
+  pantry_item_name: string | null;
+}
+
+export interface RecipeAvailabilityStatus {
+  recipe_id: string;
+  recipe_name: string;
+  servings_checked: number;
+  can_make: boolean;
+  available_servings: number;
+  missing_count: number;
+  partial_count: number;
+  available_count: number;
+  total_ingredients: number;
+  ingredients: RecipeIngredientAvailability[];
+}
+
 // ============ API Definition ============
 
 export const recipesApi = baseApi.injectEndpoints({
@@ -949,6 +976,23 @@ export const recipesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [{ type: "ShoppingLists", id: "LIST" }],
     }),
+
+    // ============ Availability ============
+
+    // Check recipe availability against pantry
+    getRecipeAvailability: builder.query<
+      RecipeAvailabilityStatus,
+      { recipeId: string; servings?: number }
+    >({
+      query: ({ recipeId, servings }) => ({
+        url: `/recipes/${recipeId}/availability`,
+        params: servings ? { servings } : undefined,
+      }),
+      providesTags: (_result, _error, { recipeId }) => [
+        { type: "Recipes", id: `AVAILABILITY_${recipeId}` },
+        { type: "Pantry", id: "LIST" },
+      ],
+    }),
   }),
 });
 
@@ -997,4 +1041,7 @@ export const {
   useBulkRecalculateNutritionMutation,
   // Shopping List
   useAddRecipeToShoppingListMutation,
+  // Availability
+  useGetRecipeAvailabilityQuery,
+  useLazyGetRecipeAvailabilityQuery,
 } = recipesApi;

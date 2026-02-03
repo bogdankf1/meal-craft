@@ -8,7 +8,6 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { useSession } from "next-auth/react";
 import {
   type CurrencyCode,
   type Currency,
@@ -20,6 +19,7 @@ import {
   getCurrencySymbol,
 } from "@/lib/currency";
 import { useGetCurrenciesQuery } from "@/lib/api/currencies-api";
+import { useIsAuthenticated } from "@/lib/hooks/use-is-authenticated";
 
 // Extended currency type that includes exchange rate
 interface ExtendedCurrency extends Currency {
@@ -73,9 +73,8 @@ export function CurrencyProvider({ children, defaultCurrency = "UAH" }: Currency
     getInitialCurrency(defaultCurrency)
   );
 
-  // Check if user is authenticated
-  const { status } = useSession();
-  const isAuthenticated = status === "authenticated";
+  // Check if user is authenticated (requires both session and auth token)
+  const isAuthenticated = useIsAuthenticated();
 
   // Fetch currencies from API only when authenticated
   const { data: apiCurrencies, isLoading } = useGetCurrenciesQuery(undefined, {
