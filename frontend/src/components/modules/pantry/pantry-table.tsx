@@ -13,7 +13,6 @@ import {
   ThermometerSnowflake,
   Package,
   Cookie,
-  HelpCircle,
   Home,
   ShoppingCart,
 } from "lucide-react";
@@ -96,11 +95,9 @@ function getStorageIcon(location: StorageLocation) {
     pantry: Home,
     fridge: Refrigerator,
     freezer: ThermometerSnowflake,
-    cabinet: Package,
     spice_rack: Cookie,
-    other: HelpCircle,
   };
-  const Icon = icons[location] || HelpCircle;
+  const Icon = icons[location] || Package;
   return <Icon className="h-4 w-4" />;
 }
 
