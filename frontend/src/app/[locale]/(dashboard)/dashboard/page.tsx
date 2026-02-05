@@ -207,10 +207,8 @@ export default function DashboardPage() {
       </div>
       )}
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        {/* Upcoming Meals */}
-        {uiVisibility.showDashboardUpcomingMeals && (
+      {/* Upcoming Meals - Full Width */}
+      {uiVisibility.showDashboardUpcomingMeals && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -234,37 +232,64 @@ export default function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              <ScrollArea className="h-[280px]">
-                <div className="space-y-3">
-                  {data.upcoming_meals.map((meal) => (
-                    <div
-                      key={meal.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50"
-                    >
-                      <div className="flex-shrink-0">
-                        {mealTypeIcons[meal.meal_type] || <Utensils className="h-4 w-4" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {meal.recipe_name || meal.custom_meal_name || t("upcomingMeals.unnamedMeal")}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDateLabel(meal.date)} • {meal.meal_type}
-                          {meal.is_leftover && (
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              {t("upcomingMeals.leftover")}
-                            </Badge>
+              <div className="space-y-4">
+                {/* Group meals by date */}
+                {Object.entries(
+                  data.upcoming_meals.reduce((groups, meal) => {
+                    const dateKey = meal.date;
+                    if (!groups[dateKey]) groups[dateKey] = [];
+                    groups[dateKey].push(meal);
+                    return groups;
+                  }, {} as Record<string, typeof data.upcoming_meals>)
+                ).map(([dateKey, meals]) => (
+                  <div key={dateKey}>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                      {formatDateLabel(dateKey)}
+                    </h4>
+                    <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                      {meals.map((meal) => (
+                        <div
+                          key={meal.id}
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 border"
+                        >
+                          {meal.profile_color && (
+                            <div
+                              className="w-1 h-10 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: meal.profile_color }}
+                            />
                           )}
-                        </p>
-                      </div>
+                          <div className="flex-shrink-0">
+                            {mealTypeIcons[meal.meal_type] || <Utensils className="h-4 w-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate text-sm">
+                              {meal.recipe_name || meal.custom_meal_name || t("upcomingMeals.unnamedMeal")}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {meal.meal_type}
+                              {meal.profile_name && (
+                                <span className="ml-1">• {meal.profile_name}</span>
+                              )}
+                              {meal.is_leftover && (
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  {t("upcomingMeals.leftover")}
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
-        )}
+      )}
+
+      {/* Main Content Grid */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
 
         {/* Expiring Soon */}
         {uiVisibility.showDashboardExpiringSoon && (

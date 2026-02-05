@@ -69,8 +69,23 @@ export function RestaurantMealImport({ onComplete, onViewItems }: RestaurantMeal
   const [parseImage] = useParseRestaurantMealImageMutation();
 
   // Define available import methods for restaurant meals
+  // Primary methods (photo and receipt) are displayed more prominently
   const importMethods: ImportMethod[] = useMemo(
     () => [
+      {
+        id: "photo_food",
+        icon: <Camera className="h-6 w-6" />,
+        titleKey: "methods.photoFood.title",
+        descriptionKey: "methods.photoFood.description",
+        primary: true,
+      },
+      {
+        id: "photo_receipt",
+        icon: <Receipt className="h-6 w-6" />,
+        titleKey: "methods.receipt.title",
+        descriptionKey: "methods.receipt.description",
+        primary: true,
+      },
       {
         id: "text",
         icon: <FileText className="h-6 w-6" />,
@@ -82,18 +97,6 @@ export function RestaurantMealImport({ onComplete, onViewItems }: RestaurantMeal
         icon: <Mic className="h-6 w-6" />,
         titleKey: "methods.voice.title",
         descriptionKey: "methods.voice.description",
-      },
-      {
-        id: "photo_food",
-        icon: <Camera className="h-6 w-6" />,
-        titleKey: "methods.photoFood.title",
-        descriptionKey: "methods.photoFood.description",
-      },
-      {
-        id: "photo_receipt",
-        icon: <Receipt className="h-6 w-6" />,
-        titleKey: "methods.receipt.title",
-        descriptionKey: "methods.receipt.description",
       },
       {
         id: "photo_app_screenshot",

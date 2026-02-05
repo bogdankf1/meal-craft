@@ -9,9 +9,9 @@ export interface OnboardingStepState {
 
 export const ONBOARDING_STEPS = [
   "household",
+  "nutrition",
   "groceries",
   "pantry",
-  "nutrition",
   "recipes",
   "meal_plan",
 ] as const;

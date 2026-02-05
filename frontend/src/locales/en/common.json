@@ -542,7 +542,9 @@
       "moveToPantry": "Move to Pantry",
       "success": "Item moved to pantry",
       "bulkSuccess": "{count, plural, one {# item} other {# items}} moved to pantry",
-      "error": "Failed to move to pantry"
+      "error": "Failed to move to pantry",
+      "autoDetected": "Storage locations auto-detected based on category",
+      "setAllTo": "Set all to"
     },
     "insights": {
       "outOfSeason": {
@@ -568,7 +570,8 @@
     "back": "Back",
     "selectMethod": {
       "title": "Choose Import Method",
-      "description": "Select how you want to add items"
+      "description": "Select how you want to add items",
+      "otherOptions": "Other ways to import"
     },
     "steps": {
       "method": "Method",
@@ -868,7 +871,14 @@
       "addToGroceries": "Add {count, plural, one {# item} other {# items}} to Groceries",
       "addToRestaurants": "Add {count, plural, one {# meal} other {# meals}} to Restaurants",
       "addToPantry": "Add {count, plural, one {# item} other {# items}} to Pantry",
-      "addToEquipment": "Add {count, plural, one {# item} other {# items}} to Equipment"
+      "addToEquipment": "Add {count, plural, one {# item} other {# items}} to Equipment",
+      "quickRemove": "Quick remove",
+      "filters": {
+        "delivery": "Delivery fees",
+        "packaging": "Packaging",
+        "nonFood": "Non-food items",
+        "bags": "Bags"
+      }
     },
     "complete": {
       "title": "Import Complete!",
@@ -928,7 +938,8 @@
       "back": "Back",
       "selectMethod": {
         "title": "Choose Import Method",
-        "description": "Select how you want to add items to your shopping list"
+        "description": "Select how you want to add items to your shopping list",
+        "otherOptions": "Other ways to import"
       },
       "steps": {
         "method": "Method",
@@ -2443,10 +2454,13 @@
     "navigation": {
       "today": "Today",
       "previous": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week"
     },
     "hints": {
-      "selectMemberToAdd": "Select a member to add meals"
+      "selectMemberToAdd": "Select a member to add meals",
+      "clickToAddMeal": "Click on any cell to add a meal"
     },
     "mealTypes": {
       "breakfast": "Breakfast",
@@ -4044,7 +4058,7 @@
     "start": "Start",
     "skip": "Skip",
     "skipped": "Skipped",
-    "completed": "Completed",
+    "stepCompleted": "Completed",
     "viewAgain": "View Again",
     "doNow": "Do Now",
     "completePrevious": "Complete previous step first",

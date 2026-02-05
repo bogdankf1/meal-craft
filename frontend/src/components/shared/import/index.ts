@@ -14,5 +14,5 @@ export { VoiceImport } from "./VoiceImport";
 export { PhotoImport, type PhotoImportType } from "./PhotoImport";
 export { DigitalReceiptImport } from "./DigitalReceiptImport";
 export { BarcodeImport, type BarcodeProductInfo } from "./BarcodeImport";
-export { ImportReview, type ColumnDefinition } from "./ImportReview";
+export { ImportReview, type ColumnDefinition, type QuickFilter } from "./ImportReview";
 export { ImportComplete } from "./ImportComplete";

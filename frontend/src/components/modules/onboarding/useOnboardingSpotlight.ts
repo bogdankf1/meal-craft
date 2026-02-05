@@ -17,7 +17,7 @@ const SPOTLIGHT_CONFIGS: Record<OnboardingStepId, Record<string, SpotlightTarget
   },
   groceries: {
     "/groceries": [
-      { selector: "[data-spotlight='import-methods']", padding: 16, borderRadius: 12 },
+      { selector: "[data-spotlight='import-methods-primary']", padding: 16, borderRadius: 12 },
     ],
   },
   pantry: {
@@ -38,8 +38,8 @@ const SPOTLIGHT_CONFIGS: Record<OnboardingStepId, Record<string, SpotlightTarget
   },
   meal_plan: {
     "/meal-planner": [
+      { selector: "[data-spotlight='meal-cell-first']", padding: 8, borderRadius: 8 },
       { selector: "[data-spotlight='members-selector']", padding: 8, borderRadius: 8 },
-      { selector: "[data-spotlight='create-plan-button']", padding: 8, borderRadius: 8 },
     ],
   },
 };

@@ -5,18 +5,54 @@ export type StorageLocation =
   | "pantry"
   | "fridge"
   | "freezer"
-  | "cabinet"
-  | "spice_rack"
-  | "other";
+  | "spice_rack";
 
 export const STORAGE_LOCATIONS: { value: StorageLocation; label: string }[] = [
-  { value: "pantry", label: "Pantry" },
   { value: "fridge", label: "Fridge" },
   { value: "freezer", label: "Freezer" },
-  { value: "cabinet", label: "Cabinet" },
+  { value: "pantry", label: "Pantry" },
   { value: "spice_rack", label: "Spice Rack" },
-  { value: "other", label: "Other" },
 ];
+
+/**
+ * Determines the appropriate storage location based on grocery category.
+ * Uses smart defaults based on common food storage practices.
+ */
+export function getStorageLocationForCategory(category: string | null): StorageLocation {
+  if (!category) return "pantry";
+
+  const categoryLower = category.toLowerCase();
+
+  // Fridge items - fresh products that need refrigeration
+  const fridgeCategories = [
+    "meat", "seafood", "dairy", "produce", "deli", "eggs",
+    "м'ясо", "морепродукти", "молочні", "овочі", "фрукти", "делікатеси", "яйця"
+  ];
+  if (fridgeCategories.some(c => categoryLower.includes(c))) {
+    return "fridge";
+  }
+
+  // Freezer items - frozen products
+  const freezerCategories = [
+    "frozen", "ice cream", "ice",
+    "заморожені", "морозиво", "лід"
+  ];
+  if (freezerCategories.some(c => categoryLower.includes(c))) {
+    return "freezer";
+  }
+
+  // Spice rack items
+  const spiceCategories = [
+    "spices", "spice", "herbs", "seasoning",
+    "спеції", "приправи", "трави", "зелень"
+  ];
+  if (spiceCategories.some(c => categoryLower.includes(c))) {
+    return "spice_rack";
+  }
+
+  // Everything else goes to pantry (canned, dry goods, beverages, snacks, etc.)
+  return "pantry";
+}
 
 // Pantry category enum matching backend
 export type PantryCategory =

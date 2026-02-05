@@ -14,13 +14,11 @@ import { type Meal, type MealType, type MealWithProfile, MEAL_TYPES } from "@/li
 interface MealCalendarProps {
   startDate: Date;
   meals: Meal[] | MealWithProfile[];
-  servings: number;
+  servings?: number;
   onAddMeal?: (date: Date, mealType: MealType) => void;
   onEditMeal?: (meal: Meal | MealWithProfile) => void;
   onDeleteMeal?: (meal: Meal | MealWithProfile) => void;
   onMarkCooked?: (meal: Meal | MealWithProfile) => void;
-  /** When true, shows all meals per slot (combined view for all members) */
-  showAllMembers?: boolean;
 }
 
 const MEAL_TYPE_ICONS: Record<MealType, React.ReactNode> = {
@@ -45,12 +43,11 @@ function isMealWithProfile(meal: Meal | MealWithProfile): meal is MealWithProfil
 export function MealCalendar({
   startDate,
   meals,
-  servings,
+  servings = 2,
   onAddMeal,
   onEditMeal,
   onDeleteMeal,
   onMarkCooked,
-  showAllMembers = false,
 }: MealCalendarProps) {
   const t = useTranslations("mealPlanner");
 
@@ -82,6 +79,22 @@ export function MealCalendar({
 
     return grouped;
   }, [days, meals]);
+
+  // Find the first empty cell for spotlight (computed once, not mutated during render)
+  const firstEmptyCellKey = useMemo(() => {
+    if (!onAddMeal) return null;
+    const mealTypes: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+    for (const mealType of mealTypes) {
+      for (const day of days) {
+        const dateKey = format(day, "yyyy-MM-dd");
+        const mealsForSlot = mealsByDateAndType[dateKey]?.[mealType] || [];
+        if (mealsForSlot.length === 0) {
+          return `${dateKey}-${mealType}`;
+        }
+      }
+    }
+    return null;
+  }, [days, mealsByDateAndType, onAddMeal]);
 
   const today = new Date();
 
@@ -135,11 +148,18 @@ export function MealCalendar({
               const mealsForSlot = mealsByDateAndType[dateKey]?.[mealType] || [];
               const hasMeals = mealsForSlot.length > 0;
 
-              // In combined view, show all meals. In single view, show first meal only.
-              const displayMeals = showAllMembers ? mealsForSlot : mealsForSlot.slice(0, 1);
+              // Show all meals in the slot (supports multiple profiles)
+              const displayMeals = mealsForSlot;
 
-              // Determine if the card is clickable
-              const isClickable = (!hasMeals && onAddMeal) || (hasMeals && !showAllMembers && onEditMeal);
+              // Determine if the card is clickable for adding
+              const canAddMeal = !hasMeals && onAddMeal;
+              // Determine if single meal can be clicked to edit
+              const canEditSingleMeal = hasMeals && displayMeals.length === 1 && onEditMeal;
+              const isClickable = canAddMeal || canEditSingleMeal;
+
+              // Check if this is the first empty cell for spotlight
+              const cellKey = `${dateKey}-${mealType}`;
+              const isFirstEmptyCell = cellKey === firstEmptyCellKey;
 
               return (
                 <Card
@@ -150,14 +170,15 @@ export function MealCalendar({
                     isSameDay(day, today) && "ring-1 ring-primary/20"
                   )}
                   onClick={() => {
-                    if (!hasMeals && onAddMeal) {
+                    if (canAddMeal) {
                       onAddMeal(day, mealType);
-                    } else if (!showAllMembers && mealsForSlot[0] && onEditMeal) {
-                      // In single profile view, clicking edits the meal
-                      onEditMeal(mealsForSlot[0]);
+                    } else if (canEditSingleMeal && displayMeals[0]) {
+                      // Single meal: click to edit
+                      onEditMeal(displayMeals[0]);
                     }
-                    // In combined view with meals, clicking does nothing - user clicks individual meals
+                    // Multiple meals: don't handle card click, user clicks individual meals
                   }}
+                  {...(isFirstEmptyCell && { "data-spotlight": "meal-cell-first" })}
                 >
                   <CardContent className={cn(
                     "p-2",
@@ -165,25 +186,29 @@ export function MealCalendar({
                   )}>
                     {hasMeals ? (
                       <div className="space-y-1.5">
-                        {displayMeals.map((meal) => {
+                        {displayMeals.map((meal, index) => {
                           const hasProfile = isMealWithProfile(meal);
                           const profileColor = hasProfile ? meal.profile_color : null;
                           const profileName = hasProfile ? meal.profile_name : null;
+                          // Show profile indicator only if meal has a profile (not shared)
+                          const showProfileIndicator = profileColor && profileName;
+                          // Multi-meal slots need individual click handling
+                          const needsIndividualClick = displayMeals.length > 1;
 
                           return (
                             <div
                               key={meal.id}
                               className={cn(
                                 "space-y-0.5 group/meal relative",
-                                showAllMembers && "p-1.5 rounded-md hover:bg-muted/80 cursor-pointer"
+                                needsIndividualClick && "p-1.5 rounded-md hover:bg-muted/80 cursor-pointer"
                               )}
                               onClick={(e) => {
-                                if (showAllMembers) {
+                                if (needsIndividualClick && onEditMeal) {
                                   e.stopPropagation();
-                                  onEditMeal?.(meal);
+                                  onEditMeal(meal);
                                 }
                               }}
-                              style={showAllMembers && profileColor ? {
+                              style={showProfileIndicator ? {
                                 borderLeft: `3px solid ${profileColor}`,
                                 paddingLeft: '6px',
                               } : undefined}
@@ -193,7 +218,7 @@ export function MealCalendar({
                                   {meal.recipe_name || meal.custom_name || t("noMeal")}
                                 </div>
                                 {/* Mark as Cooked button */}
-                                {onMarkCooked && !showAllMembers && (
+                                {onMarkCooked && (
                                   <button
                                     type="button"
                                     className="opacity-0 group-hover/meal:opacity-100 transition-opacity p-0.5 rounded hover:bg-primary/10"
@@ -207,15 +232,15 @@ export function MealCalendar({
                                   </button>
                                 )}
                               </div>
-                              {showAllMembers && profileName && (
+                              {showProfileIndicator && (
                                 <div
                                   className="text-[10px] font-medium truncate"
-                                  style={{ color: profileColor || undefined }}
+                                  style={{ color: profileColor }}
                                 >
                                   {profileName}
                                 </div>
                               )}
-                              {!showAllMembers && meal.recipe_prep_time && (
+                              {!showProfileIndicator && meal.recipe_prep_time && (
                                 <div className="text-[10px] text-muted-foreground">
                                   {meal.recipe_prep_time + (meal.recipe_cook_time || 0)} min
                                 </div>

@@ -36,6 +36,34 @@ function normalizeText(name: string): string {
     .replace(/\s+/g, " ");
 }
 
+// Map common ingredients to shopping list categories
+const INGREDIENT_CATEGORY_MAP: Record<string, string> = {
+  // Produce
+  onion: "produce", garlic: "produce", tomato: "produce", tomatoes: "produce",
+  lemon: "produce", carrot: "produce", celery: "produce", potato: "produce",
+  mushroom: "produce", "bell pepper": "produce", lettuce: "produce", spinach: "produce",
+  cucumber: "produce", broccoli: "produce", cauliflower: "produce", zucchini: "produce",
+  // Meat
+  chicken: "meat", beef: "meat", pork: "meat", lamb: "meat", turkey: "meat",
+  bacon: "meat", sausage: "meat", ham: "meat",
+  // Seafood
+  fish: "seafood", salmon: "seafood", shrimp: "seafood", tuna: "seafood",
+  // Dairy
+  butter: "dairy", cheese: "dairy", cream: "dairy", milk: "dairy", eggs: "dairy",
+  yogurt: "dairy", "sour cream": "dairy",
+  // Pantry
+  "olive oil": "pantry", flour: "pantry", sugar: "pantry", rice: "pantry",
+  pasta: "pantry", oil: "pantry", honey: "pantry", vinegar: "pantry",
+  // Spices
+  salt: "spices", pepper: "spices", cinnamon: "spices", paprika: "spices",
+  cumin: "spices", oregano: "spices", basil: "spices", thyme: "spices",
+};
+
+function getIngredientCategory(ingredientName: string): string {
+  const normalized = ingredientName.toLowerCase();
+  return INGREDIENT_CATEGORY_MAP[normalized] || "other";
+}
+
 // Common cooking techniques that might be in recipe names/descriptions
 const COOKING_TECHNIQUES = [
   { keywords: ["grilled", "grill", "bbq", "barbecue"], skill: "Grilling" },
@@ -430,7 +458,7 @@ export function RecipeInsights({
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6"
-                      onClick={() => onAddToShoppingList([{ name, category: "groceries" }])}
+                      onClick={() => onAddToShoppingList([{ name, category: getIngredientCategory(name) }])}
                     >
                       <ShoppingCart className="h-3 w-3" />
                     </Button>

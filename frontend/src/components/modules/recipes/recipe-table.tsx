@@ -7,15 +7,12 @@ import {
   Trash2,
   Archive,
   ArchiveRestore,
-  Heart,
   Clock,
   Users,
   ChefHat,
   UtensilsCrossed,
   Star,
   ShoppingCart,
-  CalendarCheck,
-  Copy,
   FolderPlus,
   Eye,
 } from "lucide-react";
@@ -36,8 +33,6 @@ import {
   useBulkDeleteRecipesMutation,
   useBulkArchiveRecipesMutation,
   useBulkUnarchiveRecipesMutation,
-  useBulkFavoriteRecipesMutation,
-  useToggleFavoriteMutation,
   useLazyGetRecipeAvailabilityQuery,
   type RecipeListItem,
   type RecipeListResponse,
@@ -53,7 +48,6 @@ interface RecipeTableProps {
   onPageChange: (page: number) => void;
   onEdit: (item: RecipeListItem) => void;
   onView?: (item: RecipeListItem) => void;
-  onCook?: (item: RecipeListItem) => void;
   onAddToShoppingList?: (item: RecipeListItem) => void;
   onAddToCollection?: (items: RecipeListItem[]) => void;
   isArchiveView?: boolean;
@@ -182,7 +176,6 @@ export function RecipeTable({
   onPageChange,
   onEdit,
   onView,
-  onCook,
   onAddToShoppingList,
   onAddToCollection,
   isArchiveView = false,
@@ -199,8 +192,6 @@ export function RecipeTable({
   const [bulkDelete, { isLoading: isBulkDeleting }] = useBulkDeleteRecipesMutation();
   const [bulkArchive, { isLoading: isBulkArchiving }] = useBulkArchiveRecipesMutation();
   const [bulkUnarchive, { isLoading: isBulkUnarchiving }] = useBulkUnarchiveRecipesMutation();
-  const [bulkFavorite, { isLoading: isBulkFavoriting }] = useBulkFavoriteRecipesMutation();
-  const [toggleFavorite] = useToggleFavoriteMutation();
 
   const items = data?.items || [];
 
@@ -229,9 +220,6 @@ export function RecipeTable({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium">{item.name}</span>
-              {item.is_favorite && (
-                <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-              )}
             </div>
             {item.description && (
               <p className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">
@@ -328,20 +316,6 @@ export function RecipeTable({
 
   // Define bulk actions
   const bulkActions: BulkAction[] = [
-    {
-      label: t("actions.favorite"),
-      icon: <Heart className="h-4 w-4 mr-1" />,
-      variant: "outline" as const,
-      isLoading: isBulkFavoriting,
-      onClick: async (ids: string[]) => {
-        try {
-          await bulkFavorite({ ids, favorite: true }).unwrap();
-          toast.success(t("messages.itemsFavorited"));
-        } catch {
-          toast.error(t("messages.errorFavoriting"));
-        }
-      },
-    },
     ...(onAddToCollection && showCollectionsTab
       ? [
           {
@@ -420,29 +394,6 @@ export function RecipeTable({
       icon: <Pencil className="h-4 w-4 mr-2" />,
       onClick: onEdit,
     },
-    {
-      label: t("actions.toggleFavorite"),
-      icon: <Heart className="h-4 w-4 mr-2" />,
-      onClick: async (item: RecipeListItem) => {
-        try {
-          await toggleFavorite(item.id).unwrap();
-          toast.success(
-            item.is_favorite ? t("messages.removedFromFavorites") : t("messages.addedToFavorites")
-          );
-        } catch {
-          toast.error(t("messages.errorTogglingFavorite"));
-        }
-      },
-    },
-    ...(onCook
-      ? [
-          {
-            label: t("actions.markCooked"),
-            icon: <CalendarCheck className="h-4 w-4 mr-2" />,
-            onClick: onCook,
-          },
-        ]
-      : []),
     ...(onAddToShoppingList
       ? [
           {

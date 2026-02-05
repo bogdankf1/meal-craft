@@ -36,11 +36,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  useCreateMealMutation,
-  useUpdateMealMutation,
-  useDeleteMealMutation,
+  useCreateMealSimpleMutation,
+  useUpdateMealSimpleMutation,
+  useDeleteMealSimpleMutation,
   type Meal,
   type MealType,
+  type MealWithProfile,
   MEAL_TYPES,
 } from "@/lib/api/meal-planner-api";
 import {
@@ -62,10 +63,10 @@ type MealFormValues = z.infer<typeof mealSchema>;
 interface MealFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  planId: string;
   date: Date;
   mealType?: MealType;
-  editingMeal?: Meal | null;
+  profileId?: string | null;  // null = shared meal
+  editingMeal?: Meal | MealWithProfile | null;
   defaultServings?: number;
   onSuccess?: () => void;
 }
@@ -73,9 +74,9 @@ interface MealFormProps {
 export function MealForm({
   open,
   onOpenChange,
-  planId,
   date,
   mealType = "lunch",
+  profileId,
   editingMeal,
   defaultServings = 2,
   onSuccess,
@@ -87,9 +88,9 @@ export function MealForm({
   const [showRecipeSearch, setShowRecipeSearch] = useState(false);
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
 
-  const [createMeal, { isLoading: isCreating }] = useCreateMealMutation();
-  const [updateMeal, { isLoading: isUpdating }] = useUpdateMealMutation();
-  const [deleteMeal, { isLoading: isDeleting }] = useDeleteMealMutation();
+  const [createMeal, { isLoading: isCreating }] = useCreateMealSimpleMutation();
+  const [updateMeal, { isLoading: isUpdating }] = useUpdateMealSimpleMutation();
+  const [deleteMeal, { isLoading: isDeleting }] = useDeleteMealSimpleMutation();
 
   // Fetch recipes for selection
   const { data: recipesData } = useGetRecipesQuery({
@@ -154,28 +155,33 @@ export function MealForm({
 
   const onSubmit = async (values: MealFormValues) => {
     try {
-      const data = {
-        date: format(date, "yyyy-MM-dd"),
-        meal_type: values.meal_type as MealType,
-        recipe_id: values.recipe_id || undefined,
-        custom_name: values.custom_name || undefined,
-        servings: values.servings || undefined,
-        notes: values.notes || undefined,
-        is_leftover: values.is_leftover,
-      };
-
       if (isEditing) {
+        const updateData = {
+          date: format(date, "yyyy-MM-dd"),
+          meal_type: values.meal_type as MealType,
+          recipe_id: values.recipe_id || null,
+          custom_name: values.custom_name || null,
+          servings: values.servings || null,
+          notes: values.notes || null,
+          is_leftover: values.is_leftover,
+        };
         await updateMeal({
-          planId,
           mealId: editingMeal.id,
-          data,
+          data: updateData,
         }).unwrap();
         toast.success(t("messages.mealUpdated"));
       } else {
-        await createMeal({
-          planId,
-          data,
-        }).unwrap();
+        const createData = {
+          date: format(date, "yyyy-MM-dd"),
+          meal_type: values.meal_type as MealType,
+          profile_id: profileId,
+          recipe_id: values.recipe_id || null,
+          custom_name: values.custom_name || null,
+          servings: values.servings || null,
+          notes: values.notes || null,
+          is_leftover: values.is_leftover,
+        };
+        await createMeal(createData).unwrap();
         toast.success(t("messages.mealAdded"));
       }
 
@@ -191,10 +197,7 @@ export function MealForm({
     if (!editingMeal) return;
 
     try {
-      await deleteMeal({
-        planId,
-        mealId: editingMeal.id,
-      }).unwrap();
+      await deleteMeal(editingMeal.id).unwrap();
       toast.success(t("messages.mealDeleted"));
       onOpenChange(false);
       onSuccess?.();
@@ -292,23 +295,28 @@ export function MealForm({
                     />
                   </div>
                   {showRecipeSearch && recipesData && recipesData.items.length > 0 && (
-                    <ScrollArea className="h-[150px] border rounded-lg">
-                      <div className="p-2 space-y-1">
-                        {recipesData.items.map((recipe) => (
-                          <button
-                            key={recipe.id}
-                            type="button"
-                            className="w-full text-left p-2 rounded hover:bg-muted transition-colors"
-                            onClick={() => handleSelectRecipe(recipe)}
-                          >
-                            <div className="font-medium">{recipe.name}</div>
-                            {recipe.category && (
-                              <div className="text-sm text-muted-foreground">
-                                {recipe.category}
+                    <ScrollArea className="h-[240px] border rounded-lg">
+                      <div className="p-1.5 space-y-0.5">
+                        {recipesData.items.map((recipe) => {
+                          const totalTime = recipe.total_time || (recipe.prep_time || 0) + (recipe.cook_time || 0);
+                          return (
+                            <button
+                              key={recipe.id}
+                              type="button"
+                              className="w-full text-left px-2 py-1.5 rounded hover:bg-muted transition-colors"
+                              onClick={() => handleSelectRecipe(recipe)}
+                            >
+                              <div className="text-sm font-medium leading-tight">{recipe.name}</div>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                {recipe.category && <span>{recipe.category}</span>}
+                                {recipe.category && (totalTime > 0 || recipe.difficulty) && <span>•</span>}
+                                {totalTime > 0 && <span>{totalTime} min</span>}
+                                {totalTime > 0 && recipe.difficulty && <span>•</span>}
+                                {recipe.difficulty && <span>{recipe.difficulty}</span>}
                               </div>
-                            )}
-                          </button>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
                     </ScrollArea>
                   )}

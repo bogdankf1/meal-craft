@@ -9,6 +9,7 @@ import {
   Trash2,
   Plus,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +45,13 @@ export interface ColumnDefinition<T extends ParsedItem> {
   renderCell?: (value: unknown, item: T) => React.ReactNode; // Custom cell renderer for display mode
 }
 
+export interface QuickFilter {
+  id: string;
+  label: string;
+  /** Keywords to match against item name (case-insensitive) */
+  keywords: string[];
+}
+
 interface ImportReviewProps<T extends ParsedItem> {
   columns: ColumnDefinition<T>[];
   onSave: (items: T[]) => Promise<void>;
@@ -52,6 +60,8 @@ interface ImportReviewProps<T extends ParsedItem> {
   emptyMessage?: string;
   saveButtonTextKey?: string;
   descriptionKey?: string;
+  /** Quick filter buttons to remove items matching keywords */
+  quickFilters?: QuickFilter[];
 }
 
 export function ImportReview<T extends ParsedItem>({
@@ -62,6 +72,7 @@ export function ImportReview<T extends ParsedItem>({
   emptyMessage,
   saveButtonTextKey,
   descriptionKey = "review.description",
+  quickFilters,
 }: ImportReviewProps<T>) {
   const t = useTranslations(translationNamespace);
   const tCommon = useTranslations("common");
@@ -126,6 +137,42 @@ export function ImportReview<T extends ParsedItem>({
     if (!editedItem) return;
     setEditedItem({ ...editedItem, [key]: value });
   };
+
+  const handleQuickFilter = useCallback(
+    (filter: QuickFilter) => {
+      const filtered = parsedItems.filter((item) => {
+        const itemName = String(item[itemNameKey] || "").toLowerCase();
+        return !filter.keywords.some((keyword) =>
+          itemName.includes(keyword.toLowerCase())
+        );
+      });
+      setParsedItems(filtered);
+      // Clear selections for removed items
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        parsedItems.forEach((item) => {
+          if (!filtered.find((f) => f.id === item.id)) {
+            newSet.delete(item.id);
+          }
+        });
+        return newSet;
+      });
+    },
+    [parsedItems, setParsedItems, itemNameKey]
+  );
+
+  // Count items that would be removed by each filter
+  const getFilterMatchCount = useCallback(
+    (filter: QuickFilter) => {
+      return parsedItems.filter((item) => {
+        const itemName = String(item[itemNameKey] || "").toLowerCase();
+        return filter.keywords.some((keyword) =>
+          itemName.includes(keyword.toLowerCase())
+        );
+      }).length;
+    },
+    [parsedItems, itemNameKey]
+  );
 
   const handleSaveAll = async () => {
     if (parsedItems.length === 0) return;
@@ -240,6 +287,32 @@ export function ImportReview<T extends ParsedItem>({
         <CardDescription>{t(descriptionKey)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Quick filters to remove non-relevant items */}
+        {quickFilters && quickFilters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">{t("review.quickRemove")}:</span>
+            {quickFilters.map((filter) => {
+              const matchCount = getFilterMatchCount(filter);
+              if (matchCount === 0) return null;
+              return (
+                <Button
+                  key={filter.id}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleQuickFilter(filter)}
+                  className="h-7 text-xs gap-1"
+                >
+                  <X className="h-3 w-3" />
+                  {filter.label}
+                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                    {matchCount}
+                  </Badge>
+                </Button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Bulk actions */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">

@@ -73,8 +73,23 @@ export function RecipeImport({ onComplete, onViewItems, initialAiQuery }: Recipe
   const [parseRecipeImage] = useParseRecipeImageMutation();
 
   // Define available import methods for recipes
+  // Primary methods (url and photo) are displayed more prominently
   const importMethods: ImportMethod[] = useMemo(
     () => [
+      {
+        id: "url",
+        icon: <Link2 className="h-6 w-6" />,
+        titleKey: "methods.url.title",
+        descriptionKey: "methods.url.description",
+        primary: true,
+      },
+      {
+        id: "photo",
+        icon: <Camera className="h-6 w-6" />,
+        titleKey: "methods.photo.title",
+        descriptionKey: "methods.photo.recipeDescription",
+        primary: true,
+      },
       {
         id: "text",
         icon: <FileText className="h-6 w-6" />,
@@ -86,18 +101,6 @@ export function RecipeImport({ onComplete, onViewItems, initialAiQuery }: Recipe
         icon: <Mic className="h-6 w-6" />,
         titleKey: "methods.voice.title",
         descriptionKey: "methods.voice.description",
-      },
-      {
-        id: "photo",
-        icon: <Camera className="h-6 w-6" />,
-        titleKey: "methods.photo.title",
-        descriptionKey: "methods.photo.recipeDescription",
-      },
-      {
-        id: "url",
-        icon: <Link2 className="h-6 w-6" />,
-        titleKey: "methods.url.title",
-        descriptionKey: "methods.url.description",
       },
     ],
     []

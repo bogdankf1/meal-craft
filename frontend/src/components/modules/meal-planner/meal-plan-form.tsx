@@ -38,6 +38,7 @@ import {
   useUpdateMealPlanMutation,
   type MealPlanListItem,
 } from "@/lib/api/meal-planner-api";
+import { useGetProfilesQuery } from "@/lib/api/profiles-api";
 
 const mealPlanSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -69,6 +70,12 @@ export function MealPlanForm({
 
   const [createMealPlan, { isLoading: isCreating }] = useCreateMealPlanMutation();
   const [updateMealPlan, { isLoading: isUpdating }] = useUpdateMealPlanMutation();
+
+  // Get profiles to determine primary profile as fallback
+  const { data: profilesData } = useGetProfilesQuery();
+  const primaryProfileId = profilesData?.profiles
+    ?.slice()
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0]?.id;
 
   const isEditing = !!editingItem;
   const isLoading = isCreating || isUpdating;
@@ -133,7 +140,8 @@ export function MealPlanForm({
         date_end: format(values.date_end, "yyyy-MM-dd"),
         servings: values.servings,
         is_template: values.is_template,
-        profile_id: isEditing ? editingItem.profile_id : defaultProfileId,
+        // Use defaultProfileId if specified, otherwise fall back to primary profile
+        profile_id: isEditing ? editingItem.profile_id : (defaultProfileId ?? primaryProfileId),
       };
 
       if (isEditing) {

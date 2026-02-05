@@ -16,6 +16,7 @@ export interface ImportMethod {
   descriptionKey: string;
   disabled?: boolean;
   comingSoon?: boolean;
+  primary?: boolean;
 }
 
 export interface ParsedItem {

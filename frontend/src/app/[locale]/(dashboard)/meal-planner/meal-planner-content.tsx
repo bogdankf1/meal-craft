@@ -1,25 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays } from "date-fns";
 import {
-  Plus,
   Archive,
   LayoutGrid,
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  Import,
   Calendar,
   UtensilsCrossed,
   CalendarCheck,
   Clock,
-  Search,
   History,
-  Sparkles,
-  Info,
 } from "lucide-react";
 
 import {
@@ -29,13 +24,9 @@ import {
   EmptyState,
   AnalyticsCard,
   DistributionList,
-  ViewSelector,
-  CALENDAR_VIEW,
-  TABLE_VIEW,
 } from "@/components/shared";
 import { BackToSetupButton } from "@/components/modules/onboarding";
 import { Button } from "@/components/ui/button";
-import { SplitButton } from "@/components/ui/split-button";
 import {
   Select,
   SelectContent,
@@ -43,39 +34,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  MealPlanTable,
   MealCalendar,
-  MealPlanForm,
   MealForm,
-  RepeatMealPlanDialog,
-  GenerateShoppingListDialog,
-  MealPlanImport,
   MarkCookedDialog,
 } from "@/components/modules/meal-planner";
 import { ProfileSelector } from "@/components/shared/ProfileSelector";
 import {
-  useGetMealPlansQuery,
-  useGetMealPlanQuery,
-  useGetCurrentWeekPlanQuery,
-  useGetCombinedWeekPlanQuery,
+  useGetWeekMealsQuery,
   useGetMealPlanAnalyticsQuery,
   useGetMealPlanHistoryQuery,
-  useDeleteMealPlanMutation,
   useBulkArchiveMealPlansMutation,
   useBulkUnarchiveMealPlansMutation,
   useBulkDeleteMealPlansMutation,
-  type MealPlanListItem,
-  type MealPlanFilters,
+  useGetMealPlansQuery,
   type Meal,
   type MealType,
   type MealWithProfile,
+  type MealPlanFilters,
+  type MealPlanListItem,
 } from "@/lib/api/meal-planner-api";
-import { toast } from "sonner";
 import { useUserStore } from "@/lib/store/user-store";
+import { useGetProfilesQuery } from "@/lib/api/profiles-api";
+import { MealPlanTable } from "@/components/modules/meal-planner";
+import { toast } from "sonner";
 
 export function MealPlannerContent() {
   const t = useTranslations("mealPlanner");
@@ -83,22 +67,26 @@ export function MealPlannerContent() {
   const { preferences } = useUserStore();
   const { uiVisibility } = preferences;
 
-  // View mode: calendar or table
-  const [viewMode, setViewMode] = useState<string>("calendar");
+  // Week navigation: 0 = current week, -1 = last week, +1 = next week
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  // Profile filter
+  // Profile filter: null = All Members (shared + all profiles)
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
-  // State for active items
-  const [filters, setFilters] = useState<MealPlanFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "date_start",
-    sort_order: "desc",
-    is_archived: false,
-  });
+  // Meal form state
+  const [mealFormOpen, setMealFormOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedMealType, setSelectedMealType] = useState<MealType>("lunch");
+  const [editingMeal, setEditingMeal] = useState<Meal | MealWithProfile | null>(null);
 
-  // State for archived items
+  // Mark as cooked dialog
+  const [markCookedDialogOpen, setMarkCookedDialogOpen] = useState(false);
+  const [markCookedMeal, setMarkCookedMeal] = useState<Meal | null>(null);
+
+  // History period
+  const [historyMonths, setHistoryMonths] = useState(3);
+
+  // Archive state (for archive tab)
   const [archiveFilters, setArchiveFilters] = useState<MealPlanFilters>({
     page: 1,
     per_page: 20,
@@ -107,71 +95,28 @@ export function MealPlannerContent() {
     is_archived: true,
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [historyMonths, setHistoryMonths] = useState(3);
-
-  // Dialog states
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<MealPlanListItem | null>(null);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [mealFormOpen, setMealFormOpen] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedMealType, setSelectedMealType] = useState<MealType>("lunch");
-  const [repeatDialogOpen, setRepeatDialogOpen] = useState(false);
-  const [repeatItem, setRepeatItem] = useState<MealPlanListItem | null>(null);
-  const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
-  const [shoppingListItem, setShoppingListItem] = useState<MealPlanListItem | null>(null);
-  const [combinedWeekOffset, setCombinedWeekOffset] = useState(0);
-  const [markCookedDialogOpen, setMarkCookedDialogOpen] = useState(false);
-  const [markCookedMeal, setMarkCookedMeal] = useState<Meal | null>(null);
-
-  // Calculate target date for combined view based on week offset
-  const getCombinedTargetDate = () => {
+  // Calculate target date based on week offset
+  const targetDate = useMemo(() => {
     const today = new Date();
-    today.setDate(today.getDate() + combinedWeekOffset * 7);
-    return format(today, "yyyy-MM-dd");
-  };
+    const offsetDate = addDays(today, weekOffset * 7);
+    return format(offsetDate, "yyyy-MM-dd");
+  }, [weekOffset]);
 
-  // Reset selected plan and week offset when profile changes
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      setSelectedPlanId(null);
-      setCombinedWeekOffset(0);
-    });
-  }, [selectedProfileId]);
-
-  // API queries
-  const { data: mealPlansData, isLoading: isLoadingPlans } = useGetMealPlansQuery({
-    ...filters,
-    search: searchQuery || undefined,
-    profile_id: selectedProfileId,
+  // API queries - single query for week meals
+  const { data: weekData, isLoading: isLoadingWeek } = useGetWeekMealsQuery({
+    targetDate,
+    profileId: selectedProfileId,
   });
+
+  const { data: analytics } = useGetMealPlanAnalyticsQuery();
+  const { data: historyData } = useGetMealPlanHistoryQuery(historyMonths);
   const { data: archivedData, isLoading: isLoadingArchived } = useGetMealPlansQuery({
     ...archiveFilters,
     profile_id: selectedProfileId,
   });
-  // For individual profile: fetch single plan
-  const { data: currentWeekPlan, isLoading: isLoadingCurrentWeek } = useGetCurrentWeekPlanQuery(
-    { profileId: selectedProfileId },
-    { skip: selectedProfileId === null } // Skip when "All Members" is selected
-  );
-  // For "All Members": fetch combined plans
-  const { data: combinedWeekPlan, isLoading: isLoadingCombined } = useGetCombinedWeekPlanQuery(
-    { targetDate: getCombinedTargetDate() },
-    { skip: selectedProfileId !== null } // Only fetch when "All Members" is selected
-  );
-  const { data: analytics } = useGetMealPlanAnalyticsQuery();
-  const { data: historyData } = useGetMealPlanHistoryQuery(historyMonths);
+  const { data: profilesData } = useGetProfilesQuery();
 
-  // Get selected plan details for calendar view
-  const { data: selectedPlanData } = useGetMealPlanQuery(selectedPlanId ?? "", {
-    skip: !selectedPlanId,
-  });
-
-  // Mutations
-  const [deleteMealPlan] = useDeleteMealPlanMutation();
-  const [bulkArchive] = useBulkArchiveMealPlansMutation();
+  // Mutations for archive tab
   const [bulkUnarchive] = useBulkUnarchiveMealPlansMutation();
   const [bulkDelete] = useBulkDeleteMealPlansMutation();
 
@@ -187,7 +132,6 @@ export function MealPlannerContent() {
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" />, alwaysShow: true },
-    { value: "import", label: t("tabs.import"), icon: <Import className="h-4 w-4" />, alwaysShow: true },
     { value: "archive", label: t("tabs.archive"), icon: <Archive className="h-4 w-4" />, visibilityKey: "showArchiveTab" as const },
     { value: "analysis", label: t("tabs.analysis"), icon: <BarChart3 className="h-4 w-4" />, visibilityKey: "showAnalysisTab" as const },
     { value: "history", label: t("tabs.history"), icon: <History className="h-4 w-4" />, visibilityKey: "showHistoryTab" as const },
@@ -199,54 +143,40 @@ export function MealPlannerContent() {
     return true;
   });
 
-  const viewOptions = [
-    { ...CALENDAR_VIEW, label: t("views.calendar") },
-    { ...TABLE_VIEW, label: t("views.table") },
-  ];
-
-  const handleAddClick = () => {
-    setEditingItem(null);
-    setFormOpen(true);
+  // Handlers
+  const handleAddMeal = (date: Date, mealType: MealType) => {
+    setSelectedDate(date);
+    setSelectedMealType(mealType);
+    setEditingMeal(null);
+    setMealFormOpen(true);
   };
 
-  const handleEditClick = (item: MealPlanListItem) => {
-    setEditingItem(item);
-    setFormOpen(true);
+  const handleEditMeal = (meal: Meal | MealWithProfile) => {
+    setEditingMeal(meal);
+    setSelectedDate(parseISO(meal.date));
+    setSelectedMealType(meal.meal_type);
+    setMealFormOpen(true);
   };
 
-  const handleViewClick = (item: MealPlanListItem) => {
-    setSelectedPlanId(item.id);
-    setViewMode("calendar");
+  const handleMarkCooked = (meal: Meal | MealWithProfile) => {
+    setMarkCookedMeal(meal as Meal);
+    setMarkCookedDialogOpen(true);
   };
 
-  const handleDeleteClick = async (item: MealPlanListItem) => {
-    try {
-      await deleteMealPlan(item.id).unwrap();
-      toast.success(t("messages.planDeleted"));
-    } catch (error) {
-      toast.error(t("messages.deleteError"));
-      console.error("Error deleting meal plan:", error);
-    }
+  const handlePreviousWeek = () => {
+    setWeekOffset(weekOffset - 1);
   };
 
-  const handleRepeatClick = (item: MealPlanListItem) => {
-    setRepeatItem(item);
-    setRepeatDialogOpen(true);
+  const handleNextWeek = () => {
+    setWeekOffset(weekOffset + 1);
   };
 
-  const handleGenerateShoppingList = (item: MealPlanListItem) => {
-    setShoppingListItem(item);
-    setShoppingListDialogOpen(true);
+  const handleGoToToday = () => {
+    setWeekOffset(0);
   };
 
-  const handleArchiveClick = async (item: MealPlanListItem) => {
-    try {
-      await bulkArchive([item.id]).unwrap();
-      toast.success(t("messages.planArchived"));
-    } catch (error) {
-      toast.error(t("messages.archiveError"));
-      console.error("Error archiving plan:", error);
-    }
+  const handleArchivePageChange = (page: number) => {
+    setArchiveFilters({ ...archiveFilters, page });
   };
 
   const handleUnarchiveClick = async (item: MealPlanListItem) => {
@@ -259,13 +189,19 @@ export function MealPlannerContent() {
     }
   };
 
+  const handleDeleteClick = async (item: MealPlanListItem) => {
+    try {
+      await bulkDelete([item.id]).unwrap();
+      toast.success(t("messages.planDeleted"));
+    } catch (error) {
+      toast.error(t("messages.deleteError"));
+      console.error("Error deleting plan:", error);
+    }
+  };
+
   const handleBulkAction = async (action: string, ids: string[]) => {
     try {
       switch (action) {
-        case "archive":
-          await bulkArchive(ids).unwrap();
-          toast.success(t("messages.plansArchived", { count: ids.length }));
-          break;
         case "unarchive":
           await bulkUnarchive(ids).unwrap();
           toast.success(t("messages.plansUnarchived", { count: ids.length }));
@@ -279,84 +215,6 @@ export function MealPlannerContent() {
       toast.error(t("messages.bulkActionError"));
       console.error("Error performing bulk action:", error);
     }
-  };
-
-  const handleAddMeal = (date: Date, mealType: MealType) => {
-    setSelectedDate(date);
-    setSelectedMealType(mealType);
-    setEditingMeal(null);
-    setMealFormOpen(true);
-  };
-
-  const handleEditMeal = (meal: Meal) => {
-    setEditingMeal(meal);
-    setSelectedDate(parseISO(meal.date));
-    setSelectedMealType(meal.meal_type);
-    setMealFormOpen(true);
-  };
-
-  const handleMarkCooked = (meal: Meal) => {
-    setMarkCookedMeal(meal);
-    setMarkCookedDialogOpen(true);
-  };
-
-  const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page });
-  };
-
-  const handleArchivePageChange = (page: number) => {
-    setArchiveFilters({ ...archiveFilters, page });
-  };
-
-  const hasPlans = (mealPlansData?.total || 0) > 0;
-  const hasArchivedItems = (archivedData?.total || 0) > 0;
-
-  // Find a plan that contains today's date, or fall back to first plan
-  const today = new Date();
-  const todayStr = format(today, "yyyy-MM-dd");
-  const planContainingToday = mealPlansData?.items?.find(
-    (p) => p.date_start <= todayStr && p.date_end >= todayStr
-  );
-  const fallbackPlanId = planContainingToday?.id || mealPlansData?.items?.[0]?.id;
-
-  // Determine which plan to load for calendar view
-  // Priority: selectedPlanId > currentWeekPlan > plan containing today > first available plan
-  const planIdToFetch = selectedPlanId || (!currentWeekPlan && fallbackPlanId ? fallbackPlanId : null);
-
-  // Fetch the plan details if we have a plan ID but no selectedPlanData yet
-  const { data: fallbackPlanData } = useGetMealPlanQuery(planIdToFetch ?? "", {
-    skip: !planIdToFetch || !!selectedPlanId, // Skip if no ID or if we already have selectedPlanId query
-  });
-
-  // Use selected plan, current week plan, or fallback plan for calendar view
-  const displayPlan = selectedPlanData || currentWeekPlan || fallbackPlanData;
-
-  // Calculate current plan index for navigation
-  const plansList = mealPlansData?.items || [];
-  const currentPlanIndex = displayPlan
-    ? plansList.findIndex(p => p.id === displayPlan.id)
-    : -1;
-  const totalPlans = plansList.length;
-
-  // Navigation functions for calendar view
-  // Plans are sorted by date_start DESC (newest first), so:
-  // - Left arrow (previous/older) = higher index
-  // - Right arrow (next/newer) = lower index
-  const handlePreviousPlan = () => {
-    if (currentPlanIndex < totalPlans - 1) {
-      setSelectedPlanId(plansList[currentPlanIndex + 1].id);
-    }
-  };
-
-  const handleNextPlan = () => {
-    if (currentPlanIndex > 0) {
-      setSelectedPlanId(plansList[currentPlanIndex - 1].id);
-    }
-  };
-
-  const handleGoToToday = () => {
-    // Reset to current week plan or first plan
-    setSelectedPlanId(null);
   };
 
   // Helper to translate meal types
@@ -380,6 +238,13 @@ export function MealPlannerContent() {
     label: item.recipe_name,
     value: item.count,
   }));
+
+  const hasArchivedItems = (archivedData?.total || 0) > 0;
+
+  // Determine profile ID to use when creating meals
+  // When "All Members" is selected (null), create shared meals (profile_id = null)
+  // When a specific profile is selected, create meals for that profile
+  const mealProfileId = selectedProfileId;
 
   return (
     <div className="space-y-6">
@@ -412,241 +277,96 @@ export function MealPlannerContent() {
             </div>
           )}
 
-          {/* Filters and Actions Row */}
-          <div className="flex flex-col gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-2">
-              {uiVisibility.showSearchBar && (
-                <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md w-full sm:w-auto">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={t("filters.search")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              )}
-              <ProfileSelector
-                value={selectedProfileId}
-                onChange={setSelectedProfileId}
-                className="w-full sm:w-[180px]"
-                data-spotlight="members-selector"
-              />
-              {uiVisibility.showViewSelector && (
-                <ViewSelector
-                  currentView={viewMode}
-                  onViewChange={setViewMode}
-                  views={viewOptions}
-                />
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              {selectedPlanId && displayPlan && (
+          {/* Calendar View */}
+          <Card>
+            <CardHeader className="pb-2">
+              {/* Navigation controls */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                {/* Left: Navigation with date range between arrows */}
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedPlanId(null)}
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousWeek}
+                    title={t("navigation.previousWeek")}
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    {tCommon("back")}
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Badge variant="outline">{displayPlan.name}</Badge>
+                  {weekData && (
+                    <span className="text-sm font-medium px-2 min-w-[160px] text-center">
+                      {format(parseISO(weekData.date_start), "MMM d")} -{" "}
+                      {format(parseISO(weekData.date_end), "MMM d, yyyy")}
+                    </span>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextWeek}
+                    title={t("navigation.nextWeek")}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  {weekOffset !== 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGoToToday}
+                    >
+                      {t("navigation.today")}
+                    </Button>
+                  )}
                 </div>
-              )}
-              <div className="flex-1" />
-              <SplitButton
-                primaryLabel={t("createNew")}
-                primaryIcon={<Plus className="h-4 w-4" />}
-                onPrimaryClick={handleAddClick}
-                options={[
-                  {
-                    label: t("importPlan"),
-                    onClick: () => navigateToTab("import"),
-                    icon: <Sparkles className="h-4 w-4" />,
-                  },
-                ]}
-                data-spotlight="create-plan-button"
-              />
-            </div>
-          </div>
 
-          {/* Calendar or Table View */}
-          {viewMode === "calendar" ? (
-            // Combined view for "All Members"
-            selectedProfileId === null && combinedWeekPlan ? (
-              <Card>
-                <CardHeader className="pb-2">
-                  {/* Navigation controls for combined view */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setCombinedWeekOffset(combinedWeekOffset - 1)}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setCombinedWeekOffset(combinedWeekOffset + 1)}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm font-medium ml-2">
-                        {t("allMembersWeek")}
-                      </span>
-                      {/* Profile legend */}
-                      {combinedWeekPlan.profiles.length > 0 && (
-                        <div className="flex items-center gap-3 ml-4">
-                          {combinedWeekPlan.profiles.map((profile) => (
-                            <div key={profile.id} className="flex items-center gap-1.5">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: profile.color || '#3B82F6' }}
-                              />
-                              <span className="text-sm font-normal text-muted-foreground">
-                                {profile.name}
-                              </span>
-                            </div>
-                          ))}
+                {/* Right: Profile selector with legend below (only when All Members selected) */}
+                <div className="flex flex-col items-end gap-2">
+                  <ProfileSelector
+                    value={selectedProfileId}
+                    onChange={setSelectedProfileId}
+                    className="w-[180px]"
+                    data-spotlight="members-selector"
+                  />
+                  {/* Profile legend - always show when All Members selected */}
+                  {selectedProfileId === null && (
+                    <div className="flex items-center gap-3 flex-wrap min-w-[180px] min-h-[24px] justify-end">
+                      {(profilesData?.profiles || []).map((profile) => (
+                        <div key={profile.id} className="flex items-center gap-1.5">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: profile.color || '#3B82F6' }}
+                          />
+                          <span className="text-sm font-normal text-muted-foreground">
+                            {profile.name}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
-                        {format(parseISO(combinedWeekPlan.date_start), "MMM d")} -{" "}
-                        {format(parseISO(combinedWeekPlan.date_end), "MMM d, yyyy")}
-                      </Badge>
-                      {combinedWeekOffset !== 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCombinedWeekOffset(0)}
-                        >
-                          {t("navigation.today")}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <MealCalendar
-                    startDate={parseISO(combinedWeekPlan.date_start)}
-                    meals={combinedWeekPlan.meals}
-                    servings={2}
-                    onEditMeal={handleEditMeal}
-                    showAllMembers
-                  />
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Info className="h-3 w-3" />
-                    <span>{t("hints.selectMemberToAdd")}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : displayPlan ? (
-              <Card>
-                <CardHeader className="pb-2">
-                  {/* Navigation controls */}
-                  {totalPlans > 1 && (
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={handlePreviousPlan}
-                          disabled={currentPlanIndex >= totalPlans - 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={handleNextPlan}
-                          disabled={currentPlanIndex <= 0}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                        <span className="text-sm font-medium ml-2">
-                          {displayPlan.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {format(parseISO(displayPlan.date_start), "MMM d")} -{" "}
-                          {format(parseISO(displayPlan.date_end), "MMM d, yyyy")}
-                        </Badge>
-                        {currentWeekPlan && selectedPlanId && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGoToToday}
-                          >
-                            {t("navigation.today")}
-                          </Button>
-                        )}
-                      </div>
+                      ))}
                     </div>
                   )}
-                  {totalPlans <= 1 && (
-                    <CardTitle className="flex items-center justify-between">
-                      <span>{displayPlan.name}</span>
-                      <Badge variant="secondary">
-                        {format(parseISO(displayPlan.date_start), "MMM d")} -{" "}
-                        {format(parseISO(displayPlan.date_end), "MMM d, yyyy")}
-                      </Badge>
-                    </CardTitle>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <MealCalendar
-                    startDate={parseISO(displayPlan.date_start)}
-                    meals={displayPlan.meals || []}
-                    servings={displayPlan.servings}
-                    onAddMeal={handleAddMeal}
-                    onEditMeal={handleEditMeal}
-                    onMarkCooked={handleMarkCooked}
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <EmptyState
-                icon={<Calendar className="h-12 w-12" />}
-                title={t("empty.title")}
-                description={t("empty.description")}
-                action={{ label: t("createPlan"), onClick: handleAddClick }}
-              />
-            )
-          ) : hasPlans || isLoadingPlans ? (
-            <MealPlanTable
-              items={mealPlansData?.items || []}
-              isLoading={isLoadingPlans}
-              page={filters.page || 1}
-              totalPages={mealPlansData?.total_pages || 1}
-              onPageChange={handlePageChange}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-              onView={handleViewClick}
-              onArchive={handleArchiveClick}
-              onRepeat={handleRepeatClick}
-              onGenerateShoppingList={handleGenerateShoppingList}
-              onBulkAction={handleBulkAction}
-            />
-          ) : (
-            <EmptyState
-              icon={<Calendar className="h-12 w-12" />}
-              title={t("empty.title")}
-              description={t("empty.description")}
-              action={{ label: t("createPlan"), onClick: handleAddClick }}
-            />
-          )}
-
-        </TabsContent>
-
-        {/* Import Tab */}
-        <TabsContent value="import">
-          <MealPlanImport onViewItems={() => navigateToTab("overview")} />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isLoadingWeek ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mb-4 animate-pulse" />
+                  <p>{tCommon("loading")}</p>
+                </div>
+              ) : weekData ? (
+                <MealCalendar
+                  startDate={parseISO(weekData.date_start)}
+                  meals={weekData.meals}
+                  onAddMeal={handleAddMeal}
+                  onEditMeal={handleEditMeal}
+                  onMarkCooked={handleMarkCooked}
+                />
+              ) : (
+                <EmptyState
+                  icon={<Calendar className="h-12 w-12" />}
+                  title={t("empty.title")}
+                  description={t("hints.clickToAddMeal")}
+                />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Archive Tab */}
@@ -658,7 +378,6 @@ export function MealPlannerContent() {
               page={archiveFilters.page || 1}
               totalPages={archivedData?.total_pages || 1}
               onPageChange={handleArchivePageChange}
-              onView={handleViewClick}
               onDelete={handleDeleteClick}
               onUnarchive={handleUnarchiveClick}
               onBulkAction={handleBulkAction}
@@ -702,7 +421,6 @@ export function MealPlannerContent() {
                 icon={<BarChart3 className="h-12 w-12" />}
                 title={t("analysis.empty.title")}
                 description={t("analysis.empty.description")}
-                action={{ label: t("createPlan"), onClick: handleAddClick }}
               />
             )}
           </div>
@@ -787,71 +505,33 @@ export function MealPlannerContent() {
                 icon={<History className="h-12 w-12" />}
                 title={t("history.empty.title")}
                 description={t("history.empty.description")}
-                action={{ label: t("createPlan"), onClick: handleAddClick }}
               />
             )}
           </div>
         </TabsContent>
       </ModuleTabs>
 
-      {/* Meal Plan Form Dialog */}
-      <MealPlanForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        editingItem={editingItem}
-        defaultProfileId={selectedProfileId}
-        onSuccess={() => {
-          setFormOpen(false);
-          setEditingItem(null);
-        }}
-      />
-
       {/* Meal Form Dialog */}
-      {displayPlan && (
-        <MealForm
-          open={mealFormOpen}
-          onOpenChange={setMealFormOpen}
-          planId={displayPlan.id}
-          date={selectedDate}
-          mealType={selectedMealType}
-          editingMeal={editingMeal}
-          defaultServings={displayPlan.servings}
-          onSuccess={() => {
-            setMealFormOpen(false);
-            setEditingMeal(null);
-          }}
-        />
-      )}
-
-      {/* Repeat Meal Plan Dialog */}
-      <RepeatMealPlanDialog
-        open={repeatDialogOpen}
-        onOpenChange={setRepeatDialogOpen}
-        mealPlan={repeatItem}
+      <MealForm
+        open={mealFormOpen}
+        onOpenChange={setMealFormOpen}
+        date={selectedDate}
+        mealType={selectedMealType}
+        profileId={mealProfileId}
+        editingMeal={editingMeal}
         onSuccess={() => {
-          setRepeatDialogOpen(false);
-          setRepeatItem(null);
-        }}
-      />
-
-      {/* Generate Shopping List Dialog */}
-      <GenerateShoppingListDialog
-        open={shoppingListDialogOpen}
-        onOpenChange={setShoppingListDialogOpen}
-        mealPlan={shoppingListItem}
-        onSuccess={() => {
-          setShoppingListDialogOpen(false);
-          setShoppingListItem(null);
+          setMealFormOpen(false);
+          setEditingMeal(null);
         }}
       />
 
       {/* Mark as Cooked Dialog */}
-      {displayPlan && (
+      {markCookedMeal && (
         <MarkCookedDialog
           open={markCookedDialogOpen}
           onOpenChange={setMarkCookedDialogOpen}
           meal={markCookedMeal}
-          planId={displayPlan.id}
+          planId={markCookedMeal.meal_plan_id}
           onSuccess={() => {
             setMarkCookedDialogOpen(false);
             setMarkCookedMeal(null);

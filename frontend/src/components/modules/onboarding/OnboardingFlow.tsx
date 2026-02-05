@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, RefreshCw } from "lucide-react";
@@ -33,23 +34,10 @@ export function OnboardingFlow() {
     useLazyGetOnboardingDerivedStatusQuery();
   const [updateStep] = useUpdateOnboardingStepMutation();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const pathname = usePathname();
+  const hasRefreshedRef = useRef(false);
 
-  // Don't render if dismissed
-  if (isDismissed) {
-    return null;
-  }
-
-  // Show completed banner if all steps are done
-  if (isAllComplete()) {
-    return <OnboardingCompletedBanner />;
-  }
-
-  const handleDismiss = async () => {
-    dismissOnboarding();
-    await dismissMutation({ is_dismissed: true });
-  };
-
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       const result = await triggerGetDerivedStatus().unwrap();
@@ -71,6 +59,53 @@ export function OnboardingFlow() {
     } finally {
       setIsRefreshing(false);
     }
+  }, [triggerGetDerivedStatus, steps, markStepCompleted, updateStep]);
+
+  // Auto-refresh when navigating to the dashboard (SPA navigation)
+  useEffect(() => {
+    // Only refresh if we're on a dashboard path and haven't refreshed yet in this navigation
+    const isDashboard = pathname?.endsWith("/dashboard");
+    if (isDashboard && !hasRefreshedRef.current) {
+      hasRefreshedRef.current = true;
+      handleRefresh();
+    }
+  }, [pathname, handleRefresh]);
+
+  // Reset the refresh flag when leaving the dashboard
+  useEffect(() => {
+    const isDashboard = pathname?.endsWith("/dashboard");
+    if (!isDashboard) {
+      hasRefreshedRef.current = false;
+    }
+  }, [pathname]);
+
+  // Auto-refresh when tab becomes visible again (browser tab switching)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleRefresh();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [handleRefresh]);
+
+  // Don't render if dismissed
+  if (isDismissed) {
+    return null;
+  }
+
+  // Show completed banner if all steps are done
+  if (isAllComplete()) {
+    return <OnboardingCompletedBanner />;
+  }
+
+  const handleDismiss = async () => {
+    dismissOnboarding();
+    await dismissMutation({ is_dismissed: true });
   };
 
   const loading = isFetching || isRefreshing;

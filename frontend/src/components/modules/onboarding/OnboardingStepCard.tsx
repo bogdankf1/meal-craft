@@ -116,7 +116,7 @@ export function OnboardingStepCard({
             <p className="text-[10px] text-muted-foreground">{t("skipped")}</p>
           )}
           {isCompleted && (
-            <p className="text-[10px] text-green-600 dark:text-green-400">{t("completed")}</p>
+            <p className="text-[10px] text-green-600 dark:text-green-400">{t("stepCompleted")}</p>
           )}
         </div>
 

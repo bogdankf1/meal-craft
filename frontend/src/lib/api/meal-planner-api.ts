@@ -341,6 +341,32 @@ export interface RepeatMealPlanRequest {
   new_name?: string;
 }
 
+// ============ Simple Meal Creation (Calendar-Centric) ============
+
+export interface SimpleMealCreate {
+  date: string;
+  meal_type: MealType;
+  profile_id?: string | null;  // null = shared meal
+  recipe_id?: string | null;
+  custom_name?: string | null;
+  servings?: number | null;
+  notes?: string | null;
+  is_leftover?: boolean;
+}
+
+export interface SimpleMealResponse extends Meal {
+  profile_id: string | null;
+  profile_name: string | null;
+  profile_color: string | null;
+}
+
+export interface WeekMealsResponse {
+  date_start: string;
+  date_end: string;
+  meals: MealWithProfile[];
+  profiles: ProfileInfo[];
+}
+
 // ============ API Definition ============
 
 export const mealPlannerApi = baseApi.injectEndpoints({
@@ -392,6 +418,66 @@ export const mealPlannerApi = baseApi.injectEndpoints({
       },
       providesTags: (_result, _error, params) => [
         { type: "MealPlans", id: `COMBINED_WEEK_${params && "targetDate" in params ? params.targetDate : "current"}` },
+      ],
+    }),
+
+    // ============ Calendar-Centric (Simple) Meal CRUD ============
+
+    getWeekMeals: builder.query<WeekMealsResponse, { targetDate?: string; profileId?: string | null } | void>({
+      query: (params) => {
+        const cleanParams: Record<string, string> = {};
+        if (params && "targetDate" in params && params.targetDate) {
+          cleanParams.target_date = params.targetDate;
+        }
+        if (params && "profileId" in params && params.profileId) {
+          cleanParams.profile_id = params.profileId;
+        }
+        return {
+          url: "/meal-plans/week",
+          params: Object.keys(cleanParams).length > 0 ? cleanParams : undefined,
+        };
+      },
+      providesTags: (_result, _error, params) => [
+        { type: "MealPlans", id: `WEEK_${params && "targetDate" in params ? params.targetDate : "current"}_${params && "profileId" in params ? params.profileId : "all"}` },
+        { type: "MealPlans", id: "WEEK" },
+      ],
+    }),
+
+    createMealSimple: builder.mutation<SimpleMealResponse, SimpleMealCreate>({
+      query: (data) => ({
+        url: "/meal-plans/meals",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: [
+        { type: "MealPlans", id: "WEEK" },
+        { type: "MealPlans", id: "CURRENT_WEEK" },
+        { type: "MealPlans", id: "LIST" },
+        { type: "MealPlans", id: "ANALYTICS" },
+      ],
+    }),
+
+    updateMealSimple: builder.mutation<SimpleMealResponse, { mealId: string; data: MealUpdate }>({
+      query: ({ mealId, data }) => ({
+        url: `/meal-plans/meals/${mealId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: [
+        { type: "MealPlans", id: "WEEK" },
+        { type: "MealPlans", id: "CURRENT_WEEK" },
+      ],
+    }),
+
+    deleteMealSimple: builder.mutation<{ success: boolean; message: string }, string>({
+      query: (mealId) => ({
+        url: `/meal-plans/meals/${mealId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [
+        { type: "MealPlans", id: "WEEK" },
+        { type: "MealPlans", id: "CURRENT_WEEK" },
+        { type: "MealPlans", id: "LIST" },
       ],
     }),
 
@@ -704,4 +790,9 @@ export const {
   useParseMealPlanTextMutation,
   useParseMealPlanVoiceMutation,
   useParseMealPlanImageMutation,
+  // Calendar-centric (simple) meal CRUD
+  useGetWeekMealsQuery,
+  useCreateMealSimpleMutation,
+  useUpdateMealSimpleMutation,
+  useDeleteMealSimpleMutation,
 } = mealPlannerApi;

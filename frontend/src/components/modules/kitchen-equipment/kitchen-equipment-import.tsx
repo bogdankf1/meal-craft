@@ -67,25 +67,28 @@ export function KitchenEquipmentImport({ onComplete, onViewItems }: KitchenEquip
   const [parseEquipmentImage] = useParseKitchenEquipmentImageMutation();
 
   // Define available import methods for kitchen equipment
+  // Primary methods (photo and text) are displayed more prominently
   const importMethods: ImportMethod[] = useMemo(
     () => [
+      {
+        id: "photo_equipment",
+        icon: <Camera className="h-6 w-6" />,
+        titleKey: "methods.photoEquipment.title",
+        descriptionKey: "methods.photoEquipment.description",
+        primary: true,
+      },
       {
         id: "text",
         icon: <FileText className="h-6 w-6" />,
         titleKey: "methods.text.title",
         descriptionKey: "methods.text.description",
+        primary: true,
       },
       {
         id: "voice",
         icon: <Mic className="h-6 w-6" />,
         titleKey: "methods.voice.title",
         descriptionKey: "methods.voice.description",
-      },
-      {
-        id: "photo_equipment",
-        icon: <Camera className="h-6 w-6" />,
-        titleKey: "methods.photoEquipment.title",
-        descriptionKey: "methods.photoEquipment.description",
       },
       {
         id: "photo_app_screenshot",

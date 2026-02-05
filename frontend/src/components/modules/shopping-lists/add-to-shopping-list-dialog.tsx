@@ -23,7 +23,25 @@ import {
   useCreateShoppingListMutation,
   useAddItemsToListMutation,
   type CreateShoppingListItemInput,
+  type ShoppingListItemCategory,
+  SHOPPING_LIST_CATEGORIES,
 } from "@/lib/api/shopping-lists-api";
+
+// Valid categories set for quick lookup
+const VALID_CATEGORIES = new Set<string>(
+  SHOPPING_LIST_CATEGORIES.map((c) => c.value)
+);
+
+// Validate and normalize category - returns valid category or null
+function normalizeCategory(category: string | null | undefined): ShoppingListItemCategory | null {
+  if (!category) return null;
+  const lower = category.toLowerCase();
+  if (VALID_CATEGORIES.has(lower)) {
+    return lower as ShoppingListItemCategory;
+  }
+  // Invalid category, return "other" as fallback
+  return "other";
+}
 
 interface AddToShoppingListDialogProps {
   open: boolean;
@@ -100,7 +118,7 @@ export function AddToShoppingListDialog({
         ingredient_name: item.name,
         quantity: item.quantity,
         unit: item.unit,
-        category: item.category as CreateShoppingListItemInput["category"],
+        category: normalizeCategory(item.category),
       }));
 
       await addItems({

@@ -256,7 +256,7 @@ export const minimalUIVisibility: UIVisibility = {
   showMySkillsTab: false,
   showLibraryTab: false,
   showLearningPathsTab: false,
-  showCollectionsTab: false,
+  showCollectionsTab: true, // Keep collections visible in minimal view
   // Sidebar navigation - Planning (keep core navigation)
   showSidebarMealPlanner: true,
   showSidebarRecipes: true,
@@ -278,9 +278,9 @@ export const minimalUIVisibility: UIVisibility = {
   // Dashboard content
   showDashboardStats: false,
   showDashboardUpcomingMeals: true,
-  showDashboardExpiringSoon: true,
+  showDashboardExpiringSoon: false,
   showDashboardRecentActivity: false,
-  showDashboardQuickActions: true,
+  showDashboardQuickActions: false,
   showDashboardWasteAnalytics: false,
   showDashboardSkillsProgress: false,
   showDashboardSeasonalInsights: false,

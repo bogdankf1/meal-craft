@@ -9,7 +9,6 @@ import {
   Receipt,
   Smartphone,
   Link2,
-  ScanBarcode,
 } from "lucide-react";
 
 import {
@@ -21,7 +20,6 @@ import {
   VoiceImport,
   PhotoImport,
   DigitalReceiptImport,
-  BarcodeImport,
   ImportReview,
   ImportComplete,
   useImportWizard,
@@ -29,7 +27,7 @@ import {
   type ParsedItem,
   type ColumnDefinition,
   type PhotoImportType,
-  type BarcodeProductInfo,
+  type QuickFilter,
 } from "@/components/shared/import";
 import {
   useCreateGroceriesMutation,
@@ -37,7 +35,6 @@ import {
   useParseGroceryVoiceMutation,
   useParseGroceryImageMutation,
   useParseReceiptUrlMutation,
-  useLazyLookupBarcodeQuery,
   GROCERY_CATEGORIES,
   type CreateGroceryInput,
   type GroceryCategory,
@@ -69,16 +66,24 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
   const [parseGroceryVoice] = useParseGroceryVoiceMutation();
   const [parseGroceryImage] = useParseGroceryImageMutation();
   const [parseReceiptUrl] = useParseReceiptUrlMutation();
-  const [lookupBarcode] = useLazyLookupBarcodeQuery();
 
   // Define available import methods
+  // Primary methods (digital receipt and text) are displayed more prominently
   const importMethods: ImportMethod[] = useMemo(
     () => [
+      {
+        id: "digital_receipt_url",
+        icon: <Link2 className="h-6 w-6" />,
+        titleKey: "methods.digitalReceipt.title",
+        descriptionKey: "methods.digitalReceipt.description",
+        primary: true,
+      },
       {
         id: "text",
         icon: <FileText className="h-6 w-6" />,
         titleKey: "methods.text.title",
         descriptionKey: "methods.text.description",
+        primary: true,
       },
       {
         id: "voice",
@@ -99,22 +104,10 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
         descriptionKey: "methods.paperReceipt.description",
       },
       {
-        id: "digital_receipt_url",
-        icon: <Link2 className="h-6 w-6" />,
-        titleKey: "methods.digitalReceipt.title",
-        descriptionKey: "methods.digitalReceipt.description",
-      },
-      {
         id: "photo_delivery_app",
         icon: <Smartphone className="h-6 w-6" />,
         titleKey: "methods.deliveryApp.title",
         descriptionKey: "methods.deliveryApp.description",
-      },
-      {
-        id: "barcode",
-        icon: <ScanBarcode className="h-6 w-6" />,
-        titleKey: "methods.barcode.title",
-        descriptionKey: "methods.barcode.description",
       },
     ],
     []
@@ -166,6 +159,41 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
       },
     ],
     [tGroceries]
+  );
+
+  // Quick filters to remove non-edible items from the list
+  const quickFilters: QuickFilter[] = useMemo(
+    () => [
+      {
+        id: "delivery",
+        label: t("review.filters.delivery"),
+        keywords: [
+          "delivery", "shipping", "courier", "service fee", "tip",
+          "доставка", "послуга", "кур'єр", "сервісний збір", "чайові"
+        ],
+      },
+      {
+        id: "packaging",
+        label: t("review.filters.packaging"),
+        keywords: ["packaging", "package", "упаковка", "пакування"],
+      },
+      {
+        id: "bags",
+        label: t("review.filters.bags"),
+        keywords: ["bag", "bags", "пакет", "пакети", "мішок", "сумка"],
+      },
+      {
+        id: "nonFood",
+        label: t("review.filters.nonFood"),
+        keywords: [
+          "toilet paper", "paper towel", "napkin", "detergent", "soap", "shampoo",
+          "toothpaste", "toothbrush", "cleaning", "sponge", "tissue",
+          "туалетний папір", "серветки", "миючий", "мило", "шампунь",
+          "зубна паста", "щітка", "губка", "засіб для"
+        ],
+      },
+    ],
+    [t]
   );
 
   // Generate a unique ID
@@ -305,46 +333,6 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
     [parseReceiptUrl, convertToParseItem]
   );
 
-  // Handle barcode lookup
-  const handleLookupBarcode = useCallback(
-    async (barcode: string): Promise<BarcodeProductInfo | null> => {
-      const response = await lookupBarcode(barcode).unwrap();
-
-      if (!response.success || !response.product_name) {
-        return null;
-      }
-
-      return {
-        barcode: response.barcode,
-        name: response.product_name,
-        brand: response.brand,
-        category: response.category,
-        quantity: response.quantity,
-        unit: response.unit,
-      };
-    },
-    [lookupBarcode]
-  );
-
-  // Create grocery item from barcode product info
-  const handleCreateItemFromBarcode = useCallback(
-    (product: BarcodeProductInfo): ParsedGroceryItem => {
-      const today = new Date().toISOString().split("T")[0];
-      return {
-        id: crypto.randomUUID(),
-        item_name: product.brand ? `${product.brand} ${product.name}` : product.name,
-        quantity: product.quantity || 1,
-        unit: product.unit || "pcs",
-        category: product.category || null,
-        purchase_date: today,
-        expiry_date: null,
-        cost: null,
-        store: null,
-      };
-    },
-    []
-  );
-
   // Handle saving items to the database
   const handleSave = useCallback(
     async (items: ParsedGroceryItem[]) => {
@@ -384,8 +372,6 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
             onParseImage={handleParseImage}
             onParseMultipleImages={handleParseMultipleImages}
             onParseReceiptUrl={handleParseReceiptUrl}
-            onLookupBarcode={handleLookupBarcode}
-            onCreateItemFromBarcode={handleCreateItemFromBarcode}
             exampleText={exampleText}
           />
         </ImportStepContent>
@@ -396,6 +382,7 @@ export function GroceryImport({ onComplete, onViewItems }: GroceryImportProps) {
             columns={columns}
             onSave={handleSave}
             itemNameKey="item_name"
+            quickFilters={quickFilters}
           />
         </ImportStepContent>
 
@@ -415,8 +402,6 @@ function ImportInputContent({
   onParseImage,
   onParseMultipleImages,
   onParseReceiptUrl,
-  onLookupBarcode,
-  onCreateItemFromBarcode,
   exampleText,
 }: {
   onParseText: (text: string) => Promise<ParsedGroceryItem[]>;
@@ -424,8 +409,6 @@ function ImportInputContent({
   onParseImage: (file: File, type: PhotoImportType) => Promise<ParsedGroceryItem[]>;
   onParseMultipleImages: (files: File[], type: PhotoImportType) => Promise<ParsedGroceryItem[]>;
   onParseReceiptUrl: (url: string) => Promise<ParsedGroceryItem[]>;
-  onLookupBarcode: (barcode: string) => Promise<BarcodeProductInfo | null>;
-  onCreateItemFromBarcode: (product: BarcodeProductInfo) => ParsedGroceryItem;
   exampleText: string;
 }) {
   const { selectedMethod } = useImportWizard<ParsedGroceryItem>();
@@ -480,14 +463,6 @@ function ImportInputContent({
           importType="delivery_app"
           onParseImage={onParseImage}
           onParseMultipleImages={onParseMultipleImages}
-        />
-      );
-
-    case "barcode":
-      return (
-        <BarcodeImport<ParsedGroceryItem>
-          onLookupBarcode={onLookupBarcode}
-          onCreateItem={onCreateItemFromBarcode}
         />
       );
 

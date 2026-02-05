@@ -66,25 +66,28 @@ export function PantryImport({ onComplete, onViewItems }: PantryImportProps) {
   const [parsePantryImage] = useParsePantryImageMutation();
 
   // Define available import methods for pantry
+  // Primary methods (photo and text) are displayed more prominently
   const importMethods: ImportMethod[] = useMemo(
     () => [
+      {
+        id: "photo_pantry",
+        icon: <Camera className="h-6 w-6" />,
+        titleKey: "methods.photoPantry.title",
+        descriptionKey: "methods.photoPantry.description",
+        primary: true,
+      },
       {
         id: "text",
         icon: <FileText className="h-6 w-6" />,
         titleKey: "methods.text.title",
         descriptionKey: "methods.text.description",
+        primary: true,
       },
       {
         id: "voice",
         icon: <Mic className="h-6 w-6" />,
         titleKey: "methods.voice.title",
         descriptionKey: "methods.voice.description",
-      },
-      {
-        id: "photo_pantry",
-        icon: <Camera className="h-6 w-6" />,
-        titleKey: "methods.photoPantry.title",
-        descriptionKey: "methods.photoPantry.description",
       },
       {
         id: "photo_paper_list",

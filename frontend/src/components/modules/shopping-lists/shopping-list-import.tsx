@@ -76,13 +76,22 @@ export function ShoppingListImport({
   const [parseImage] = useParseShoppingListImageMutation();
 
   // Define available import methods for shopping lists
+  // Primary methods (screenshot and text) are displayed more prominently
   const importMethods: ImportMethod[] = useMemo(
     () => [
+      {
+        id: "photo_screenshot",
+        icon: <StickyNote className="h-6 w-6" />,
+        titleKey: "methods.screenshot.title",
+        descriptionKey: "methods.screenshot.description",
+        primary: true,
+      },
       {
         id: "text",
         icon: <FileText className="h-6 w-6" />,
         titleKey: "methods.text.title",
         descriptionKey: "methods.text.description",
+        primary: true,
       },
       {
         id: "voice",
@@ -95,12 +104,6 @@ export function ShoppingListImport({
         icon: <Camera className="h-6 w-6" />,
         titleKey: "methods.paperList.title",
         descriptionKey: "methods.paperList.description",
-      },
-      {
-        id: "photo_screenshot",
-        icon: <StickyNote className="h-6 w-6" />,
-        titleKey: "methods.screenshot.title",
-        descriptionKey: "methods.screenshot.description",
       },
     ],
     []

@@ -127,6 +127,7 @@ export function GroceryTable({
   const [itemsToMoveToPantry, setItemsToMoveToPantry] = useState<{
     id: string;
     name: string;
+    category: string | null;
   }[]>([]);
 
   const items = data?.items || [];
@@ -259,6 +260,7 @@ export function GroceryTable({
   const groceryToMoveItem = (grocery: Grocery) => ({
     id: grocery.id,
     name: grocery.item_name,
+    category: grocery.category,
   });
 
   // Define bulk actions

@@ -55,6 +55,9 @@ export interface UpcomingMeal {
   recipe_name?: string;
   custom_meal_name?: string;
   is_leftover: boolean;
+  profile_id?: string;
+  profile_name?: string;
+  profile_color?: string;
 }
 
 export interface ExpiringItem {

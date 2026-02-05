@@ -383,7 +383,6 @@ export function RecipesContent() {
               onPageChange={handlePageChange}
               onEdit={handleEditClick}
               onView={handleViewClick}
-              onCook={handleCookClick}
               onAddToShoppingList={handleAddToShoppingList}
               onAddToCollection={handleAddToCollection}
             />
@@ -457,7 +456,6 @@ export function RecipesContent() {
                   onPageChange={() => {}}
                   onEdit={handleEditClick}
                   onView={handleViewClick}
-                  onCook={handleCookClick}
                   onAddToShoppingList={handleAddToShoppingList}
                   onAddToCollection={handleAddToCollection}
                 />
