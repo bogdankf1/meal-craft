@@ -6,7 +6,7 @@ from typing import Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
-from sqlalchemy import select, func, desc, asc, or_, and_
+from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -53,6 +53,10 @@ from app.schemas.meal_plan import (
     IngredientDeductionSummary,
     MealAvailabilityResponse,
     MealIngredientAvailability,
+    SimpleMealCreate,
+    SimpleMealUpdate,
+    SimpleMealResponse,
+    WeekMealsResponse,
 )
 from app.models.profile import Profile
 from app.models.recipe import CookingHistory
@@ -114,8 +118,25 @@ async def get_meal_plans(
     query = select(MealPlan).where(MealPlan.user_id == current_user.id)
 
     # Filter by profile (None = all members/shared)
+    # When a specific profile is selected, show plans for that profile
+    # Legacy plans (profile_id = null) are shown only for the user's first profile
     if profile_id:
-        query = query.where(MealPlan.profile_id == profile_id)
+        # Check if this is the user's first (primary) profile
+        first_profile_query = select(Profile.id).where(
+            Profile.user_id == current_user.id,
+            Profile.is_archived == False
+        ).order_by(Profile.created_at).limit(1)
+        first_profile_result = await db.execute(first_profile_query)
+        first_profile_id = first_profile_result.scalar_one_or_none()
+
+        if first_profile_id and profile_id == first_profile_id:
+            # Primary profile: include legacy plans (profile_id = null)
+            query = query.where(
+                or_(MealPlan.profile_id == profile_id, MealPlan.profile_id.is_(None))
+            )
+        else:
+            # Non-primary profile: only show plans explicitly for this profile
+            query = query.where(MealPlan.profile_id == profile_id)
 
     # Apply filters
     if search:
@@ -200,14 +221,33 @@ async def get_current_week_plan(
     ]
 
     # Filter by profile if specified
+    # Legacy plans (profile_id = null) are shown only for the user's first profile
     if profile_id:
-        conditions.append(MealPlan.profile_id == profile_id)
+        # Check if this is the user's first (primary) profile
+        first_profile_query = select(Profile.id).where(
+            Profile.user_id == current_user.id,
+            Profile.is_archived == False
+        ).order_by(Profile.created_at).limit(1)
+        first_profile_result = await db.execute(first_profile_query)
+        first_profile_id = first_profile_result.scalar_one_or_none()
+
+        if first_profile_id and profile_id == first_profile_id:
+            # Primary profile: include legacy plans (profile_id = null)
+            conditions.append(
+                or_(MealPlan.profile_id == profile_id, MealPlan.profile_id.is_(None))
+            )
+        else:
+            # Non-primary profile: only show plans explicitly for this profile
+            conditions.append(MealPlan.profile_id == profile_id)
 
     query = (
         select(MealPlan)
         .where(*conditions)
         .options(selectinload(MealPlan.meals).selectinload(Meal.recipe))
-        .order_by(desc(MealPlan.created_at))
+        .order_by(
+            MealPlan.profile_id.is_(None),  # Non-NULL profile_id first
+            desc(MealPlan.created_at)
+        )
         .limit(1)
     )
 
@@ -334,6 +374,326 @@ async def get_combined_week_plans(
         profiles=profile_infos,
         plan_count=len(plans),
     )
+
+
+# ============ Calendar-Centric Endpoints (Simple Meal CRUD) ============
+
+@router.get("/week", response_model=WeekMealsResponse)
+async def get_week_meals(
+    target_date: Optional[date] = Query(None, description="Any date within the target week (defaults to today)"),
+    profile_id: Optional[UUID] = Query(None, description="Filter by profile. None = all members (shared + all profiles)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all meals for a week, regardless of which plan they belong to.
+
+    - If profile_id is None: Returns shared meals (profile_id=null) + all profile meals
+    - If profile_id is set: Returns shared meals + meals for that specific profile
+    """
+    reference_date = target_date if target_date else date.today()
+    monday, sunday = get_week_bounds(reference_date)
+
+    # Get all meal plans for the week
+    query = (
+        select(MealPlan)
+        .where(
+            MealPlan.user_id == current_user.id,
+            MealPlan.date_start <= sunday,
+            MealPlan.date_end >= monday,
+            MealPlan.is_archived == False,
+            MealPlan.is_template == False,
+        )
+        .options(
+            selectinload(MealPlan.meals).selectinload(Meal.recipe),
+            selectinload(MealPlan.profile),
+        )
+    )
+    result = await db.execute(query)
+    plans = result.scalars().all()
+
+    # Get all profiles for reference
+    profiles_query = select(Profile).where(
+        Profile.user_id == current_user.id,
+        Profile.is_archived == False
+    )
+    profiles_result = await db.execute(profiles_query)
+    profiles = profiles_result.scalars().all()
+    profiles_map = {p.id: p for p in profiles}
+
+    # Collect meals based on profile_id filter
+    all_meals: List[MealWithProfile] = []
+    seen_profile_ids = set()
+
+    for plan in plans:
+        # If profile_id filter is set, only include meals from:
+        # - Plans with matching profile_id
+        # - Plans with profile_id = null (shared meals)
+        if profile_id is not None:
+            if plan.profile_id is not None and plan.profile_id != profile_id:
+                continue
+
+        profile = profiles_map.get(plan.profile_id) if plan.profile_id else None
+        if plan.profile_id:
+            seen_profile_ids.add(plan.profile_id)
+
+        for meal in plan.meals:
+            # Only include meals within the week bounds
+            if monday <= meal.date <= sunday:
+                meal_response = MealWithProfile(
+                    id=meal.id,
+                    meal_plan_id=meal.meal_plan_id,
+                    date=meal.date,
+                    meal_type=meal.meal_type,
+                    recipe_id=meal.recipe_id,
+                    custom_name=meal.custom_name,
+                    servings=meal.servings,
+                    notes=meal.notes,
+                    is_leftover=meal.is_leftover,
+                    leftover_from_meal_id=meal.leftover_from_meal_id,
+                    created_at=meal.created_at,
+                    recipe_name=meal.recipe.name if meal.recipe else None,
+                    recipe_image_url=meal.recipe.image_url if meal.recipe else None,
+                    recipe_prep_time=meal.recipe.prep_time if meal.recipe else None,
+                    recipe_cook_time=meal.recipe.cook_time if meal.recipe else None,
+                    profile_id=plan.profile_id,
+                    profile_name=profile.name if profile else None,
+                    profile_color=profile.color if profile else None,
+                )
+                all_meals.append(meal_response)
+
+    # Sort meals by date and meal type
+    all_meals.sort(key=lambda m: (m.date, m.meal_type))
+
+    # Build profile info list
+    profile_infos = [
+        ProfileInfo(id=p.id, name=p.name, color=p.color)
+        for p in profiles
+        if p.id in seen_profile_ids
+    ]
+
+    return WeekMealsResponse(
+        date_start=monday,
+        date_end=sunday,
+        meals=all_meals,
+        profiles=profile_infos,
+    )
+
+
+@router.post("/meals", response_model=SimpleMealResponse)
+async def create_meal_simple(
+    data: SimpleMealCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create a meal for a specific date.
+
+    Auto-creates a MealPlan for the week if one doesn't exist.
+    - If profile_id is None: Creates shared meal (in a shared plan)
+    - If profile_id is set: Creates meal for that profile (in profile's plan)
+    """
+    # Calculate week bounds from the meal date
+    monday, sunday = get_week_bounds(data.date)
+
+    # Verify profile if provided
+    profile = None
+    if data.profile_id:
+        profile_query = select(Profile).where(
+            Profile.id == data.profile_id,
+            Profile.user_id == current_user.id,
+            Profile.is_archived == False,
+        )
+        profile_result = await db.execute(profile_query)
+        profile = profile_result.scalar_one_or_none()
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Find existing MealPlan for user + profile_id + week
+    plan_query = select(MealPlan).where(
+        MealPlan.user_id == current_user.id,
+        MealPlan.date_start == monday,
+        MealPlan.date_end == sunday,
+        MealPlan.is_archived == False,
+        MealPlan.is_template == False,
+    )
+
+    # Match profile_id (including null for shared plans)
+    if data.profile_id:
+        plan_query = plan_query.where(MealPlan.profile_id == data.profile_id)
+    else:
+        plan_query = plan_query.where(MealPlan.profile_id.is_(None))
+
+    plan_result = await db.execute(plan_query)
+    plan = plan_result.scalar_one_or_none()
+
+    # If no plan exists, create one
+    if not plan:
+        plan_name = f"Week of {monday.strftime('%b %d')}"
+        if profile:
+            plan_name = f"{profile.name} - {plan_name}"
+
+        plan = MealPlan(
+            user_id=current_user.id,
+            profile_id=data.profile_id,
+            name=plan_name,
+            date_start=monday,
+            date_end=sunday,
+            servings=data.servings or 2,
+        )
+        db.add(plan)
+        await db.flush()
+
+    # Verify recipe if provided
+    recipe = None
+    if data.recipe_id:
+        recipe_query = select(Recipe).where(
+            Recipe.id == data.recipe_id,
+            Recipe.user_id == current_user.id
+        )
+        recipe_result = await db.execute(recipe_query)
+        recipe = recipe_result.scalar_one_or_none()
+        if not recipe:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+
+    # Create the meal
+    meal = Meal(
+        meal_plan_id=plan.id,
+        date=data.date,
+        meal_type=data.meal_type.value,
+        recipe_id=data.recipe_id,
+        custom_name=data.custom_name,
+        servings=data.servings or plan.servings,
+        notes=data.notes,
+        is_leftover=data.is_leftover,
+    )
+    db.add(meal)
+    await db.commit()
+    await db.refresh(meal)
+
+    return SimpleMealResponse(
+        id=meal.id,
+        meal_plan_id=meal.meal_plan_id,
+        date=meal.date,
+        meal_type=meal.meal_type,
+        recipe_id=meal.recipe_id,
+        custom_name=meal.custom_name,
+        servings=meal.servings,
+        notes=meal.notes,
+        is_leftover=meal.is_leftover,
+        leftover_from_meal_id=meal.leftover_from_meal_id,
+        created_at=meal.created_at,
+        recipe_name=recipe.name if recipe else None,
+        recipe_image_url=recipe.image_url if recipe else None,
+        recipe_prep_time=recipe.prep_time if recipe else None,
+        recipe_cook_time=recipe.cook_time if recipe else None,
+        profile_id=data.profile_id,
+        profile_name=profile.name if profile else None,
+        profile_color=profile.color if profile else None,
+    )
+
+
+@router.put("/meals/{meal_id}", response_model=SimpleMealResponse)
+async def update_meal_simple(
+    meal_id: UUID,
+    data: SimpleMealUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update a meal directly by its ID (without needing plan ID)."""
+    # Find meal and verify ownership
+    query = (
+        select(Meal)
+        .join(MealPlan)
+        .where(
+            Meal.id == meal_id,
+            MealPlan.user_id == current_user.id
+        )
+        .options(selectinload(Meal.meal_plan).selectinload(MealPlan.profile))
+    )
+    result = await db.execute(query)
+    meal = result.scalar_one_or_none()
+
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+
+    # Get recipe if updating
+    recipe = None
+    update_data = data.model_dump(exclude_unset=True, by_alias=True)
+
+    if "recipe_id" in update_data and update_data["recipe_id"]:
+        recipe_query = select(Recipe).where(
+            Recipe.id == update_data["recipe_id"],
+            Recipe.user_id == current_user.id
+        )
+        recipe_result = await db.execute(recipe_query)
+        recipe = recipe_result.scalar_one_or_none()
+        if not recipe:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+
+    for field, value in update_data.items():
+        if field == "meal_type" and value:
+            value = value.value if hasattr(value, "value") else value
+        setattr(meal, field, value)
+
+    await db.commit()
+    await db.refresh(meal)
+
+    # Load recipe if not already loaded
+    if meal.recipe_id and not recipe:
+        recipe_query = select(Recipe).where(Recipe.id == meal.recipe_id)
+        recipe_result = await db.execute(recipe_query)
+        recipe = recipe_result.scalar_one_or_none()
+
+    plan = meal.meal_plan
+    profile = plan.profile if plan else None
+
+    return SimpleMealResponse(
+        id=meal.id,
+        meal_plan_id=meal.meal_plan_id,
+        date=meal.date,
+        meal_type=meal.meal_type,
+        recipe_id=meal.recipe_id,
+        custom_name=meal.custom_name,
+        servings=meal.servings,
+        notes=meal.notes,
+        is_leftover=meal.is_leftover,
+        leftover_from_meal_id=meal.leftover_from_meal_id,
+        created_at=meal.created_at,
+        recipe_name=recipe.name if recipe else None,
+        recipe_image_url=recipe.image_url if recipe else None,
+        recipe_prep_time=recipe.prep_time if recipe else None,
+        recipe_cook_time=recipe.cook_time if recipe else None,
+        profile_id=plan.profile_id if plan else None,
+        profile_name=profile.name if profile else None,
+        profile_color=profile.color if profile else None,
+    )
+
+
+@router.delete("/meals/{meal_id}")
+async def delete_meal_simple(
+    meal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a meal directly by its ID (without needing plan ID)."""
+    # Find meal and verify ownership
+    query = (
+        select(Meal)
+        .join(MealPlan)
+        .where(
+            Meal.id == meal_id,
+            MealPlan.user_id == current_user.id
+        )
+    )
+    result = await db.execute(query)
+    meal = result.scalar_one_or_none()
+
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+
+    await db.delete(meal)
+    await db.commit()
+
+    return {"success": True, "message": "Meal deleted"}
 
 
 # ============ Analytics (must be before /{plan_id} route) ============

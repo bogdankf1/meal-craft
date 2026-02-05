@@ -65,6 +65,9 @@ class UpcomingMeal(BaseModel):
     recipe_name: Optional[str] = None
     custom_meal_name: Optional[str] = None
     is_leftover: bool = False
+    profile_id: Optional[UUID] = None
+    profile_name: Optional[str] = None
+    profile_color: Optional[str] = None
 
 
 # ==================== Expiring Items ====================

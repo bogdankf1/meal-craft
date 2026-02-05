@@ -1,7 +1,7 @@
 """Meal Plan Schemas"""
 
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, Union
 from uuid import UUID
 from enum import Enum
 
@@ -428,3 +428,51 @@ class MealAvailabilityResponse(BaseModel):
     available_count: int = 0
     missing_count: int = 0
     ingredients: List[MealIngredientAvailability] = []
+
+
+# ============ Simple Meal Creation (Calendar-Centric) ============
+
+class SimpleMealCreate(BaseModel):
+    """Schema for creating a meal without specifying a plan ID.
+
+    The plan will be auto-created if it doesn't exist for the week.
+    """
+    date: date
+    meal_type: MealType
+    profile_id: Optional[UUID] = None  # None = shared meal
+    recipe_id: Optional[UUID] = None
+    custom_name: Optional[str] = Field(None, max_length=255)
+    servings: Optional[int] = Field(None, ge=1)
+    notes: Optional[str] = None
+    is_leftover: bool = False
+
+
+class SimpleMealUpdate(BaseModel):
+    """Schema for updating a meal via the simple endpoint.
+
+    All fields are optional for partial updates.
+    """
+    meal_date: Union[date, None] = Field(default=None, alias="date")
+    meal_type: Union[MealType, None] = None
+    recipe_id: Union[UUID, None] = None
+    custom_name: Union[str, None] = Field(default=None, max_length=255)
+    servings: Union[int, None] = Field(default=None, ge=1)
+    notes: Union[str, None] = None
+    is_leftover: Union[bool, None] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class SimpleMealResponse(MealResponse):
+    """Meal response with profile information for simple endpoints."""
+    profile_id: Optional[UUID] = None
+    profile_name: Optional[str] = None
+    profile_color: Optional[str] = None
+
+
+class WeekMealsResponse(BaseModel):
+    """Response for get week meals endpoint."""
+    date_start: date  # Monday
+    date_end: date    # Sunday
+    meals: List[MealWithProfile] = []
+    profiles: List[ProfileInfo] = []  # All profiles that have meals this week

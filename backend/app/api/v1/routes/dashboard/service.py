@@ -338,7 +338,10 @@ async def get_upcoming_meals(db: AsyncSession, user_id: UUID, days: int = 7) -> 
     query = (
         select(Meal)
         .join(MealPlan)
-        .options(selectinload(Meal.recipe))
+        .options(
+            selectinload(Meal.recipe),
+            selectinload(Meal.meal_plan).selectinload(MealPlan.profile)
+        )
         .where(
             and_(
                 MealPlan.user_id == user_id,
@@ -361,7 +364,10 @@ async def get_upcoming_meals(db: AsyncSession, user_id: UUID, days: int = 7) -> 
             recipe_id=meal.recipe_id,
             recipe_name=meal.recipe.name if meal.recipe else None,
             custom_meal_name=meal.custom_name,
-            is_leftover=meal.is_leftover or False
+            is_leftover=meal.is_leftover or False,
+            profile_id=meal.meal_plan.profile_id if meal.meal_plan else None,
+            profile_name=meal.meal_plan.profile.name if meal.meal_plan and meal.meal_plan.profile else None,
+            profile_color=meal.meal_plan.profile.color if meal.meal_plan and meal.meal_plan.profile else None
         )
         for meal in meals
     ]
