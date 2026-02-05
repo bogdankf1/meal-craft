@@ -40,9 +40,7 @@ function getStorageIcon(location: StorageLocation) {
     pantry: Home,
     fridge: Refrigerator,
     freezer: ThermometerSnowflake,
-    cabinet: Package,
     spice_rack: Package,
-    other: Package,
   };
   const Icon = icons[location] || Package;
   return <Icon className="h-3 w-3" />;
