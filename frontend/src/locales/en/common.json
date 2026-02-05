@@ -121,7 +121,8 @@
       "protein": "Protein",
       "carbs": "Carbs",
       "fat": "Fat"
-    }
+    },
+    "more": "more"
   },
   "common": {
     "all": "All",

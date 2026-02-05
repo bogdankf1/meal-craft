@@ -62,9 +62,9 @@ export default function DashboardLayout({
       />
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile/Tablet Header */}
-        <header className="xl:hidden bg-background border-b px-3 py-2 flex items-center justify-between sticky top-0 z-30">
+      <div className="flex-1 overflow-y-auto bg-muted/30">
+        {/* Mobile/Tablet Header - scrolls with content */}
+        <header className="xl:hidden bg-background border-b px-3 py-2 flex items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -103,7 +103,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-muted/30">
+        <main>
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

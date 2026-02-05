@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Calendar,
@@ -310,45 +309,48 @@ export default function DashboardPage() {
                 <p>{t("expiring.empty")}</p>
               </div>
             ) : (
-              <ScrollArea className="h-[280px]">
-                <div className="space-y-3">
-                  {data.expiring_items.map((item) => (
-                    <div
-                      key={`${item.source}-${item.id}`}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-1.5 rounded ${
-                            item.days_until_expiry <= 2
-                              ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
-                              : "bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-400"
-                          }`}
-                        >
-                          <Clock className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.quantity && `${item.quantity} ${item.unit || ""} • `}
-                            {item.location || item.source}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant={item.days_until_expiry <= 2 ? "destructive" : "secondary"}
-                        className="text-xs"
+              <div className="space-y-3">
+                {data.expiring_items.slice(0, 6).map((item) => (
+                  <div
+                    key={`${item.source}-${item.id}`}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`p-1.5 rounded ${
+                          item.days_until_expiry <= 2
+                            ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+                            : "bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-400"
+                        }`}
                       >
-                        {item.days_until_expiry === 0
-                          ? t("expiring.today")
-                          : item.days_until_expiry === 1
-                          ? t("expiring.tomorrow")
-                          : `${item.days_until_expiry} ${t("expiring.days")}`}
-                      </Badge>
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.quantity && `${item.quantity} ${item.unit || ""} • `}
+                          {item.location || item.source}
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                    <Badge
+                      variant={item.days_until_expiry <= 2 ? "destructive" : "secondary"}
+                      className="text-xs"
+                    >
+                      {item.days_until_expiry === 0
+                        ? t("expiring.today")
+                        : item.days_until_expiry === 1
+                        ? t("expiring.tomorrow")
+                        : `${item.days_until_expiry} ${t("expiring.days")}`}
+                    </Badge>
+                  </div>
+                ))}
+                {data.expiring_items.length > 6 && (
+                  <p className="text-xs text-muted-foreground text-center pt-2">
+                    +{data.expiring_items.length - 6} {t("more")}
+                  </p>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -370,29 +372,32 @@ export default function DashboardPage() {
                 <p>{t("activity.empty")}</p>
               </div>
             ) : (
-              <ScrollArea className="h-[280px]">
-                <div className="space-y-3">
-                  {data.recent_activity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50"
-                    >
-                      <div className="p-1.5 rounded bg-muted">
-                        {activityIcons[activity.icon] || <Clock className="h-4 w-4" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{activity.title}</p>
-                        {activity.description && (
-                          <p className="text-xs text-muted-foreground">{activity.description}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
-                        </p>
-                      </div>
+              <div className="space-y-3">
+                {data.recent_activity.slice(0, 6).map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50"
+                  >
+                    <div className="p-1.5 rounded bg-muted">
+                      {activityIcons[activity.icon] || <Clock className="h-4 w-4" />}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{activity.title}</p>
+                      {activity.description && (
+                        <p className="text-xs text-muted-foreground">{activity.description}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {data.recent_activity.length > 6 && (
+                  <p className="text-xs text-muted-foreground text-center pt-2">
+                    +{data.recent_activity.length - 6} {t("more")}
+                  </p>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
