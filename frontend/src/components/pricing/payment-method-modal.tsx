@@ -92,7 +92,7 @@ export function PaymentMethodModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl">{t("title")}</DialogTitle>
           <DialogDescription className="text-base pt-1">
@@ -100,7 +100,7 @@ export function PaymentMethodModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="py-4 overflow-y-auto flex-1 min-h-0">
           <Label className="text-base font-semibold mb-4 block">
             {t("selectMethod")}
           </Label>
@@ -166,7 +166,7 @@ export function PaymentMethodModal({
           </RadioGroup>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-col sm:flex-row gap-2 flex-shrink-0">
           <Button
             type="button"
             variant="outline"
