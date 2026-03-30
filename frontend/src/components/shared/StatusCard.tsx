@@ -19,27 +19,27 @@ const variantStyles: Record<StatusVariant, {
   text: string;
 }> = {
   danger: {
-    container: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900",
+    container: "bg-red-50 dark:bg-red-950/20",
     iconWrapper: "bg-red-100 dark:bg-red-900",
     text: "text-red-600 dark:text-red-400",
   },
   warning: {
-    container: "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900",
-    iconWrapper: "bg-orange-100 dark:bg-orange-900",
+    container: "bg-[var(--terra-ghost)] dark:bg-orange-950/20",
+    iconWrapper: "bg-[var(--terra-wash)] dark:bg-orange-900",
     text: "text-orange-600 dark:text-orange-400",
   },
   success: {
-    container: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900",
-    iconWrapper: "bg-green-100 dark:bg-green-900",
+    container: "bg-[var(--green-ghost)] dark:bg-green-950/20",
+    iconWrapper: "bg-[var(--green-wash)] dark:bg-green-900",
     text: "text-green-600 dark:text-green-400",
   },
   info: {
-    container: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900",
+    container: "bg-blue-50 dark:bg-blue-950/20",
     iconWrapper: "bg-blue-100 dark:bg-blue-900",
     text: "text-blue-600 dark:text-blue-400",
   },
   muted: {
-    container: "bg-muted/50 border-border",
+    container: "bg-muted/50",
     iconWrapper: "bg-muted",
     text: "text-muted-foreground",
   },
@@ -57,17 +57,17 @@ export function StatusCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg border",
+        "flex items-center gap-3 p-3 rounded-[1.375rem] shadow-[0_2px_12px_rgba(0,0,0,0.04)]",
         styles.container,
         className
       )}
     >
-      <div className={cn("p-2 rounded-full", styles.iconWrapper)}>
+      <div className={cn("h-9 w-9 flex items-center justify-center rounded-xl", styles.iconWrapper)}>
         <div className={styles.text}>{icon}</div>
       </div>
       <div>
-        <p className={cn("text-2xl font-bold", styles.text)}>{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className={cn("text-lg font-medium", styles.text)}>{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
   );
@@ -92,7 +92,7 @@ export function StatusCardGrid({
   };
 
   return (
-    <div className={cn("grid gap-4", colsClass[columns], className)}>
+    <div className={cn("grid gap-3", colsClass[columns], className)}>
       {children}
     </div>
   );

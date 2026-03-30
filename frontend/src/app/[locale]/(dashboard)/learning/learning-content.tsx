@@ -269,13 +269,13 @@ export function LearningContent() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ModuleTabs tabs={tabs} defaultTab="overview">
         {/* Overview Tab - My Skills */}
         <TabsContent value="overview">
           {/* Stats Cards */}
           {uiVisibility.showStatsCards && (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
               <StatsCard
                 title={t("stats.totalSkills")}
                 value={analytics?.total_skills || 0}
@@ -304,17 +304,17 @@ export function LearningContent() {
 
           {/* Streak Card */}
           {analytics?.learning_streak && analytics.learning_streak.current_streak_days > 0 && (
-            <Card className="mb-6 border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/20">
-              <CardContent className="py-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900">
-                    <Flame className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            <Card className="mb-4 border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] bg-[var(--terra-ghost)]">
+              <CardContent className="py-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-full bg-[var(--terra-ghost)]">
+                    <Flame className="h-5 w-5 text-accent" />
                   </div>
                   <div>
-                    <p className="font-semibold text-orange-900 dark:text-orange-100">
+                    <p className="font-medium text-[13px]">
                       {t("streak.current", { days: analytics.learning_streak.current_streak_days })}
                     </p>
-                    <p className="text-sm text-orange-700 dark:text-orange-300">
+                    <p className="text-[13px] text-muted-foreground">
                       {t("streak.longest", { days: analytics.learning_streak.longest_streak_days })}
                     </p>
                   </div>
@@ -325,7 +325,7 @@ export function LearningContent() {
 
           {/* Cross-module Insights */}
           {uiVisibility.showInsights && userSkillsData?.items && userSkillsData.items.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <LearningInsights
                 userSkills={userSkillsData.items}
                 onNavigateToEquipment={() => router.push("/kitchen-equipment")}
@@ -348,7 +348,7 @@ export function LearningContent() {
           )}
 
           {/* Filters Row */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-6">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-4">
             <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -404,7 +404,7 @@ export function LearningContent() {
             </div>
           ) : (
             <EmptyState
-              icon={<BookOpen className="h-12 w-12" />}
+              icon={<BookOpen className="h-8 w-8" />}
               title={t("empty.mySkills.title")}
               description={t("empty.mySkills.description")}
             />
@@ -414,7 +414,7 @@ export function LearningContent() {
         {/* Library Tab */}
         <TabsContent value="library">
           {/* Filters Row */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-6">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-4">
             <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -468,7 +468,7 @@ export function LearningContent() {
             </div>
           ) : (
             <EmptyState
-              icon={<Library className="h-12 w-12" />}
+              icon={<Library className="h-8 w-8" />}
               title={t("empty.library.title")}
               description={t("empty.library.description")}
             />
@@ -479,12 +479,12 @@ export function LearningContent() {
         <TabsContent value="learning">
           {/* User's Active Paths */}
           {userPaths && userPaths.items.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Target className="h-5 w-5" />
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Target className="h-4 w-4" />
                 {t("paths.activePaths")}
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {userPaths.items.map((userPath) => {
                   // Calculate real completion based on mastered skills
                   const pathSkills = userPath.learning_path?.skills || [];
@@ -497,7 +497,7 @@ export function LearningContent() {
                     : 0;
 
                   return (
-                    <Card key={userPath.id} className="border-primary/20">
+                    <Card key={userPath.id} className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <div>
@@ -516,10 +516,10 @@ export function LearningContent() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           {/* Progress bar */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between text-[13px]">
                               <span>{t("paths.progress")}</span>
                               <span>{realProgress}%</span>
                             </div>
@@ -533,7 +533,7 @@ export function LearningContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full"
+                            className="w-full rounded-xl"
                             onClick={() => handleAddAllPathSkills(userPath.learning_path_id)}
                           >
                             <Plus className="h-4 w-4 mr-2" />
@@ -556,14 +556,14 @@ export function LearningContent() {
                                     <div
                                       key={skill.id}
                                       className={cn(
-                                        "flex items-center gap-2 p-2 rounded-md text-sm",
-                                        isCompleted && "bg-green-500/10",
+                                        "flex items-center gap-2 p-2 rounded-xl text-[13px]",
+                                        isCompleted && "bg-[var(--green-ghost)]",
                                         isCurrent && !isCompleted && "bg-primary/10 border border-primary/20",
                                         !isCompleted && !isCurrent && "text-muted-foreground"
                                       )}
                                     >
                                       {isCompleted ? (
-                                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                                       ) : isCurrent ? (
                                         <Target className="h-4 w-4 text-primary shrink-0" />
                                       ) : (
@@ -594,8 +594,8 @@ export function LearningContent() {
 
           {/* Available Paths */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
+            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
               {t("paths.availablePaths")}
             </h3>
             {learningPaths && learningPaths.items.length > 0 ? (
@@ -613,7 +613,7 @@ export function LearningContent() {
               </div>
             ) : (
               <EmptyState
-                icon={<GraduationCap className="h-12 w-12" />}
+                icon={<GraduationCap className="h-8 w-8" />}
                 title={t("empty.paths.title")}
                 description={t("empty.paths.description")}
               />
@@ -623,10 +623,10 @@ export function LearningContent() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Period selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {t("analytics.period")}:
               </span>
               <Select
@@ -646,7 +646,7 @@ export function LearningContent() {
 
             {/* Stats Summary */}
             {uiVisibility.showStatsCards && (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
                   title={t("analytics.skillsAdded")}
                   value={historyData?.total_skills_added || 0}
@@ -675,7 +675,7 @@ export function LearningContent() {
             )}
 
             {analytics && analytics.total_skills > 0 && (
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {/* By Category */}
                 <AnalyticsCard title={t("analytics.byCategory")}>
                   <DistributionList
@@ -712,8 +712,8 @@ export function LearningContent() {
                       className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                     >
                       <div>
-                        <p className="font-medium">{practice.skill_name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-[13px]">{practice.skill_name}</p>
+                        <p className="text-[11px] text-muted-foreground">
                           {new Date(practice.practiced_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -725,7 +725,7 @@ export function LearningContent() {
                         )}
                         {practice.rating && (
                           <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <Star className="h-4 w-4 fill-accent text-accent" />
                             <span className="text-sm">{practice.rating}</span>
                           </div>
                         )}
@@ -739,7 +739,7 @@ export function LearningContent() {
             {/* Empty state for analytics */}
             {(!analytics || analytics.total_skills === 0) && (
               <EmptyState
-                icon={<BarChart3 className="h-12 w-12" />}
+                icon={<BarChart3 className="h-8 w-8" />}
                 title={t("analytics.empty.title")}
                 description={t("analytics.empty.description")}
               />
@@ -775,21 +775,21 @@ function SkillCard({
   if (!skill) return null;
 
   const statusColors: Record<string, string> = {
-    want_to_learn: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300",
-    learning: "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300",
-    practicing: "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300",
-    mastered: "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
+    want_to_learn: "bg-muted text-muted-foreground",
+    learning: "bg-primary/10 text-primary",
+    practicing: "bg-[var(--terra-ghost)] text-accent",
+    mastered: "bg-[var(--green-ghost)] text-primary",
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
               {skill.name}
               {userSkill.is_favorite && (
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <Star className="h-4 w-4 fill-accent text-accent" />
               )}
             </CardTitle>
             <div className="flex gap-2 mt-1">
@@ -809,14 +809,14 @@ function SkillCard({
       </CardHeader>
       <CardContent>
         {skill.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          <p className="text-[13px] text-muted-foreground mb-3 line-clamp-2">
             {skill.description}
           </p>
         )}
 
         {/* Progress */}
-        <div className="space-y-2 mb-3">
-          <div className="flex justify-between text-sm">
+        <div className="space-y-1.5 mb-3">
+          <div className="flex justify-between text-[13px]">
             <span>{t("card.progress")}</span>
             <span>{userSkill.progress_percent}%</span>
           </div>
@@ -824,7 +824,7 @@ function SkillCard({
         </div>
 
         {/* Stats */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-3">
           <span>{t("card.practiced", { count: userSkill.times_practiced })}</span>
           <span>{Math.round(userSkill.total_practice_minutes / 60)}h {t("card.total")}</span>
         </div>
@@ -877,10 +877,10 @@ function LibrarySkillCard({
   t,
 }: LibrarySkillCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-base">{skill.name}</CardTitle>
+          <CardTitle className="text-sm">{skill.name}</CardTitle>
           {skill.is_added && (
             <Badge variant="secondary" className="text-xs">
               <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -903,13 +903,13 @@ function LibrarySkillCard({
       </CardHeader>
       <CardContent>
         {skill.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+          <p className="text-[13px] text-muted-foreground mb-3 line-clamp-3">
             {skill.description}
           </p>
         )}
 
         <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
+          <div className="text-[11px] text-muted-foreground">
             {skill.estimated_learning_hours && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
@@ -918,7 +918,7 @@ function LibrarySkillCard({
             )}
           </div>
           {!skill.is_added && (
-            <Button size="sm" onClick={() => onAdd(skill.id)}>
+            <Button size="sm" className="rounded-xl" onClick={() => onAdd(skill.id)}>
               <Plus className="h-4 w-4 mr-1" />
               {t("library.addToMySkills")}
             </Button>
@@ -946,12 +946,12 @@ function LearningPathCard({
   t,
 }: LearningPathCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-base">{path.name}</CardTitle>
+          <CardTitle className="text-sm">{path.name}</CardTitle>
           {path.is_featured && (
-            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <Badge className="bg-gradient-to-r from-primary to-accent text-white">
               {t("paths.featured")}
             </Badge>
           )}
@@ -971,12 +971,12 @@ function LearningPathCard({
       </CardHeader>
       <CardContent>
         {path.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          <p className="text-[13px] text-muted-foreground mb-3 line-clamp-2">
             {path.description}
           </p>
         )}
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-3">
           <span>{path.skill_count} {t("paths.skills")}</span>
           {path.estimated_hours && (
             <span>{t("paths.estimatedHours", { hours: path.estimated_hours })}</span>
@@ -984,15 +984,15 @@ function LearningPathCard({
         </div>
 
         {path.is_started ? (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[13px]">
               <span>{t("paths.progress")}</span>
               <span>{path.user_progress_percent}%</span>
             </div>
             <Progress value={path.user_progress_percent} />
           </div>
         ) : (
-          <Button className="w-full" onClick={() => onStart(path.id)}>
+          <Button className="w-full rounded-xl" onClick={() => onStart(path.id)}>
             {t("paths.startPath")}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>

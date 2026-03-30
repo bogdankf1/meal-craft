@@ -276,7 +276,7 @@ export function SeasonalityInsights({
                   <TrendingUp className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-orange-800 dark:text-orange-200">
+                  <h3 className="font-medium text-orange-800 dark:text-orange-200">
                     {t("pantry.title")}
                   </h3>
                   <p className="text-xs text-orange-600 dark:text-orange-400">
@@ -354,7 +354,7 @@ export function SeasonalityInsights({
                   <ShoppingCart className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-green-800 dark:text-green-200">
+                  <h3 className="font-medium text-green-800 dark:text-green-200">
                     {t("groceries.title")}
                   </h3>
                   <p className="text-xs text-green-600 dark:text-green-400">
@@ -428,7 +428,7 @@ export function SeasonalityInsights({
                   <ChefHat className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">
+                  <h3 className="font-medium text-emerald-800 dark:text-emerald-200">
                     {t("recipes.title")}
                   </h3>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400">

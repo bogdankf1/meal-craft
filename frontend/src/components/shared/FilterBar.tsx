@@ -195,7 +195,7 @@ export function FilterBar<T extends Record<string, any>>({
                   placeholder={def.placeholder}
                   value={(filters[def.key] as string) || ""}
                   onChange={(e) => handleChange(def.key, e.target.value)}
-                  className="pl-9"
+                  className="pl-9 rounded-xl text-[13px]"
                 />
               </div>
             );
@@ -210,10 +210,10 @@ export function FilterBar<T extends Record<string, any>>({
                   handleChange(def.key, value === "all" ? undefined : value)
                 }
               >
-                <SelectTrigger className={`w-full ${def.width || "sm:w-[180px]"}`}>
+                <SelectTrigger className={`w-full rounded-xl text-[13px] ${def.width || "sm:w-[180px]"}`}>
                   <SelectValue placeholder={def.placeholder} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   <SelectItem value="all">{def.allLabel || "All"}</SelectItem>
                   {def.options.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
@@ -232,7 +232,7 @@ export function FilterBar<T extends Record<string, any>>({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={`w-full ${def.width || "sm:w-[200px]"} justify-start text-left font-normal ${
+                    className={`w-full rounded-xl text-[13px] ${def.width || "sm:w-[200px]"} justify-start text-left font-normal ${
                       hasDateRange ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
@@ -246,7 +246,7 @@ export function FilterBar<T extends Record<string, any>>({
                     </span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-4" align="start">
+                <PopoverContent className="w-auto p-4 rounded-xl" align="start">
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor={`date-from-${index}`}>{def.fromLabel || "From"}</Label>
@@ -294,10 +294,10 @@ export function FilterBar<T extends Record<string, any>>({
                   handleSortChange(def.sortByKey, def.sortOrderKey, value)
                 }
               >
-                <SelectTrigger className={`w-full ${def.width || "sm:w-[180px]"}`}>
+                <SelectTrigger className={`w-full rounded-xl text-[13px] ${def.width || "sm:w-[180px]"}`}>
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   {def.options.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}

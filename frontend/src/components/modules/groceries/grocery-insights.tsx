@@ -201,7 +201,7 @@ export function GroceryInsights({
                 <Leaf className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+                <h3 className="font-medium text-amber-800 dark:text-amber-200">
                   {t("outOfSeason.title")}
                 </h3>
                 <p className="text-xs text-amber-600 dark:text-amber-400">
@@ -258,7 +258,7 @@ export function GroceryInsights({
                 <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-blue-800 dark:text-blue-200">
+                <h3 className="font-medium text-blue-800 dark:text-blue-200">
                   {t("mealPlanner.title")}
                 </h3>
                 <p className="text-xs text-blue-600 dark:text-blue-400">

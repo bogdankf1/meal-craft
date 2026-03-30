@@ -175,7 +175,7 @@ export function CollectionManager({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{t("collections.title")}</h2>
+        <h2 className="text-lg font-medium">{t("collections.title")}</h2>
         <Button onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-2" />
           {t("collections.create")}

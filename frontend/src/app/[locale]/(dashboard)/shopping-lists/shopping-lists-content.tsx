@@ -237,18 +237,18 @@ export function ShoppingListsContent() {
                 <StatsCard
                   title={t("stats.activeLists")}
                   value={analytics?.active_lists?.toString() || "0"}
-                  icon={<ListTodo className="h-5 w-5 text-blue-500" />}
+                  icon={<ListTodo className="h-5 w-5 text-primary" />}
                 />
                 <StatsCard
                   title={t("stats.completedLists")}
                   value={analytics?.completed_lists?.toString() || "0"}
-                  icon={<CheckCircle className="h-5 w-5 text-green-500" />}
+                  icon={<CheckCircle className="h-5 w-5 text-primary" />}
                   variant="success"
                 />
                 <StatsCard
                   title={t("stats.avgCompletionRate")}
                   value={`${Math.round(analytics?.avg_completion_rate || 0)}%`}
-                  icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+                  icon={<TrendingUp className="h-5 w-5 text-muted-foreground" />}
                 />
               </div>
             )}
@@ -415,22 +415,22 @@ export function ShoppingListsContent() {
                     <StatsCard
                       title={t("analysis.listsThisWeek")}
                       value={analytics.lists_this_week?.toString() || "0"}
-                      icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
+                      icon={<ShoppingCart className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("analysis.listsThisMonth")}
                       value={analytics.lists_this_month?.toString() || "0"}
-                      icon={<ShoppingCart className="h-5 w-5 text-purple-500" />}
+                      icon={<ShoppingCart className="h-5 w-5 text-muted-foreground" />}
                     />
                     <StatsCard
                       title={t("analysis.avgItemsPerList")}
                       value={Math.round(analytics.avg_items_per_list || 0).toString()}
-                      icon={<Package className="h-5 w-5 text-green-500" />}
+                      icon={<Package className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("analysis.totalItemsPurchased")}
                       value={analytics.total_items_purchased?.toString() || "0"}
-                      icon={<CheckCircle className="h-5 w-5 text-orange-500" />}
+                      icon={<CheckCircle className="h-5 w-5 text-accent" />}
                     />
                   </div>
                 )}
@@ -446,13 +446,13 @@ export function ShoppingListsContent() {
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-2">
                       <div className="text-center p-3 rounded-lg bg-muted/50">
-                        <div className="text-2xl font-bold text-green-500">
+                        <div className="text-2xl font-medium text-primary">
                           {analytics.completed_lists}
                         </div>
                         <div className="text-xs text-muted-foreground">{t("status.completed")}</div>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50">
-                        <div className="text-2xl font-bold text-blue-500">
+                        <div className="text-2xl font-medium text-primary">
                           {analytics.active_lists}
                         </div>
                         <div className="text-xs text-muted-foreground">{t("status.active")}</div>
@@ -480,9 +480,9 @@ export function ShoppingListsContent() {
                         >
                           <div className="flex items-center gap-2">
                             {list.status === "completed" ? (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <CheckCircle className="h-4 w-4 text-primary" />
                             ) : (
-                              <ListTodo className="h-4 w-4 text-blue-500" />
+                              <ListTodo className="h-4 w-4 text-primary" />
                             )}
                             <span className="font-medium text-sm">{list.name}</span>
                           </div>
@@ -516,7 +516,7 @@ export function ShoppingListsContent() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{t("history.title")}</h2>
+                <h2 className="text-lg font-medium">{t("history.title")}</h2>
                 <p className="text-sm text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
@@ -543,22 +543,22 @@ export function ShoppingListsContent() {
                     <StatsCard
                       title={t("history.totalInPeriod")}
                       value={historyData.total_lists.toString()}
-                      icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
+                      icon={<ShoppingCart className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("history.completedInPeriod")}
                       value={historyData.completed_lists.toString()}
-                      icon={<CheckCircle className="h-5 w-5 text-green-500" />}
+                      icon={<CheckCircle className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("history.avgMonthlyLists")}
                       value={Math.round(historyData.avg_monthly_lists).toString()}
-                      icon={<Repeat className="h-5 w-5 text-purple-500" />}
+                      icon={<Repeat className="h-5 w-5 text-muted-foreground" />}
                     />
                     <StatsCard
                       title={t("history.avgCompletionRate")}
                       value={`${Math.round(historyData.avg_completion_rate)}%`}
-                      icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
+                      icon={<TrendingUp className="h-5 w-5 text-accent" />}
                     />
                   </div>
                 )}
@@ -570,7 +570,7 @@ export function ShoppingListsContent() {
                   >
                     <BarChart
                       data={listsTrendData}
-                      color="bg-blue-500"
+                      color="bg-primary"
                       emptyMessage={t("history.noData")}
                     />
                   </AnalyticsCard>
@@ -582,7 +582,7 @@ export function ShoppingListsContent() {
                     <BarChart
                       data={completionTrendData}
                       formatValue={(v) => `${Math.round(v)}%`}
-                      color="bg-green-500"
+                      color="bg-primary"
                       emptyMessage={t("history.noData")}
                     />
                   </AnalyticsCard>

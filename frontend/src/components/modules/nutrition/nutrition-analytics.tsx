@@ -140,10 +140,10 @@ export function NutritionAnalytics({ data, isLoading }: NutritionAnalyticsProps)
                   key={item.key}
                   className={`transition-all ${
                     item.key === "protein"
-                      ? "bg-blue-500"
+                      ? "bg-accent"
                       : item.key === "carbs"
-                      ? "bg-green-500"
-                      : "bg-yellow-500"
+                      ? "bg-primary"
+                      : "bg-[var(--terra-wash)]"
                   }`}
                   style={{ width: `${item.value}%` }}
                   title={`${item.label}: ${item.value}%`}
@@ -235,19 +235,19 @@ interface NutrientStatProps {
 
 function NutrientStat({ label, value, unit, color }: NutrientStatProps) {
   const colorClasses = {
-    blue: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    green: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    yellow: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    purple: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    red: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    gray: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-    orange: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    blue: "bg-accent/10 text-accent",
+    green: "bg-[var(--green-ghost)] text-primary",
+    yellow: "bg-[var(--terra-ghost)] text-accent",
+    purple: "bg-muted text-muted-foreground",
+    red: "bg-[var(--error-bg)] text-destructive",
+    gray: "bg-muted text-muted-foreground",
+    orange: "bg-[var(--terra-ghost)] text-accent",
   };
 
   return (
     <div className={`rounded-lg p-3 ${colorClasses[color]}`}>
       <div className="text-xs font-medium opacity-75">{label}</div>
-      <div className="text-lg font-bold">
+      <div className="text-lg font-medium">
         {value.toFixed(1)}
         <span className="text-xs font-normal ml-1">{unit}</span>
       </div>

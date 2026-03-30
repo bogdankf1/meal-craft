@@ -259,7 +259,7 @@ export default function AdminCurrenciesPage() {
                     <TableCell className="font-medium">{currency.code}</TableCell>
                     <TableCell>{currency.name}</TableCell>
                     <TableCell>
-                      <span className="font-semibold text-lg">{currency.symbol}</span>
+                      <span className="font-medium text-lg">{currency.symbol}</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatExample(currency)}

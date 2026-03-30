@@ -111,7 +111,7 @@ export default function AdminTiersPage() {
 
   const getTierIcon = (name: string) => {
     if (name.toLowerCase() === "pro") {
-      return <Crown className="h-6 w-6 text-yellow-500" />;
+      return <Crown className="h-6 w-6 text-accent" />;
     }
     return null;
   };
@@ -160,7 +160,7 @@ export default function AdminTiersPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-medium">
                   ${tier.price_monthly?.toFixed(2) ?? "0.00"}
                   <span className="text-sm font-normal text-muted-foreground">
                     /{t("tiers.card.month")}
@@ -223,7 +223,7 @@ export default function AdminTiersPage() {
                           <TableCell key={tier.id} className="text-center">
                             {isEnabled ? (
                               <div className="flex flex-col items-center gap-1">
-                                <Check className="h-5 w-5 text-green-500" />
+                                <Check className="h-5 w-5 text-primary" />
                                 {limitValue !== null && limitValue !== undefined && (
                                   <span className="text-xs text-muted-foreground">
                                     {limitValue === -1 ? t("tiers.comparison.unlimited") : `${t("tiers.comparison.limit")}: ${limitValue}`}
@@ -339,7 +339,7 @@ export default function AdminTiersPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {isFeatureEnabled(feature.id) ? (
-                        <Check className="h-5 w-5 text-green-500" />
+                        <Check className="h-5 w-5 text-primary" />
                       ) : (
                         <X className="h-5 w-5 text-muted-foreground" />
                       )}

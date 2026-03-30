@@ -7,6 +7,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -232,10 +233,10 @@ export function DataTable<T extends DataTableItem>({
     <div className="space-y-4">
       {/* Selection bar */}
       {showBulkActions && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2 sm:py-0 sm:h-12 bg-muted/50 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2 sm:py-0 sm:h-10 bg-muted/50 rounded-xl">
           {hasSelection ? (
             <>
-              <span className="text-sm font-medium">
+              <span className="text-[13px] font-medium">
                 {texts.selectedCount(validSelectedIds.length)}
               </span>
               <div className="flex-1 hidden sm:block" />
@@ -258,11 +259,11 @@ export function DataTable<T extends DataTableItem>({
             </>
           ) : (
             <>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {texts.itemsOnPage(items.length)}
               </span>
               <div className="flex-1 hidden sm:block" />
-              <span className="text-sm text-muted-foreground hidden sm:block">
+              <span className="text-[13px] text-muted-foreground hidden sm:block">
                 {emptySelectionText || texts.selectToAction}
               </span>
             </>
@@ -271,7 +272,7 @@ export function DataTable<T extends DataTableItem>({
       )}
 
       {/* Table */}
-      <div className="border rounded-lg overflow-x-auto">
+      <div className="border-0 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-x-auto">
         <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow>
@@ -284,7 +285,7 @@ export function DataTable<T extends DataTableItem>({
                 </TableHead>
               )}
               {columns.map((column) => (
-                <TableHead key={column.key} className={column.width}>
+                <TableHead key={column.key} className={cn("text-xs", column.width)}>
                   {column.header}
                 </TableHead>
               ))}
@@ -305,7 +306,7 @@ export function DataTable<T extends DataTableItem>({
                   </TableCell>
                 )}
                 {columns.map((column) => (
-                  <TableCell key={column.key}>{column.render(item)}</TableCell>
+                  <TableCell key={column.key} className="py-2 text-[13px]">{column.render(item)}</TableCell>
                 ))}
                 {rowActions.length > 0 && (
                   <TableCell>
@@ -361,7 +362,7 @@ export function DataTable<T extends DataTableItem>({
               <ChevronLeft className="h-4 w-4" />
               <span className="hidden sm:inline ml-1">{texts.previous}</span>
             </Button>
-            <span className="text-sm text-muted-foreground px-2">
+            <span className="text-xs text-muted-foreground px-2">
               {pagination.page} / {pagination.totalPages}
             </span>
             <Button

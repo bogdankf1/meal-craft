@@ -50,7 +50,7 @@ function StatCard({
           <Skeleton className="h-8 w-20" />
         ) : (
           <>
-            <div className="text-2xl font-bold">{value}</div>
+            <div className="text-2xl font-medium">{value}</div>
             {description && (
               <p className="text-xs text-muted-foreground">{description}</p>
             )}
@@ -169,7 +169,7 @@ export default function AdminDashboardPage() {
                       {t("dashboard.engagement.dauDescription")}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold">
+                  <span className="text-2xl font-medium">
                     {engagement?.dau || 0}
                   </span>
                 </div>
@@ -182,7 +182,7 @@ export default function AdminDashboardPage() {
                       {t("dashboard.engagement.wauDescription")}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold">
+                  <span className="text-2xl font-medium">
                     {engagement?.wau || 0}
                   </span>
                 </div>
@@ -195,7 +195,7 @@ export default function AdminDashboardPage() {
                       {t("dashboard.engagement.mauDescription")}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold">
+                  <span className="text-2xl font-medium">
                     {engagement?.mau || 0}
                   </span>
                 </div>
@@ -208,7 +208,7 @@ export default function AdminDashboardPage() {
                       {t("dashboard.engagement.retentionDescription")}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold">
+                  <span className="text-2xl font-medium">
                     {engagement?.retention_rate_30d?.toFixed(1) || 0}%
                   </span>
                 </div>
@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
                       {t("dashboard.engagement.avgSessionDescription")}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold">
+                  <span className="text-2xl font-medium">
                     {engagement?.avg_session_duration?.toFixed(1) || 0}{" "}
                     {t("dashboard.engagement.minutes")}
                   </span>

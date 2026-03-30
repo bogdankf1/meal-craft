@@ -29,30 +29,30 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center py-12 px-4 text-center",
+        "flex flex-col items-center justify-center py-10 px-4 text-center",
         className
       )}
     >
       {icon && (
-        <div className="mb-4 text-muted-foreground/50 [&>svg]:h-16 [&>svg]:w-16">
+        <div className="mb-3 text-muted-foreground/50 [&>svg]:h-8 [&>svg]:w-8">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h3 className="text-[15px] font-medium">{title}</h3>
       {description && (
-        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+        <p className="mt-1.5 text-[13px] text-muted-foreground max-w-md">
           {description}
         </p>
       )}
       {action && (
-        <Button className="mt-6" onClick={action.onClick}>
+        <Button className="mt-4 rounded-xl" onClick={action.onClick}>
           {action.label}
         </Button>
       )}
       {secondaryAction && (
         <Button
           variant="link"
-          className="mt-2 text-sm"
+          className="mt-1.5 text-[13px]"
           onClick={secondaryAction.onClick}
         >
           {secondaryAction.label}

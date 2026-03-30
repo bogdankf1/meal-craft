@@ -32,31 +32,31 @@ export function ImportComplete({
   };
 
   return (
-    <Card>
-      <CardContent className="py-12">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="p-4 rounded-full bg-green-100 dark:bg-green-900/30">
-            <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+    <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+      <CardContent className="py-10">
+        <div className="flex flex-col items-center text-center space-y-3">
+          <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-[var(--green-ghost)] dark:bg-green-900/30">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold">
+            <h3 className="text-[15px] font-medium">
               {t("complete.title")}
             </h3>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-[13px] text-muted-foreground mt-1">
               {t(descriptionKey, { count: itemCount })}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button variant="outline" onClick={handleAddMore}>
-              <Plus className="h-4 w-4 mr-2" />
+          <div className="flex flex-col sm:flex-row gap-2.5 pt-3">
+            <Button variant="outline" className="rounded-xl" onClick={handleAddMore}>
+              <Plus className="h-4 w-4 mr-1.5" />
               {t("complete.addMore")}
             </Button>
             {onViewItems && (
-              <Button onClick={onViewItems}>
+              <Button className="rounded-xl" onClick={onViewItems}>
                 {t(viewItemsKey)}
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             )}
           </div>

@@ -98,21 +98,21 @@ export default function AdminSupportPage() {
     switch (status) {
       case SupportTopicStatus.OPEN:
         return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <Badge variant="secondary" className="bg-accent/10 text-accent">
             <Clock className="w-3 h-3 mr-1" />
             {t("status.open")}
           </Badge>
         );
       case SupportTopicStatus.IN_PROGRESS:
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+          <Badge variant="secondary" className="bg-[var(--terra-ghost)] text-accent">
             <Loader2 className="w-3 h-3 mr-1" />
             {t("status.inProgress")}
           </Badge>
         );
       case SupportTopicStatus.RESOLVED:
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+          <Badge variant="secondary" className="bg-[var(--green-ghost)] text-primary">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             {t("status.resolved")}
           </Badge>
@@ -218,12 +218,12 @@ export default function AdminSupportPage() {
                       }`}
                     >
                       {!message.is_admin_reply && (
-                        <p className="text-xs font-semibold mb-1">
+                        <p className="text-xs font-medium mb-1">
                           {message.user_name || t("user")}
                         </p>
                       )}
                       {message.is_admin_reply && (
-                        <p className="text-xs font-semibold mb-1 text-primary-foreground/80">
+                        <p className="text-xs font-medium mb-1 text-primary-foreground/80">
                           {t("supportTeam")}
                         </p>
                       )}
@@ -318,10 +318,10 @@ export default function AdminSupportPage() {
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
       ) : filteredTopics.length === 0 ? (
-        <Card className="p-12 text-center">
-          <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">{t("noTopics")}</h3>
-          <p className="text-muted-foreground">{t("noTopicsDescription")}</p>
+        <Card className="p-12 text-center border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+          <MessageSquare className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-[13px] font-medium mb-2">{t("noTopics")}</h3>
+          <p className="text-[13px] text-muted-foreground">{t("noTopicsDescription")}</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -335,7 +335,7 @@ export default function AdminSupportPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">{topic.title}</h3>
+                      <h3 className="font-medium">{topic.title}</h3>
                       {getStatusBadge(topic.status)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-1">

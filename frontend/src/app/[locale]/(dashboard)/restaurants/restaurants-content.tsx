@@ -231,9 +231,9 @@ export function RestaurantsContent() {
       <ModuleTabs tabs={tabs} defaultTab="overview">
         {/* Overview Tab */}
         <TabsContent value="overview">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {uiVisibility.showStatsCards && (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
                   title={t("stats.totalMeals")}
                   value={mealsData?.total?.toString() || "0"}
@@ -242,17 +242,17 @@ export function RestaurantsContent() {
                 <StatsCard
                   title={t("stats.thisWeek")}
                   value={analytics?.meals_this_week?.toString() || "0"}
-                  icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+                  icon={<CalendarDays className="h-5 w-5 text-accent" />}
                 />
                 <StatsCard
                   title={t("stats.avgRating")}
                   value={analytics?.avg_rating ? `${analytics.avg_rating}/5` : "-"}
-                  icon={<Star className="h-5 w-5 text-yellow-500" />}
+                  icon={<Star className="h-5 w-5 text-accent" />}
                 />
                 <StatsCard
                   title={t("stats.avgFeeling")}
                   value={analytics?.avg_feeling ? `${analytics.avg_feeling}/5` : "-"}
-                  icon={<Heart className="h-5 w-5 text-red-500" />}
+                  icon={<Heart className="h-5 w-5 text-destructive" />}
                 />
               </div>
             )}
@@ -275,7 +275,7 @@ export function RestaurantsContent() {
             )}
 
             {/* Filters and Actions - Two line layout for better responsiveness */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               {/* First row: Search and filters */}
               <div className="w-full">
                 <RestaurantMealFiltersBar
@@ -356,35 +356,35 @@ export function RestaurantsContent() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {hasMeals && analytics ? (
               <>
                 {uiVisibility.showStatsCards && (
-                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <StatsCard
                       title={t("stats.thisWeek")}
                       value={analytics.meals_this_week?.toString() || "0"}
-                      icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+                      icon={<CalendarDays className="h-5 w-5 text-accent" />}
                     />
                     <StatsCard
                       title={t("stats.thisMonth")}
                       value={analytics.meals_this_month?.toString() || "0"}
-                      icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+                      icon={<TrendingUp className="h-5 w-5 text-accent" />}
                     />
                     <StatsCard
                       title={t("stats.avgRating")}
                       value={analytics.avg_rating ? `${analytics.avg_rating}/5` : "-"}
-                      icon={<Star className="h-5 w-5 text-yellow-500" />}
+                      icon={<Star className="h-5 w-5 text-accent" />}
                     />
                     <StatsCard
                       title={t("stats.avgFeeling")}
                       value={analytics.avg_feeling ? `${analytics.avg_feeling}/5` : "-"}
-                      icon={<Heart className="h-5 w-5 text-red-500" />}
+                      icon={<Heart className="h-5 w-5 text-destructive" />}
                     />
                   </div>
                 )}
 
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   <AnalyticsCard title={t("analytics.byOrderType")}>
                     <DistributionList
                       items={orderTypeItems}
@@ -430,11 +430,11 @@ export function RestaurantsContent() {
 
         {/* History Tab */}
         <TabsContent value="history">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{t("history.title")}</h2>
-                <p className="text-sm text-muted-foreground">{t("history.description")}</p>
+                <h2 className="text-sm font-medium">{t("history.title")}</h2>
+                <p className="text-[13px] text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
                 <SelectTrigger className="w-full sm:w-[140px]">
@@ -450,27 +450,27 @@ export function RestaurantsContent() {
             </div>
 
             {isLoadingHistory ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-muted-foreground">{tCommon("loading")}</div>
+              <div className="flex items-center justify-center py-8">
+                <div className="text-muted-foreground text-[13px]">{tCommon("loading")}</div>
               </div>
             ) : historyData && historyData.total_meals > 0 ? (
               <>
                 {uiVisibility.showStatsCards && (
-                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     <StatsCard
                       title={t("history.totalInPeriod")}
                       value={historyData.total_meals.toString()}
-                      icon={<UtensilsCrossed className="h-5 w-5 text-blue-500" />}
+                      icon={<UtensilsCrossed className="h-5 w-5 text-accent" />}
                     />
                     <StatsCard
                       title={t("history.avgMonthly")}
                       value={Math.round(historyData.avg_monthly_meals).toString()}
-                      icon={<TrendingUp className="h-5 w-5 text-purple-500" />}
+                      icon={<TrendingUp className="h-5 w-5 text-accent" />}
                     />
                     <StatsCard
                       title={t("history.uniqueRestaurants")}
                       value={historyData.all_time_top_restaurants.length.toString()}
-                      icon={<Truck className="h-5 w-5 text-orange-500" />}
+                      icon={<Truck className="h-5 w-5 text-accent" />}
                     />
                   </div>
                 )}
@@ -506,9 +506,9 @@ export function RestaurantsContent() {
 
         {/* Archive Tab */}
         <TabsContent value="archive">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {uiVisibility.showStatsCards && (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 <StatsCard
                   title={t("stats.archivedMeals")}
                   value={archivedData?.total?.toString() || "0"}
@@ -517,7 +517,7 @@ export function RestaurantsContent() {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-start sm:items-center justify-between">
               <div className="flex-1 w-full">
                 <RestaurantMealFiltersBar
                   filters={archiveFilters}

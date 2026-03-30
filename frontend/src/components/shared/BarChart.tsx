@@ -28,7 +28,7 @@ export function BarChart({
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center py-8">
-        <span className="text-sm text-muted-foreground">{emptyMessage}</span>
+        <span className="text-xs text-muted-foreground">{emptyMessage}</span>
       </div>
     );
   }
@@ -41,13 +41,13 @@ export function BarChart({
         const heightPx = maxValue > 0 ? Math.round((item.value / maxValue) * height) : 0;
         return (
           <div key={item.key} className="flex-1 flex flex-col items-center gap-2">
-            <span className="text-sm font-semibold">{formatValue(item.value)}</span>
+            <span className="text-xs font-medium">{formatValue(item.value)}</span>
             <div
               className="w-full flex items-end px-1"
               style={{ height: `${height}px` }}
             >
               <div
-                className={cn("w-full rounded-t transition-all", color)}
+                className={cn("w-full rounded-t-lg transition-all", color)}
                 style={{
                   height: `${heightPx}px`,
                   minHeight: item.value > 0 ? "4px" : "0",

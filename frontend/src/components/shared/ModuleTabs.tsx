@@ -53,9 +53,9 @@ export function ModuleTabs({
               "relative px-3 sm:px-4 py-2.5 sm:py-3 rounded-none border-none whitespace-nowrap shrink-0",
               "bg-transparent data-[state=active]:bg-transparent",
               "text-muted-foreground hover:text-foreground transition-colors",
-              "data-[state=active]:text-foreground data-[state=active]:shadow-none",
-              "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5",
-              "after:bg-transparent data-[state=active]:after:bg-foreground",
+              "data-[state=active]:text-primary data-[state=active]:shadow-none",
+              "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px]",
+              "after:bg-transparent data-[state=active]:after:bg-primary",
               "dark:data-[state=active]:bg-transparent dark:data-[state=active]:border-none",
               "text-sm sm:text-base"
             )}

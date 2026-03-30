@@ -79,7 +79,7 @@ export function RestaurantMealCalendarView({
         <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-medium">
           {format(currentMonth, "MMMM yyyy")}
         </h2>
         <Button variant="outline" size="icon" onClick={handleNextMonth}>
@@ -152,7 +152,7 @@ export function RestaurantMealCalendarView({
                         </Badge>
                         {meal.rating && (
                           <div className="flex items-center">
-                            <Star className="h-2 w-2 text-yellow-500 fill-yellow-500" />
+                            <Star className="h-2 w-2 text-accent fill-accent" />
                             <span className="text-[10px]">{meal.rating}</span>
                           </div>
                         )}

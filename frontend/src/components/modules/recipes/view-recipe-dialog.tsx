@@ -487,7 +487,7 @@ export function ViewRecipeDialog({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <DialogTitle className="text-2xl font-medium flex items-center gap-2">
                 {recipe.name}
                 {recipe.is_favorite && (
                   <Heart className="h-5 w-5 fill-red-500 text-red-500" />
@@ -559,7 +559,7 @@ export function ViewRecipeDialog({
             {/* Ingredients Section */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+                <h3 className="text-lg font-medium flex items-center gap-2">
                   <UtensilsCrossed className="h-5 w-5" />
                   {t("ingredients")}
                   {totalIngredients > 0 && (
@@ -644,7 +644,7 @@ export function ViewRecipeDialog({
 
             {/* Instructions Section */}
             <div>
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+              <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
                 <ChefHat className="h-5 w-5" />
                 {t("instructions")}
               </h3>
@@ -713,13 +713,13 @@ export function ViewRecipeDialog({
               <>
                 <Separator />
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">
+                  <h3 className="text-lg font-medium mb-3">
                     {t("viewRecipe.nutrition")}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {fullRecipe.nutrition.calories && (
                       <div className="bg-muted/50 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold">
+                        <p className="text-2xl font-medium">
                           {fullRecipe.nutrition.calories}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -729,7 +729,7 @@ export function ViewRecipeDialog({
                     )}
                     {fullRecipe.nutrition.protein_g && (
                       <div className="bg-muted/50 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold">
+                        <p className="text-2xl font-medium">
                           {fullRecipe.nutrition.protein_g}g
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -739,7 +739,7 @@ export function ViewRecipeDialog({
                     )}
                     {fullRecipe.nutrition.carbs_g && (
                       <div className="bg-muted/50 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold">
+                        <p className="text-2xl font-medium">
                           {fullRecipe.nutrition.carbs_g}g
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -749,7 +749,7 @@ export function ViewRecipeDialog({
                     )}
                     {fullRecipe.nutrition.fat_g && (
                       <div className="bg-muted/50 rounded-lg p-3 text-center">
-                        <p className="text-2xl font-bold">
+                        <p className="text-2xl font-medium">
                           {fullRecipe.nutrition.fat_g}g
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -768,7 +768,7 @@ export function ViewRecipeDialog({
                 <Separator />
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
                       <Wrench className="h-5 w-5" />
                       {t("viewRecipe.requiredEquipment")}
                       <span className="text-sm font-normal text-muted-foreground">
@@ -855,7 +855,7 @@ export function ViewRecipeDialog({
                 <Separator />
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
                       <GraduationCap className="h-5 w-5" />
                       {t("viewRecipe.techniques")}
                       <span className="text-sm font-normal text-muted-foreground">
@@ -970,7 +970,7 @@ export function ViewRecipeDialog({
               <>
                 <Separator />
                 <div>
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                  <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
                     <Leaf className="h-5 w-5" />
                     {t("viewRecipe.seasonality")}
                   </h3>
@@ -1067,7 +1067,7 @@ export function ViewRecipeDialog({
               <>
                 <Separator />
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">{t("tags")}</h3>
+                  <h3 className="text-lg font-medium mb-3">{t("tags")}</h3>
                   <div className="flex flex-wrap gap-2">
                     {fullRecipe.tags.map((tag, index) => (
                       <Badge key={index} variant="secondary">
@@ -1084,7 +1084,7 @@ export function ViewRecipeDialog({
               <>
                 <Separator />
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">{t("notes")}</h3>
+                  <h3 className="text-lg font-medium mb-3">{t("notes")}</h3>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                     {fullRecipe.notes}
                   </p>

@@ -1,4 +1,5 @@
 export { OnboardingFlow } from "./OnboardingFlow";
+export { OnboardingWizard } from "./OnboardingWizard";
 export { OnboardingStepCard } from "./OnboardingStepCard";
 export { OnboardingProgress } from "./OnboardingProgress";
 export { OnboardingCompletedBanner } from "./OnboardingCompletedBanner";

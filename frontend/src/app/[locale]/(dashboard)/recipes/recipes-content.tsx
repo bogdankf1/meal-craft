@@ -388,7 +388,7 @@ export function RecipesContent() {
             />
           ) : (
             <EmptyState
-              icon={<BookOpen className="h-12 w-12" />}
+              icon={<BookOpen className="h-8 w-8" />}
               title={t("empty.title")}
               description={t("empty.description")}
               action={{ label: t("addRecipe"), onClick: handleAddClick }}
@@ -423,7 +423,7 @@ export function RecipesContent() {
                     className="h-4 w-4 rounded-full"
                     style={{ backgroundColor: selectedCollection.color || "#3b82f6" }}
                   />
-                  <h2 className="text-lg font-semibold">{selectedCollection.name}</h2>
+                  <h2 className="text-lg font-medium">{selectedCollection.name}</h2>
                   <Badge variant="secondary">
                     {t("collections.recipeCount", {
                       count: collectionData?.recipes?.length ?? selectedCollection.recipe_count,
@@ -461,7 +461,7 @@ export function RecipesContent() {
                 />
               ) : (
                 <EmptyState
-                  icon={<FolderOpen className="h-12 w-12" />}
+                  icon={<FolderOpen className="h-8 w-8" />}
                   title={t("collectionDetail.empty.title")}
                   description={t("collectionDetail.empty.description")}
                   action={{ label: t("tabs.overview"), onClick: () => navigateToTab("overview") }}
@@ -492,7 +492,7 @@ export function RecipesContent() {
             />
           ) : (
             <EmptyState
-              icon={<Archive className="h-12 w-12" />}
+              icon={<Archive className="h-8 w-8" />}
               title={t("archive.empty.title")}
               description={t("archive.empty.description")}
             />
@@ -558,7 +558,7 @@ export function RecipesContent() {
                       className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-muted-foreground">
+                        <span className="text-lg font-medium text-muted-foreground">
                           #{index + 1}
                         </span>
                         <div>
@@ -599,8 +599,8 @@ export function RecipesContent() {
                               key={star}
                               className={`h-4 w-4 ${
                                 star <= item.rating!
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300 dark:text-gray-600"
+                                  ? "fill-accent text-accent"
+                                  : "text-muted-foreground"
                               }`}
                             />
                           ))}
@@ -615,7 +615,7 @@ export function RecipesContent() {
             {/* Empty state for analysis */}
             {(!analytics || analytics.total_recipes === 0) && (
               <EmptyState
-                icon={<BarChart3 className="h-12 w-12" />}
+                icon={<BarChart3 className="h-8 w-8" />}
                 title={t("analysis.empty.title")}
                 description={t("analysis.empty.description")}
                 action={{ label: t("addRecipe"), onClick: handleAddClick }}

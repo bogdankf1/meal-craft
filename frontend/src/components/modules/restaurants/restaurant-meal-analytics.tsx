@@ -56,9 +56,9 @@ export function RestaurantMealAnalytics() {
   if (!analytics || analytics.total_meals === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold">{t("analytics.empty.title")}</h3>
-        <p className="text-sm text-muted-foreground max-w-md">
+        <TrendingUp className="h-8 w-8 text-muted-foreground mb-4" />
+        <h3 className="text-[13px] font-medium">{t("analytics.empty.title")}</h3>
+        <p className="text-[13px] text-muted-foreground max-w-md">
           {t("analytics.empty.description")}
         </p>
       </div>
@@ -68,35 +68,35 @@ export function RestaurantMealAnalytics() {
   const getMealTypeColor = (type: string) => {
     switch (type) {
       case "breakfast":
-        return "bg-yellow-500";
+        return "bg-accent";
       case "lunch":
-        return "bg-green-500";
+        return "bg-primary";
       case "dinner":
-        return "bg-blue-500";
+        return "bg-accent";
       case "snack":
-        return "bg-purple-500";
+        return "bg-muted-foreground";
       default:
-        return "bg-gray-500";
+        return "bg-muted-foreground";
     }
   };
 
   const getOrderTypeColor = (type: string) => {
     switch (type) {
       case "dine_in":
-        return "bg-emerald-500";
+        return "bg-primary";
       case "delivery":
-        return "bg-orange-500";
+        return "bg-accent";
       case "takeout":
-        return "bg-cyan-500";
+        return "bg-accent";
       default:
-        return "bg-gray-500";
+        return "bg-muted-foreground";
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">{t("analytics.title")}</h2>
+        <h2 className="text-lg font-medium">{t("analytics.title")}</h2>
         <p className="text-sm text-muted-foreground">{t("analytics.description")}</p>
       </div>
 
@@ -173,7 +173,7 @@ export function RestaurantMealAnalytics() {
                     <span>{restaurant.visit_count} {t("analytics.visits")}</span>
                     {restaurant.avg_rating && (
                       <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                        <Star className="h-3 w-3 text-accent fill-accent" />
                         <span>{restaurant.avg_rating.toFixed(1)}</span>
                       </div>
                     )}

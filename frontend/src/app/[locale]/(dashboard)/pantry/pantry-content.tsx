@@ -266,13 +266,13 @@ export function PantryContent() {
                 <StatsCard
                   title={t("stats.expiringSoon")}
                   value={analytics?.expiring_soon?.toString() || "0"}
-                  icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+                  icon={<AlertTriangle className="h-5 w-5 text-accent" />}
                   variant={analytics?.expiring_soon ? "warning" : "default"}
                 />
                 <StatsCard
                   title={t("stats.lowStock")}
                   value={analytics?.low_stock_items?.toString() || "0"}
-                  icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
+                  icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
                   variant={analytics?.low_stock_items ? "danger" : "default"}
                 />
                 <StatsCard
@@ -469,19 +469,19 @@ export function PantryContent() {
                     <StatsCard
                       title={t("waste.stats.totalWasted")}
                       value={wasteAnalytics.total_wasted_items.toString()}
-                      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                      icon={<Trash2 className="h-5 w-5 text-destructive" />}
                       variant="danger"
                     />
                     <StatsCard
                       title={t("waste.stats.wastedThisMonth")}
                       value={(wasteAnalytics.wasted_this_month ?? 0).toString()}
-                      icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+                      icon={<CalendarDays className="h-5 w-5 text-accent" />}
                       variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
                     />
                     <StatsCard
                       title={t("waste.stats.wasteRate")}
                       value={`${wasteAnalytics.waste_rate ?? 0}%`}
-                      icon={<Percent className="h-5 w-5 text-purple-500" />}
+                      icon={<Percent className="h-5 w-5 text-muted-foreground" />}
                       variant={(wasteAnalytics.waste_rate ?? 0) > 10 ? "warning" : "default"}
                     />
                     <StatsCard
@@ -496,12 +496,12 @@ export function PantryContent() {
                 {wasteAnalytics.suggestions && wasteAnalytics.suggestions.length > 0 && (
                   <AnalyticsCard
                     title={t("waste.analytics.suggestions")}
-                    icon={<Lightbulb className="h-4 w-4 text-yellow-500" />}
+                    icon={<Lightbulb className="h-4 w-4 text-accent" />}
                   >
                     <ul className="space-y-2">
                       {wasteAnalytics.suggestions.map((suggestion, index) => (
                         <li key={index} className="flex items-start gap-2 text-sm">
-                          <span className="text-yellow-500 mt-0.5">•</span>
+                          <span className="text-accent mt-0.5">•</span>
                           <span>{suggestion}</span>
                         </li>
                       ))}
@@ -559,7 +559,7 @@ export function PantryContent() {
                         value: month.wasted_count,
                         label: month.month_label.split(" ")[0],
                       }))}
-                      color="bg-red-500"
+                      color="bg-destructive"
                       emptyMessage={t("waste.analytics.noWasteData")}
                     />
                   </AnalyticsCard>
@@ -616,22 +616,22 @@ export function PantryContent() {
                     <StatsCard
                       title={t("analysis.inFridge")}
                       value={analytics.items_by_location?.fridge?.toString() || "0"}
-                      icon={<Refrigerator className="h-5 w-5 text-blue-500" />}
+                      icon={<Refrigerator className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("analysis.inFreezer")}
                       value={analytics.items_by_location?.freezer?.toString() || "0"}
-                      icon={<ThermometerSnowflake className="h-5 w-5 text-cyan-500" />}
+                      icon={<ThermometerSnowflake className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("analysis.inPantry")}
                       value={analytics.items_by_location?.pantry?.toString() || "0"}
-                      icon={<Home className="h-5 w-5 text-amber-500" />}
+                      icon={<Home className="h-5 w-5 text-accent" />}
                     />
                     <StatsCard
                       title={t("analysis.expiryStatus")}
                       value={`${analytics.expired || 0} / ${analytics.expiring_soon || 0}`}
-                      icon={<Clock className="h-5 w-5 text-orange-500" />}
+                      icon={<Clock className="h-5 w-5 text-accent" />}
                       variant={analytics.expired > 0 ? "danger" : analytics.expiring_soon > 0 ? "warning" : "default"}
                     />
                   </div>
@@ -683,7 +683,7 @@ export function PantryContent() {
                 {analytics.low_stock_list && analytics.low_stock_list.length > 0 && (
                   <AnalyticsCard
                     title={t("analysis.lowStockItems")}
-                    icon={<AlertTriangle className="h-4 w-4 text-orange-500" />}
+                    icon={<AlertTriangle className="h-4 w-4 text-accent" />}
                   >
                     <div className="space-y-3">
                       {analytics.low_stock_list.slice(0, 5).map((item) => (
@@ -698,7 +698,7 @@ export function PantryContent() {
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className="text-orange-500 font-medium">
+                            <span className="text-accent font-medium">
                               {item.quantity} {item.unit}
                             </span>
                             {item.minimum_quantity && (
@@ -717,7 +717,7 @@ export function PantryContent() {
                 {analytics.expiring_items && analytics.expiring_items.length > 0 && (
                   <AnalyticsCard
                     title={t("analysis.expiringItems")}
-                    icon={<Clock className="h-4 w-4 text-orange-500" />}
+                    icon={<Clock className="h-4 w-4 text-accent" />}
                   >
                     <div className="space-y-3">
                       {analytics.expiring_items.slice(0, 5).map((item) => (
@@ -732,7 +732,7 @@ export function PantryContent() {
                             </span>
                           </div>
                           {item.expiry_date && (
-                            <Badge variant="secondary" className="text-orange-500">
+                            <Badge variant="secondary" className="text-accent">
                               {format(parseISO(item.expiry_date), "MMM d, yyyy")}
                             </Badge>
                           )}
@@ -757,7 +757,7 @@ export function PantryContent() {
         <TabsContent value="transactions">
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold">{t("transactions.title")}</h2>
+              <h2 className="text-lg font-medium">{t("transactions.title")}</h2>
               <p className="text-sm text-muted-foreground">{t("transactions.description")}</p>
             </div>
             <PantryTransactions />
@@ -769,7 +769,7 @@ export function PantryContent() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">{t("history.title")}</h2>
+                <h2 className="text-lg font-medium">{t("history.title")}</h2>
                 <p className="text-sm text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
@@ -796,17 +796,17 @@ export function PantryContent() {
                     <StatsCard
                       title={t("history.totalAdded")}
                       value={historyData.total_items_added.toString()}
-                      icon={<Package className="h-5 w-5 text-blue-500" />}
+                      icon={<Package className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("history.totalConsumed")}
                       value={historyData.total_items_consumed.toString()}
-                      icon={<TrendingUp className="h-5 w-5 text-green-500" />}
+                      icon={<TrendingUp className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("history.totalWasted")}
                       value={historyData.total_items_wasted.toString()}
-                      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                      icon={<Trash2 className="h-5 w-5 text-destructive" />}
                       variant={historyData.total_items_wasted > 0 ? "danger" : "default"}
                     />
                     <StatsCard
@@ -814,7 +814,7 @@ export function PantryContent() {
                       value={`${historyData.total_items_added > 0
                         ? Math.round((historyData.total_items_wasted / historyData.total_items_added) * 100)
                         : 0}%`}
-                      icon={<Percent className="h-5 w-5 text-purple-500" />}
+                      icon={<Percent className="h-5 w-5 text-muted-foreground" />}
                     />
                   </div>
                 )}
@@ -826,7 +826,7 @@ export function PantryContent() {
                   >
                     <BarChart
                       data={itemsAddedTrendData}
-                      color="bg-blue-500"
+                      color="bg-primary"
                       emptyMessage={t("history.noData")}
                     />
                   </AnalyticsCard>
@@ -837,7 +837,7 @@ export function PantryContent() {
                   >
                     <BarChart
                       data={itemsConsumedTrendData}
-                      color="bg-green-500"
+                      color="bg-primary"
                       emptyMessage={t("history.noData")}
                     />
                   </AnalyticsCard>
@@ -898,7 +898,7 @@ export function PantryContent() {
                 {wasteAnalytics && wasteAnalytics.total_wasted_items > 0 && (
                   <AnalyticsCard
                     title={t("history.wasteOverview")}
-                    icon={<Trash2 className="h-4 w-4 text-red-500" />}
+                    icon={<Trash2 className="h-4 w-4 text-destructive" />}
                   >
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
@@ -929,15 +929,15 @@ export function PantryContent() {
                       </div>
                     </div>
                     {wasteAnalytics.suggestions.length > 0 && (
-                      <div className="mt-4 pt-4 border-t">
+                      <div className="mt-4 pt-4 border-t border-border">
                         <div className="flex items-center gap-2 mb-2">
-                          <Lightbulb className="h-4 w-4 text-yellow-500" />
+                          <Lightbulb className="h-4 w-4 text-accent" />
                           <h4 className="text-sm font-medium">{t("waste.analytics.suggestions")}</h4>
                         </div>
                         <ul className="space-y-1">
                           {wasteAnalytics.suggestions.slice(0, 3).map((suggestion, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                              <span className="text-yellow-500 mt-0.5">•</span>
+                              <span className="text-accent mt-0.5">•</span>
                               <span>{suggestion}</span>
                             </li>
                           ))}

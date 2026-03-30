@@ -351,44 +351,44 @@ export function SeasonalityContent() {
       <ModuleTabs tabs={tabs} defaultTab="thisMonth">
         {/* Stats Cards */}
         {uiVisibility.showStatsCards && (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
             <StatsCard
               title={t("stats.inSeason")}
               value={inSeasonCount}
-              icon={<Leaf className="h-4 w-4 text-green-600" />}
+              icon={<Leaf className="h-4 w-4 text-primary" />}
               trend={{ value: t("stats.itemsAvailable"), label: "", direction: "neutral" }}
             />
             <StatsCard
               title={t("stats.peakSeason")}
               value={peakCount}
-              icon={<TrendingUp className="h-4 w-4 text-orange-600" />}
+              icon={<TrendingUp className="h-4 w-4 text-accent" />}
               trend={{ value: t("stats.atTheirBest"), label: "", direction: "neutral" }}
             />
             <StatsCard
               title={t("stats.favorites")}
               value={favoritesCount}
-              icon={<Heart className="h-4 w-4 text-red-500" />}
+              icon={<Heart className="h-4 w-4 text-destructive" />}
               trend={{ value: t("stats.savedItems"), label: "", direction: "neutral" }}
             />
             <StatsCard
               title={t("stats.localSpecialties")}
               value={specialtiesCount}
-              icon={<MapPin className="h-4 w-4 text-blue-600" />}
+              icon={<MapPin className="h-4 w-4 text-accent" />}
               trend={{ value: countryInfo?.name || "", label: "", direction: "neutral" }}
             />
           </div>
         )}
 
         {/* This Month Tab */}
-        <TabsContent value="thisMonth" className="space-y-6">
+        <TabsContent value="thisMonth" className="space-y-4">
           {/* Country & Month Selector */}
-          <Card>
+          <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
             <CardContent className="py-3">
               <div className="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{countryInfo?.flag}</span>
                   <div>
-                    <h3 className="font-semibold">{countryInfo?.name}</h3>
+                    <h3 className="font-medium">{countryInfo?.name}</h3>
                     <p className="text-sm text-muted-foreground">
                       {t("thisMonth.showing", { month: currentMonthName })}
                     </p>
@@ -446,7 +446,7 @@ export function SeasonalityContent() {
 
           {/* AI Recommendations */}
           {recommendations && (
-            <Card className="border-primary/20 bg-primary/5">
+            <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] bg-[var(--green-ghost)]">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -469,7 +469,7 @@ export function SeasonalityContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {recommendations.recommendations.map((rec, idx) => (
                     <RecommendationCard
                       key={idx}
@@ -491,11 +491,11 @@ export function SeasonalityContent() {
 
           {/* Weekly Picks */}
           {weeklyPicks && (
-            <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
+            <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] bg-[var(--green-ghost)]">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <ShoppingBag className="h-4 w-4 text-green-600" />
+                    <ShoppingBag className="h-4 w-4 text-primary" />
                     {t("thisMonth.whatToBuy")} - {weeklyPicks.week_of}
                   </CardTitle>
                   <Button
@@ -531,7 +531,7 @@ export function SeasonalityContent() {
           )}
 
           {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -582,19 +582,19 @@ export function SeasonalityContent() {
 
           {/* Produce Grid */}
           {isLoadingProduce ? (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(8)].map((_, i) => (
                 <Skeleton key={i} className="h-40 rounded-lg" />
               ))}
             </div>
           ) : filteredProduce.length === 0 ? (
             <EmptyState
-              icon={<Leaf className="h-12 w-12" />}
+              icon={<Leaf className="h-8 w-8" />}
               title={showFavoritesOnly ? t("empty.favorites.title") : t("empty.produce.title")}
               description={showFavoritesOnly ? t("empty.favorites.description") : t("empty.produce.description")}
             />
           ) : (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProduce.map((produce) => (
                 <ProduceCard
                   key={produce.id}
@@ -612,10 +612,10 @@ export function SeasonalityContent() {
         </TabsContent>
 
         {/* Calendar Tab */}
-        <TabsContent value="calendar" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("calendar.title")}</CardTitle>
+        <TabsContent value="calendar" className="space-y-4">
+          <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+            <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+              <CardTitle className="text-sm">{t("calendar.title")}</CardTitle>
               <CardDescription>
                 {t("calendar.description", { country: countryInfo?.name || "" })}
               </CardDescription>
@@ -628,10 +628,10 @@ export function SeasonalityContent() {
                   ))}
                 </div>
               ) : !hasCalendarData ? (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">{t("calendar.noData")}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="text-center py-6">
+                  <Calendar className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+                  <h3 className="font-medium text-[13px] mb-2">{t("calendar.noData")}</h3>
+                  <p className="text-[13px] text-muted-foreground mb-3">
                     {t("calendar.noDataDescription")}
                   </p>
                   <Button onClick={handleGetRecommendations} disabled={isLoadingRecs}>
@@ -644,18 +644,18 @@ export function SeasonalityContent() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {calendarData?.months.map((monthData) => (
                     <Card
                       key={monthData.month}
                       className={cn(
-                        "cursor-pointer transition-all hover:shadow-md",
+                        "cursor-pointer transition-all border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] hover:shadow-md",
                         monthData.month === currentMonth && "ring-2 ring-primary"
                       )}
                       onClick={() => setSelectedMonth(monthData.month)}
                     >
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex items-center justify-between">
+                        <CardTitle className="text-sm flex items-center justify-between">
                           {monthData.month_name}
                           {monthData.month === currentMonth && (
                             <Badge>{t("calendar.now")}</Badge>
@@ -668,7 +668,7 @@ export function SeasonalityContent() {
                       <CardContent className="space-y-3">
                         {monthData.peak_produce.length > 0 && (
                           <div>
-                            <p className="text-xs font-medium text-orange-600 mb-1">
+                            <p className="text-[11px] font-medium text-accent mb-1">
                               {t("calendar.peak")}:
                             </p>
                             <div className="flex flex-wrap gap-1">
@@ -687,7 +687,7 @@ export function SeasonalityContent() {
                         )}
                         {monthData.coming_soon.length > 0 && (
                           <div>
-                            <p className="text-xs font-medium text-green-600 mb-1">
+                            <p className="text-[11px] font-medium text-primary mb-1">
                               {t("calendar.comingSoon")}:
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -697,7 +697,7 @@ export function SeasonalityContent() {
                         )}
                         {monthData.ending_soon.length > 0 && (
                           <div>
-                            <p className="text-xs font-medium text-red-600 mb-1">
+                            <p className="text-[11px] font-medium text-destructive mb-1">
                               {t("calendar.endingSoon")}:
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -715,9 +715,9 @@ export function SeasonalityContent() {
 
           {/* Selected Month Details */}
           {selectedMonth !== currentMonth && hasCalendarData && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
+            <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+              <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+                <CardTitle className="text-sm">
                   {t("calendar.inSeasonIn", { month: MONTHS[selectedMonth - 1] })}
                 </CardTitle>
               </CardHeader>
@@ -733,10 +733,10 @@ export function SeasonalityContent() {
         </TabsContent>
 
         {/* Local Specialties Tab */}
-        <TabsContent value="specialties" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+        <TabsContent value="specialties" className="space-y-4">
+          <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+            <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <MapPin className="h-5 w-5" />
                 {t("specialties.title", { country: countryInfo?.name || "" })}
               </CardTitle>
@@ -750,10 +750,10 @@ export function SeasonalityContent() {
                   ))}
                 </div>
               ) : !hasSpecialtiesData ? (
-                <div className="text-center py-8">
-                  <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">{t("specialties.noData")}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="text-center py-6">
+                  <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+                  <h3 className="font-medium text-[13px] mb-2">{t("specialties.noData")}</h3>
+                  <p className="text-[13px] text-muted-foreground mb-3">
                     {t("specialties.noDataDescription")}
                   </p>
                   <Button onClick={handleGetRecommendations} disabled={isLoadingRecs}>
@@ -795,12 +795,12 @@ export function SeasonalityContent() {
                 <DialogTitle className="flex items-center gap-2">
                   {selectedProduce.name}
                   {selectedProduce.is_peak_season && (
-                    <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                    <Badge className="bg-[var(--terra-ghost)] text-accent">
                       {t("badges.peak")}
                     </Badge>
                   )}
                   {selectedProduce.is_in_season && !selectedProduce.is_peak_season && (
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                    <Badge className="bg-[var(--green-ghost)] text-primary">
                       {t("badges.inSeason")}
                     </Badge>
                   )}
@@ -895,13 +895,13 @@ interface RecommendationCardProps {
 
 function RecommendationCard({ recommendation: rec, onAddToList, onRecipeClick, onSave, onFavorite, isSaved, isFavorite, isSaving, t }: RecommendationCardProps) {
   return (
-    <Card className="bg-background">
+    <Card className="bg-background border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
       <CardContent className="pt-4">
         <div className="flex items-start justify-between mb-2">
-          <h4 className="font-medium">{rec.produce_name}</h4>
+          <h4 className="font-medium text-[13px]">{rec.produce_name}</h4>
           <div className="flex items-center gap-1">
             {rec.is_peak && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+              <Badge variant="secondary" className="bg-[var(--terra-ghost)] text-accent">
                 {t("badges.peak")}
               </Badge>
             )}
@@ -940,10 +940,10 @@ function RecommendationCard({ recommendation: rec, onAddToList, onRecipeClick, o
             </Button>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground mb-3">{rec.why_now}</p>
+        <p className="text-[13px] text-muted-foreground mb-3">{rec.why_now}</p>
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{t("thisMonth.recipeIdeas")}:</p>
-          <ul className="text-sm space-y-1">
+          <p className="text-[11px] font-medium text-muted-foreground">{t("thisMonth.recipeIdeas")}:</p>
+          <ul className="text-[13px] space-y-1">
             {rec.recipe_ideas.map((idea, i) => (
               <li
                 key={i}
@@ -1056,11 +1056,11 @@ interface ProduceCardProps {
 
 function ProduceCard({ produce, onToggleFavorite, onDelete, onAddToList, onClick, isDeleting, t }: ProduceCardProps) {
   return (
-    <Card className="group hover:shadow-md transition-all cursor-pointer" onClick={onClick}>
+    <Card className="group border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] hover:shadow-md transition-all cursor-pointer" onClick={onClick}>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h4 className="font-medium">{produce.name}</h4>
+            <h4 className="font-medium text-[13px]">{produce.name}</h4>
             {produce.name_local && (
               <p className="text-xs text-muted-foreground">{produce.name_local}</p>
             )}
@@ -1101,19 +1101,19 @@ function ProduceCard({ produce, onToggleFavorite, onDelete, onAddToList, onClick
             {t(`categories.${produce.category}`)}
           </Badge>
           {produce.is_peak_season && (
-            <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 text-xs">
+            <Badge className="bg-[var(--terra-ghost)] text-accent text-xs">
               {t("badges.peak")}
             </Badge>
           )}
           {produce.is_in_season && !produce.is_peak_season && (
-            <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
+            <Badge className="bg-[var(--green-ghost)] text-primary text-xs">
               {t("badges.inSeason")}
             </Badge>
           )}
         </div>
 
         {produce.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+          <p className="text-[13px] text-muted-foreground line-clamp-2 mb-3">
             {produce.description}
           </p>
         )}
@@ -1146,11 +1146,11 @@ interface SpecialtyCardProps {
 
 function SpecialtyCard({ specialty, t }: SpecialtyCardProps) {
   return (
-    <Card className="hover:shadow-md transition-all">
+    <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] hover:shadow-md transition-all">
       <CardContent className="pt-4">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h4 className="font-medium">{specialty.name}</h4>
+            <h4 className="font-medium text-[13px]">{specialty.name}</h4>
             {specialty.name_local && (
               <p className="text-xs text-muted-foreground">{specialty.name_local}</p>
             )}
@@ -1168,24 +1168,24 @@ function SpecialtyCard({ specialty, t }: SpecialtyCardProps) {
         </Badge>
 
         {specialty.description && (
-          <p className="text-sm text-muted-foreground mb-3">{specialty.description}</p>
+          <p className="text-[13px] text-muted-foreground mb-3">{specialty.description}</p>
         )}
 
         {specialty.cultural_info && (
-          <div className="text-sm mb-3">
+          <div className="text-[13px] mb-3">
             <p className="font-medium text-xs text-muted-foreground mb-1">
               {t("specialties.culturalInfo")}:
             </p>
-            <p className="text-sm">{specialty.cultural_info}</p>
+            <p className="text-[13px]">{specialty.cultural_info}</p>
           </div>
         )}
 
         {specialty.how_to_use && (
-          <div className="text-sm mb-3">
-            <p className="font-medium text-xs text-muted-foreground mb-1">
+          <div className="text-[13px] mb-3">
+            <p className="font-medium text-[11px] text-muted-foreground mb-1">
               {t("specialties.howToUse")}:
             </p>
-            <p className="text-sm">{specialty.how_to_use}</p>
+            <p className="text-[13px]">{specialty.how_to_use}</p>
           </div>
         )}
 

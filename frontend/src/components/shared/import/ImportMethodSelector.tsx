@@ -34,28 +34,28 @@ export function ImportMethodSelector({
     <Card
       key={method.id}
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md border-primary/50 bg-primary/5",
+        "cursor-pointer transition-all border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] bg-[var(--green-ghost)]",
         method.disabled || method.comingSoon
           ? "opacity-60 cursor-not-allowed"
-          : "hover:border-primary hover:bg-primary/10"
+          : "hover:shadow-[0_2px_16px_rgba(0,0,0,0.08)] hover:bg-[var(--green-wash)]"
       )}
       onClick={() => handleMethodSelect(method)}
     >
-      <CardContent className="p-8">
-        <div className="flex flex-col items-center text-center space-y-3">
-          <div className="rounded-full bg-primary/10 text-primary p-4">
-            <div className="[&>svg]:h-8 [&>svg]:w-8">{method.icon}</div>
+      <CardContent className="p-6">
+        <div className="flex flex-col items-center text-center space-y-2.5">
+          <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-[var(--green-ghost)] text-primary">
+            <div className="[&>svg]:h-5 [&>svg]:w-5">{method.icon}</div>
           </div>
           <div>
             <div className="flex items-center justify-center gap-2">
-              <h4 className="font-medium text-lg">{t(method.titleKey)}</h4>
+              <h4 className="font-medium text-[15px]">{t(method.titleKey)}</h4>
               {method.comingSoon && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-[11px] rounded-full">
                   {tCommon("comingSoon")}
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-[13px] text-muted-foreground mt-1">
               {t(method.descriptionKey)}
             </p>
           </div>
@@ -68,23 +68,23 @@ export function ImportMethodSelector({
     <Card
       key={method.id}
       className={cn(
-        "cursor-pointer transition-all hover:shadow-sm",
+        "cursor-pointer transition-all border-0 shadow-[0_1px_6px_rgba(0,0,0,0.04)] rounded-[1.375rem]",
         method.disabled || method.comingSoon
           ? "opacity-60 cursor-not-allowed"
-          : "hover:border-primary/50"
+          : "hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
       )}
       onClick={() => handleMethodSelect(method)}
     >
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-muted text-muted-foreground p-2 flex-shrink-0">
+          <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-muted text-muted-foreground flex-shrink-0">
             <div className="[&>svg]:h-4 [&>svg]:w-4">{method.icon}</div>
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h4 className="font-medium text-sm truncate">{t(method.titleKey)}</h4>
+              <h4 className="font-medium text-[13px] truncate">{t(method.titleKey)}</h4>
               {method.comingSoon && (
-                <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                <Badge variant="secondary" className="text-[10px] px-1 py-0 rounded-full">
                   {tCommon("comingSoon")}
                 </Badge>
               )}
@@ -101,8 +101,8 @@ export function ImportMethodSelector({
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold">{t("selectMethod.title")}</h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h3 className="text-[15px] font-medium">{t("selectMethod.title")}</h3>
+        <p className="text-[13px] text-muted-foreground mt-1">
           {t("selectMethod.description")}
         </p>
       </div>

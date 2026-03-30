@@ -173,13 +173,13 @@ export function NutritionContent() {
   const isToday = format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ModuleTabs tabs={tabs} defaultTab="overview">
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
           {uiVisibility.showStatsCards && (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
               <StatsCard
                 title={t("stats.todayCalories")}
                 value={dailyData?.total_calories || 0}
@@ -219,7 +219,7 @@ export function NutritionContent() {
           )}
 
           {/* View Controls */}
-          <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col gap-3 mb-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <ProfileSelector
@@ -242,7 +242,7 @@ export function NutritionContent() {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-                <span className="text-lg font-semibold mx-2">
+                <span className="text-sm font-medium mx-2">
                   {format(selectedDate, "EEEE, MMMM d, yyyy")}
                 </span>
                 {!isToday && (
@@ -261,7 +261,7 @@ export function NutritionContent() {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button>
+                    <Button className="rounded-xl">
                       <Plus className="h-4 w-4 mr-2" />
                       {t("addEntry")}
                     </Button>
@@ -292,8 +292,8 @@ export function NutritionContent() {
               isLoading={isLoadingDaily}
             />
           ) : (
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+              <CardContent className="pt-4">
                 <NutritionCalendar
                   dailyData={analytics?.daily_data || []}
                   selectedDate={selectedDate}
@@ -308,7 +308,7 @@ export function NutritionContent() {
 
         {/* Goals Tab */}
         <TabsContent value="goals">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Profile Selector for Goals */}
             <div className="flex items-center justify-between">
               <ProfileSelector
@@ -320,20 +320,20 @@ export function NutritionContent() {
 
             {/* Combined View - All Members */}
             {selectedProfileId === null ? (
-              <div className="space-y-6">
-                <div className="text-lg font-semibold">{t("goals.allMembersGoals")}</div>
+              <div className="space-y-4">
+                <div className="text-[13px] font-medium">{t("goals.allMembersGoals")}</div>
                 {profiles.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-8">
+                  <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+                    <CardContent className="py-6">
                       <EmptyState
-                        icon={<Target className="h-12 w-12" />}
+                        icon={<Target className="h-8 w-8" />}
                         title={t("goals.noProfiles")}
                         description={t("goals.noProfilesDescription")}
                       />
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     {profiles.map((profile) => (
                       <ProfileGoalCard
                         key={profile.id}
@@ -352,9 +352,9 @@ export function NutritionContent() {
             ) : (
               <>
                 {/* Single Profile View - Active Goal Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
+                <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+                  <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+                    <CardTitle className="flex items-center justify-between text-sm">
                       <span>{t("goals.activeGoal")}</span>
                       <Button onClick={() => {
                         setEditingGoal(null);
@@ -367,13 +367,13 @@ export function NutritionContent() {
                   </CardHeader>
                   <CardContent>
                     {isLoadingGoal ? (
-                      <div className="text-muted-foreground">{tCommon("loading")}</div>
+                      <div className="text-muted-foreground text-[13px]">{tCommon("loading")}</div>
                     ) : activeGoal ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Badge>{t(`goalTypes.${activeGoal.goal_type}`)}</Badge>
-                            <Badge variant="outline" className="text-green-600">
+                            <Badge variant="outline" className="text-primary">
                               {t("goals.active")}
                             </Badge>
                           </div>
@@ -387,7 +387,7 @@ export function NutritionContent() {
                             </Button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <GoalStat
                             label={t("macros.calories")}
                             value={activeGoal.daily_calories}
@@ -427,7 +427,7 @@ export function NutritionContent() {
                       </div>
                     ) : (
                       <EmptyState
-                        icon={<Target className="h-12 w-12" />}
+                        icon={<Target className="h-8 w-8" />}
                         title={t("goals.empty.title")}
                         description={t("goals.empty.description")}
                         action={{
@@ -441,18 +441,18 @@ export function NutritionContent() {
 
                 {/* All Goals History */}
                 {allGoals && allGoals.length > 1 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t("goals.goalHistory")}</CardTitle>
+                  <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+                    <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+                      <CardTitle className="text-sm">{t("goals.goalHistory")}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2">
+                      <div className="divide-y divide-border">
                         {allGoals
                           .filter((g) => g.id !== activeGoal?.id)
                           .map((goal) => (
                             <div
                               key={goal.id}
-                              className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                              className="flex items-center justify-between py-2.5"
                             >
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline">
@@ -555,11 +555,11 @@ interface GoalStatProps {
 
 function GoalStat({ label, value, unit }: GoalStatProps) {
   return (
-    <div className="text-center p-3 rounded-lg bg-muted/30">
-      <div className="text-xs text-muted-foreground mb-1">{label}</div>
-      <div className="text-lg font-bold">
+    <div className="text-center p-2.5 rounded-xl bg-muted/30">
+      <div className="text-[11px] text-muted-foreground mb-1">{label}</div>
+      <div className="text-sm font-medium">
         {value !== null ? value : "-"}
-        {value !== null && <span className="text-xs font-normal ml-1">{unit}</span>}
+        {value !== null && <span className="text-[11px] font-normal ml-1">{unit}</span>}
       </div>
     </div>
   );
@@ -580,9 +580,9 @@ function ProfileGoalCard({ profile, onEditGoal, onCreateGoal }: ProfileGoalCardP
   const { data: activeGoal, isLoading } = useGetActiveNutritionGoalQuery(profile.id);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
+    <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+      <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+        <CardTitle className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full"
@@ -591,7 +591,7 @@ function ProfileGoalCard({ profile, onEditGoal, onCreateGoal }: ProfileGoalCardP
             <span>{profile.name}</span>
           </div>
           {!activeGoal && !isLoading && (
-            <Button size="sm" variant="outline" onClick={onCreateGoal} data-spotlight="set-goal-button">
+            <Button size="sm" variant="outline" className="rounded-xl" onClick={onCreateGoal} data-spotlight="set-goal-button">
               <Plus className="h-3 w-3 mr-1" />
               {t("goals.setGoal")}
             </Button>
@@ -620,32 +620,32 @@ function ProfileGoalCard({ profile, onEditGoal, onCreateGoal }: ProfileGoalCardP
             <div className="grid grid-cols-2 gap-2">
               <div className="text-center p-2 rounded bg-muted/30">
                 <div className="text-[10px] text-muted-foreground">{t("macros.calories")}</div>
-                <div className="text-sm font-semibold">
+                <div className="text-sm font-medium">
                   {activeGoal.daily_calories || "-"} <span className="text-[10px] font-normal">{t("units.kcal")}</span>
                 </div>
               </div>
               <div className="text-center p-2 rounded bg-muted/30">
                 <div className="text-[10px] text-muted-foreground">{t("macros.protein")}</div>
-                <div className="text-sm font-semibold">
+                <div className="text-sm font-medium">
                   {activeGoal.daily_protein_g || "-"} <span className="text-[10px] font-normal">g</span>
                 </div>
               </div>
               <div className="text-center p-2 rounded bg-muted/30">
                 <div className="text-[10px] text-muted-foreground">{t("macros.carbs")}</div>
-                <div className="text-sm font-semibold">
+                <div className="text-sm font-medium">
                   {activeGoal.daily_carbs_g || "-"} <span className="text-[10px] font-normal">g</span>
                 </div>
               </div>
               <div className="text-center p-2 rounded bg-muted/30">
                 <div className="text-[10px] text-muted-foreground">{t("macros.fat")}</div>
-                <div className="text-sm font-semibold">
+                <div className="text-sm font-medium">
                   {activeGoal.daily_fat_g || "-"} <span className="text-[10px] font-normal">g</span>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground text-center py-4">
+          <div className="text-[13px] text-muted-foreground text-center py-3">
             {t("goals.noGoalSet")}
           </div>
         )}

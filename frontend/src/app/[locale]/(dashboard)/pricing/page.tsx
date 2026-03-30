@@ -179,7 +179,7 @@ export default function PricingPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">
+        <h1 className="text-4xl font-medium tracking-tight mb-4">
           {t("page.title")}
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -225,7 +225,7 @@ export default function PricingPage() {
                 }`}
               >
                 {isRecommended && (
-                  <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold rounded-bl-lg rounded-tr-lg flex items-center gap-1">
+                  <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-bl-lg rounded-tr-lg flex items-center gap-1">
                     <Sparkles className="h-3 w-3" />
                     {t("page.recommended")}
                   </div>
@@ -237,7 +237,7 @@ export default function PricingPage() {
                     {t(`descriptions.${tier.name.toLowerCase()}`)}
                   </CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold tracking-tight text-foreground">
+                    <span className="text-4xl font-medium tracking-tight text-foreground">
                       {formatPriceFromUSD(tier.price_monthly ?? 0)}
                     </span>
                     <span className="text-muted-foreground">

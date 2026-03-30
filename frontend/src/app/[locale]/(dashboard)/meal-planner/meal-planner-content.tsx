@@ -278,8 +278,8 @@ export function MealPlannerContent() {
           )}
 
           {/* Calendar View */}
-          <Card>
-            <CardHeader className="pb-2">
+          <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+            <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
               {/* Navigation controls */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 {/* Left: Navigation with date range between arrows */}
@@ -360,7 +360,7 @@ export function MealPlannerContent() {
                 />
               ) : (
                 <EmptyState
-                  icon={<Calendar className="h-12 w-12" />}
+                  icon={<Calendar className="h-8 w-8" />}
                   title={t("empty.title")}
                   description={t("hints.clickToAddMeal")}
                 />
@@ -385,7 +385,7 @@ export function MealPlannerContent() {
             />
           ) : (
             <EmptyState
-              icon={<Archive className="h-12 w-12" />}
+              icon={<Archive className="h-8 w-8" />}
               title={t("archive.empty.title")}
               description={t("archive.empty.description")}
             />
@@ -418,7 +418,7 @@ export function MealPlannerContent() {
             {/* Empty state for analysis */}
             {(!analytics || analytics.total_meals === 0) && (
               <EmptyState
-                icon={<BarChart3 className="h-12 w-12" />}
+                icon={<BarChart3 className="h-8 w-8" />}
                 title={t("analysis.empty.title")}
                 description={t("analysis.empty.description")}
               />
@@ -502,7 +502,7 @@ export function MealPlannerContent() {
             {/* Empty state for history */}
             {(!historyData || historyData.total_plans === 0) && (
               <EmptyState
-                icon={<History className="h-12 w-12" />}
+                icon={<History className="h-8 w-8" />}
                 title={t("history.empty.title")}
                 description={t("history.empty.description")}
               />

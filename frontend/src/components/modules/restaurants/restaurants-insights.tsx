@@ -244,7 +244,7 @@ export function RestaurantsInsights({
                   <ChefHat className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">
+                  <h3 className="font-medium text-emerald-800 dark:text-emerald-200">
                     {t("recipes.title")}
                   </h3>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400">
@@ -289,10 +289,10 @@ export function RestaurantsInsights({
                           variant="secondary"
                           className={`text-xs cursor-pointer hover:opacity-80 ${
                             recipe.difficulty === "easy"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
+                              ? "bg-[var(--green-ghost)] text-primary"
                               : recipe.difficulty === "hard"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+                              ? "bg-[var(--error-bg)] text-destructive"
+                              : "bg-accent/10 text-accent"
                           }`}
                           onClick={() => onRecipeClick?.(recipe.name)}
                         >
@@ -322,7 +322,7 @@ export function RestaurantsInsights({
                   <GraduationCap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-purple-800 dark:text-purple-200">
+                  <h3 className="font-medium text-purple-800 dark:text-purple-200">
                     {t("learning.title")}
                   </h3>
                   <p className="text-xs text-purple-600 dark:text-purple-400">
@@ -354,8 +354,8 @@ export function RestaurantsInsights({
                         variant="secondary"
                         className={`text-xs cursor-pointer ${
                           hasSkill
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
-                            : "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300"
+                            ? "bg-[var(--green-ghost)] text-primary"
+                            : "bg-muted text-muted-foreground"
                         }`}
                         onClick={() => onSkillClick?.(skillName)}
                       >

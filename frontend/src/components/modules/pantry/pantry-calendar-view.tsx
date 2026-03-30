@@ -155,7 +155,7 @@ export function PantryCalendarView({
           <Button variant="outline" size="icon" onClick={goToNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <h2 className="text-lg font-semibold ml-2">
+          <h2 className="text-lg font-medium ml-2">
             {formatMonthYear(currentDate)}
           </h2>
         </div>
@@ -223,8 +223,8 @@ export function PantryCalendarView({
                             variant="secondary"
                             className={cn(
                               "text-xs w-full justify-center gap-1",
-                              expiredCount > 0 && "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-                              expiredCount === 0 && expiringCount > 0 && "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
+                              expiredCount > 0 && "bg-[var(--error-bg)] text-destructive",
+                              expiredCount === 0 && expiringCount > 0 && "bg-[var(--terra-ghost)] text-accent"
                             )}
                           >
                             {(expiredCount > 0 || expiringCount > 0) && (
@@ -259,7 +259,7 @@ export function PantryCalendarView({
                       side="right"
                     >
                       <div className="p-3 border-b">
-                        <div className="font-semibold">
+                        <div className="font-medium">
                           {day.date.toLocaleDateString(undefined, {
                             weekday: "long",
                             month: "long",
@@ -272,7 +272,7 @@ export function PantryCalendarView({
                             {day.items.length} {t("calendar.items")}
                           </span>
                           {expiredCount > 0 && (
-                            <span className="flex items-center gap-1 text-red-500">
+                            <span className="flex items-center gap-1 text-destructive">
                               <AlertTriangle className="h-3 w-3" />
                               {expiredCount} {t("calendar.expired")}
                             </span>
@@ -292,8 +292,8 @@ export function PantryCalendarView({
                                 <div className="flex-1 min-w-0">
                                   <div className={cn(
                                     "font-medium truncate",
-                                    status === "expired" && "text-red-500",
-                                    status === "expiring" && "text-orange-500"
+                                    status === "expired" && "text-destructive",
+                                    status === "expiring" && "text-accent"
                                   )}>
                                     {item.item_name}
                                   </div>
@@ -317,7 +317,7 @@ export function PantryCalendarView({
                                 {status && status !== "ok" && (
                                   <AlertTriangle className={cn(
                                     "h-4 w-4 shrink-0",
-                                    status === "expired" ? "text-red-500" : "text-orange-500"
+                                    status === "expired" ? "text-destructive" : "text-accent"
                                   )} />
                                 )}
                               </div>
@@ -349,13 +349,13 @@ export function PantryCalendarView({
           <span>{t("calendar.itemsExpiring")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+          <Badge variant="secondary" className="text-xs bg-[var(--terra-ghost)] text-accent">
             <AlertTriangle className="h-3 w-3 mr-1" />
           </Badge>
           <span>{t("calendar.expiringSoon")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+          <Badge variant="secondary" className="text-xs bg-[var(--error-bg)] text-destructive">
             <AlertTriangle className="h-3 w-3 mr-1" />
           </Badge>
           <span>{t("calendar.expired")}</span>

@@ -82,7 +82,7 @@ export function ShoppingListCalendarView({
             <Button variant="outline" size="icon" onClick={handleNextMonth}>
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <h2 className="text-lg font-semibold ml-2">
+            <h2 className="text-lg font-medium ml-2">
               {format(currentMonth, "MMMM yyyy")}
             </h2>
           </div>
@@ -160,7 +160,7 @@ export function ShoppingListCalendarView({
                           >
                             <div className="flex items-center gap-2">
                               {list.status === "completed" ? (
-                                <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                                <CheckCircle className="h-4 w-4 text-primary shrink-0" />
                               ) : (
                                 <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
                               )}

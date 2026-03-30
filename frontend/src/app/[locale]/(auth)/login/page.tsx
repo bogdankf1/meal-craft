@@ -22,9 +22,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">
+          <CardTitle className="text-2xl font-medium text-primary">
             {tApp("name")}
           </CardTitle>
           <CardDescription>{tApp("tagline")}</CardDescription>
@@ -32,7 +32,7 @@ export default function LoginPage() {
         <CardContent className="space-y-4">
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full rounded-xl"
             onClick={() => signIn("google", { callbackUrl })}
           >
             <svg

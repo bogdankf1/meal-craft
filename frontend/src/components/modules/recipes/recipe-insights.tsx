@@ -342,7 +342,7 @@ export function RecipeInsights({
                   <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-green-800 dark:text-green-200">
+                  <h3 className="font-medium text-green-800 dark:text-green-200">
                     {t("pantry.title")}
                   </h3>
                   <p className="text-xs text-green-600 dark:text-green-400">
@@ -416,7 +416,7 @@ export function RecipeInsights({
                   <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-orange-800 dark:text-orange-200">
+                  <h3 className="font-medium text-orange-800 dark:text-orange-200">
                     {t("shopping.title")}
                   </h3>
                   <p className="text-xs text-orange-600 dark:text-orange-400">
@@ -484,7 +484,7 @@ export function RecipeInsights({
                   <GraduationCap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-purple-800 dark:text-purple-200">
+                  <h3 className="font-medium text-purple-800 dark:text-purple-200">
                     {t("learning.title")}
                   </h3>
                   <p className="text-xs text-purple-600 dark:text-purple-400">

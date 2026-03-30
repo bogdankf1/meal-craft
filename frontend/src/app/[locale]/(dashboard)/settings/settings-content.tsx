@@ -8,7 +8,6 @@ import Cookies from "js-cookie";
 import { useTheme } from "next-themes";
 import {
   Settings,
-  Palette,
   Globe,
   Leaf,
   DollarSign,
@@ -20,13 +19,13 @@ import {
   Pencil,
   Trash2,
   Star,
-  ChevronDown,
   ChevronUp,
+  ChevronDown,
   AlertTriangle,
   Salad,
-  LayoutDashboard,
-  PanelLeft,
   LogOut,
+  Eye,
+  MapPin,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -44,7 +43,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,27 +147,6 @@ export function SettingsContent() {
   // Expand all profiles when in onboarding mode (initial value from query param)
   const [expandAllProfiles] = useState(isOnboarding);
 
-  // Interface customization section collapse state (all closed by default)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    pageElements: false,
-    toolbarElements: false,
-    commonTabs: false,
-    moduleSpecificTabs: false,
-    // Sidebar navigation sections
-    sidebarPlanning: false,
-    sidebarInventory: false,
-    sidebarTracking: false,
-    sidebarLifestyle: false,
-    sidebarTools: false,
-    // Dashboard content sections
-    dashboardMainContent: false,
-    dashboardInsights: false,
-  });
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
   // Get selected country for seasonality
   const selectedCountry = seasonalPreferences?.country_code || "UA";
 
@@ -182,11 +160,6 @@ export function SettingsContent() {
       value: "household",
       label: t("tabs.household"),
       icon: <Users className="h-4 w-4" />,
-    },
-    {
-      value: "appearance",
-      label: t("tabs.appearance"),
-      icon: <Palette className="h-4 w-4" />,
     },
   ];
 
@@ -294,28 +267,34 @@ export function SettingsContent() {
     <ModuleTabs tabs={tabs} defaultTab="general">
       {/* General Tab */}
       <TabsContent value="general" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              {t("general.title")}
-            </CardTitle>
-            <CardDescription>{t("general.description")}</CardDescription>
+        {/* Card 1: Language & Region */}
+        <Card className="shadow-sm border-0">
+          <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-[var(--green-wash)] flex items-center justify-center">
+                <Globe className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-[15px] font-medium text-primary">
+                  Language &amp; Region
+                </CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Set your language, location, and currency
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="pt-5 space-y-0">
             {/* Language */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="space-y-0.5">
-                <Label className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  {t("general.language.title")}
-                </Label>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4">
+              <div>
+                <p className="text-sm font-medium">{t("general.language.title")}</p>
+                <p className="text-xs text-muted-foreground">
                   {t("general.language.description")}
                 </p>
               </div>
               <Select value={currentLocale} onValueChange={handleLanguageChange} disabled={isPending}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 rounded-xl border-0 bg-[var(--green-ghost)]">
                   <SelectValue placeholder={t("general.language.placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -331,14 +310,13 @@ export function SettingsContent() {
               </Select>
             </div>
 
+            <Separator />
+
             {/* Country */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="space-y-0.5">
-                <Label className="flex items-center gap-2">
-                  <Leaf className="h-4 w-4" />
-                  {t("general.country.title")}
-                </Label>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4">
+              <div>
+                <p className="text-sm font-medium">{t("general.country.title")}</p>
+                <p className="text-xs text-muted-foreground">
                   {t("general.country.description")}
                 </p>
               </div>
@@ -346,7 +324,7 @@ export function SettingsContent() {
                 <Skeleton className="h-10 w-full sm:w-48" />
               ) : (
                 <Select value={selectedCountry} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="w-full sm:w-48">
+                  <SelectTrigger className="w-full sm:w-48 rounded-xl border-0 bg-[var(--green-ghost)]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -363,19 +341,18 @@ export function SettingsContent() {
               )}
             </div>
 
+            <Separator />
+
             {/* Currency */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="space-y-0.5">
-                <Label className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  {t("general.currency.title")}
-                </Label>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4">
+              <div>
+                <p className="text-sm font-medium">{t("general.currency.title")}</p>
+                <p className="text-xs text-muted-foreground">
                   {t("general.currency.description")}
                 </p>
               </div>
               <Select value={currency} onValueChange={handleCurrencyChange}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 rounded-xl border-0 bg-[var(--green-ghost)]">
                   <SelectValue placeholder={t("general.currency.placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -390,26 +367,107 @@ export function SettingsContent() {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Account / Logout */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="space-y-0.5">
-                <Label className="flex items-center gap-2">
-                  <LogOut className="h-4 w-4" />
-                  {t("general.account.title")}
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("general.account.description")}
+        {/* Card 2: Appearance */}
+        <Card className="shadow-sm border-0">
+          <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-[var(--green-wash)] flex items-center justify-center">
+                <Sun className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-[15px] font-medium text-primary">
+                  Appearance
+                </CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Choose your theme and display preferences
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Theme</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              {[
+                { value: "light", label: t("appearance.theme.light"), desc: t("appearance.theme.lightDescription"), icon: Sun },
+                { value: "dark", label: t("appearance.theme.dark"), desc: t("appearance.theme.darkDescription"), icon: Moon },
+                { value: "system", label: t("appearance.theme.system"), desc: t("appearance.theme.systemDescription"), icon: Monitor },
+              ].map(({ value, label, desc, icon: Icon }) => {
+                const sel = theme === value;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => handleThemeChange(value)}
+                    className={cn(
+                      "flex flex-col items-center gap-3 p-5 rounded-2xl text-center cursor-pointer transition-shadow",
+                      sel
+                        ? "border-2 border-primary bg-[var(--green-ghost)]"
+                        : "border-0 bg-card shadow-sm hover:shadow-md"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "h-12 w-12 rounded-2xl flex items-center justify-center",
+                        sel ? "bg-[var(--green-wash)]" : "bg-muted"
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-5 w-5",
+                          sel ? "text-primary" : "text-muted-foreground"
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <p className={cn("text-sm font-medium", sel && "text-primary")}>
+                        {label}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Separator />
+
+            {/* Minimal View Toggle */}
+            <div className="flex items-center justify-between py-4">
+              <div>
+                <p className="text-sm font-medium">{t("appearance.minimalView.label")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("appearance.minimalView.description")}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className="w-full sm:w-auto text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:text-red-500 dark:border-red-900 dark:hover:bg-red-950/50 dark:hover:text-red-400"
-              >
-                {t("general.account.logout")}
-              </Button>
+              <Switch
+                checked={minimalView}
+                onCheckedChange={toggleMinimalView}
+              />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Sign Out */}
+        <Card className="shadow-sm border-0">
+          <CardContent className="py-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-[var(--error-bg)] flex items-center justify-center">
+                <LogOut className="h-4 w-4 text-destructive" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Sign Out</p>
+                <p className="text-xs text-muted-foreground">End your current session</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="rounded-xl border-destructive/30 bg-[var(--error-bg)] text-destructive hover:bg-destructive hover:text-white"
+            >
+              {t("general.account.logout")}
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -449,7 +507,7 @@ export function SettingsContent() {
                     <div className="flex items-center justify-between p-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
                           style={{ backgroundColor: profile.color || "#3B82F6" }}
                         >
                           {profile.name.charAt(0).toUpperCase()}
@@ -554,941 +612,6 @@ export function SettingsContent() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Appearance Tab */}
-      <TabsContent value="appearance" className="space-y-6">
-        {/* Minimal View Toggle */}
-        <Card>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-base font-medium">{t("appearance.minimalView.label")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("appearance.minimalView.description")}
-                </p>
-              </div>
-              <Switch
-                checked={minimalView}
-                onCheckedChange={toggleMinimalView}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Theme Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              {t("appearance.theme.title")}
-            </CardTitle>
-            <CardDescription>{t("appearance.theme.description")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              value={theme}
-              onValueChange={handleThemeChange}
-              className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
-            >
-              <Label
-                htmlFor="theme-light"
-                className={cn(
-                  "flex flex-col items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all hover:border-primary",
-                  theme === "light" && "border-primary bg-primary/5"
-                )}
-              >
-                <RadioGroupItem value="light" id="theme-light" className="sr-only" />
-                <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/50">
-                  <Sun className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">{t("appearance.theme.light")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("appearance.theme.lightDescription")}
-                  </p>
-                </div>
-              </Label>
-
-              <Label
-                htmlFor="theme-dark"
-                className={cn(
-                  "flex flex-col items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all hover:border-primary",
-                  theme === "dark" && "border-primary bg-primary/5"
-                )}
-              >
-                <RadioGroupItem value="dark" id="theme-dark" className="sr-only" />
-                <div className="p-3 rounded-full bg-slate-800 dark:bg-slate-700">
-                  <Moon className="h-6 w-6 text-slate-200" />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">{t("appearance.theme.dark")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("appearance.theme.darkDescription")}
-                  </p>
-                </div>
-              </Label>
-
-              <Label
-                htmlFor="theme-system"
-                className={cn(
-                  "flex flex-col items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all hover:border-primary",
-                  theme === "system" && "border-primary bg-primary/5"
-                )}
-              >
-                <RadioGroupItem value="system" id="theme-system" className="sr-only" />
-                <div className="p-3 rounded-full bg-gradient-to-br from-amber-100 to-slate-800 dark:from-amber-900/50 dark:to-slate-700">
-                  <Monitor className="h-6 w-6 text-slate-600 dark:text-slate-300" />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">{t("appearance.theme.system")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("appearance.theme.systemDescription")}
-                  </p>
-                </div>
-              </Label>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
-        {/* Interface Customization */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5" />
-              {t("appearance.interfaceCustomization.title")}
-            </CardTitle>
-            <CardDescription>{t("appearance.interfaceCustomization.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Page Elements */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("pageElements")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.interfaceCustomization.pageElements.title")}
-                </h4>
-                {expandedSections.pageElements ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.pageElements && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.pageElements.showPageTitle.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.pageElements.showPageTitle.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showPageTitle}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showPageTitle", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.pageElements.showPageSubtitle.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.pageElements.showPageSubtitle.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showPageSubtitle}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showPageSubtitle", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.pageElements.showStatsCards.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.pageElements.showStatsCards.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showStatsCards}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showStatsCards", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.pageElements.showInsights.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.pageElements.showInsights.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showInsights}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showInsights", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Toolbar Elements */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("toolbarElements")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.interfaceCustomization.toolbarElements.title")}
-                </h4>
-                {expandedSections.toolbarElements ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.toolbarElements && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showSearchBar.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.toolbarElements.showSearchBar.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSearchBar}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSearchBar", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showFilters.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.toolbarElements.showFilters.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showFilters}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showFilters", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showDateRange.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.toolbarElements.showDateRange.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDateRange}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDateRange", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showViewSelector.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.toolbarElements.showViewSelector.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showViewSelector}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showViewSelector", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showSorting.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.toolbarElements.showSorting.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSorting}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSorting", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.toolbarElements.showColumnSelector.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.toolbarElements.showColumnSelector.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showColumnSelector}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showColumnSelector", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Module Tabs */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("commonTabs")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.interfaceCustomization.tabs.title")}
-                </h4>
-                {expandedSections.commonTabs ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.commonTabs && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.tabs.showArchiveTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.tabs.showArchiveTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showArchiveTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showArchiveTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.tabs.showWasteTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.tabs.showWasteTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showWasteTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showWasteTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.tabs.showAnalysisTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.tabs.showAnalysisTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showAnalysisTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showAnalysisTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.tabs.showHistoryTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.tabs.showHistoryTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showHistoryTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showHistoryTab", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Module-Specific Tabs */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("moduleSpecificTabs")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <div>
-                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("appearance.interfaceCustomization.moduleSpecificTabs.title")}
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-1">{t("appearance.interfaceCustomization.moduleSpecificTabs.description")}</p>
-                </div>
-                {expandedSections.moduleSpecificTabs ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                )}
-              </button>
-              {expandedSections.moduleSpecificTabs && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showMaintenanceTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showMaintenanceTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showMaintenanceTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showMaintenanceTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showGoalsTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showGoalsTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showGoalsTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showGoalsTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showCollectionsTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showCollectionsTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showCollectionsTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showCollectionsTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showThisMonthTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showThisMonthTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showThisMonthTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showThisMonthTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showSeasonalCalendarTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showSeasonalCalendarTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSeasonalCalendarTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSeasonalCalendarTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showLocalSpecialtiesTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showLocalSpecialtiesTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showLocalSpecialtiesTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showLocalSpecialtiesTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showMySkillsTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showMySkillsTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showMySkillsTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showMySkillsTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showLibraryTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showLibraryTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showLibraryTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showLibraryTab", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.interfaceCustomization.moduleSpecificTabs.showLearningPathsTab.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.interfaceCustomization.moduleSpecificTabs.showLearningPathsTab.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showLearningPathsTab}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showLearningPathsTab", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sidebar Navigation */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PanelLeft className="h-5 w-5" />
-              {t("appearance.sidebarNavigation.title")}
-            </CardTitle>
-            <CardDescription>{t("appearance.sidebarNavigation.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Planning Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("sidebarPlanning")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.sidebarNavigation.planning.title")}
-                </h4>
-                {expandedSections.sidebarPlanning ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.sidebarPlanning && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.planning.mealPlanner.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.planning.mealPlanner.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarMealPlanner}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarMealPlanner", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.planning.recipes.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.planning.recipes.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarRecipes}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarRecipes", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.planning.shoppingLists.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.planning.shoppingLists.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarShoppingLists}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarShoppingLists", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Inventory Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("sidebarInventory")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.sidebarNavigation.inventory.title")}
-                </h4>
-                {expandedSections.sidebarInventory ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.sidebarInventory && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.inventory.groceries.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.inventory.groceries.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarGroceries}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarGroceries", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.inventory.pantry.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.inventory.pantry.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarPantry}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarPantry", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.inventory.kitchenEquipment.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.inventory.kitchenEquipment.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarKitchenEquipment}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarKitchenEquipment", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tracking Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("sidebarTracking")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.sidebarNavigation.tracking.title")}
-                </h4>
-                {expandedSections.sidebarTracking ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.sidebarTracking && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.tracking.restaurants.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.tracking.restaurants.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarRestaurants}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarRestaurants", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.tracking.nutrition.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.tracking.nutrition.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarNutrition}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarNutrition", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Lifestyle Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("sidebarLifestyle")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.sidebarNavigation.lifestyle.title")}
-                </h4>
-                {expandedSections.sidebarLifestyle ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.sidebarLifestyle && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.lifestyle.seasonality.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.lifestyle.seasonality.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarSeasonality}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarSeasonality", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.lifestyle.learning.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.lifestyle.learning.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarLearning}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarLearning", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tools Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("sidebarTools")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.sidebarNavigation.tools.title")}
-                </h4>
-                {expandedSections.sidebarTools ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.sidebarTools && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.tools.export.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.tools.export.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarExport}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarExport", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.tools.backups.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.tools.backups.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarBackups}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarBackups", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.sidebarNavigation.tools.help.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.sidebarNavigation.tools.help.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showSidebarHelp}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showSidebarHelp", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Dashboard Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5" />
-              {t("appearance.dashboardContent.title")}
-            </CardTitle>
-            <CardDescription>{t("appearance.dashboardContent.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Main Content Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("dashboardMainContent")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.dashboardContent.mainContent.title")}
-                </h4>
-                {expandedSections.dashboardMainContent ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.dashboardMainContent && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.mainContent.stats.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.mainContent.stats.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardStats}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardStats", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.mainContent.upcomingMeals.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.mainContent.upcomingMeals.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardUpcomingMeals}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardUpcomingMeals", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.mainContent.expiringSoon.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.mainContent.expiringSoon.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardExpiringSoon}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardExpiringSoon", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.mainContent.recentActivity.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.mainContent.recentActivity.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardRecentActivity}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardRecentActivity", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.mainContent.quickActions.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.mainContent.quickActions.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardQuickActions}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardQuickActions", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Insights Section */}
-            <div className="border rounded-lg">
-              <button
-                type="button"
-                onClick={() => toggleSection("dashboardInsights")}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
-              >
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("appearance.dashboardContent.insights.title")}
-                </h4>
-                {expandedSections.dashboardInsights ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-              {expandedSections.dashboardInsights && (
-                <div className="px-4 pb-4 space-y-4 border-t">
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.insights.wasteAnalytics.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.insights.wasteAnalytics.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardWasteAnalytics}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardWasteAnalytics", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.insights.skillsProgress.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.insights.skillsProgress.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardSkillsProgress}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardSkillsProgress", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.insights.seasonalInsights.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.insights.seasonalInsights.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardSeasonalInsights}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardSeasonalInsights", checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t("appearance.dashboardContent.insights.nutrition.label")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("appearance.dashboardContent.insights.nutrition.description")}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={uiVisibility.showDashboardNutrition}
-                      onCheckedChange={(checked) => handleUIVisibilityChange("showDashboardNutrition", checked)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Touch Gestures */}
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-base font-medium">{t("appearance.touchGestures.swipeToOpenSidebar.label")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("appearance.touchGestures.swipeToOpenSidebar.description")}
-                </p>
-              </div>
-              <Switch
-                checked={uiVisibility.enableSidebarSwipeGesture}
-                onCheckedChange={(checked) => handleUIVisibilityChange("enableSidebarSwipeGesture", checked)}
-              />
-            </div>
           </CardContent>
         </Card>
       </TabsContent>

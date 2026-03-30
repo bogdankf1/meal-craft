@@ -41,9 +41,9 @@ const SOURCE_ICONS: Record<string, React.ReactNode> = {
 };
 
 const SOURCE_COLORS: Record<string, string> = {
-  meal_plan: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  restaurant: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  custom: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  meal_plan: "bg-accent/10 text-accent",
+  restaurant: "bg-[var(--terra-ghost)] text-accent",
+  custom: "bg-muted text-muted-foreground",
 };
 
 export function NutritionDailyView({
@@ -103,8 +103,8 @@ export function NutritionDailyView({
           {/* Calories */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 min-w-[120px]">
-              <Flame className="h-5 w-5 text-orange-500" />
-              <span className="text-2xl font-bold">{data.total_calories}</span>
+              <Flame className="h-5 w-5 text-accent" />
+              <span className="text-2xl font-medium">{data.total_calories}</span>
               <span className="text-muted-foreground">{t("units.kcal")}</span>
             </div>
             {goal?.daily_calories && (
@@ -230,17 +230,17 @@ export function NutritionDailyView({
                             <span>{entry.calories} {t("units.kcal")}</span>
                           )}
                           {entry.protein_g && (
-                            <span className="text-blue-600 dark:text-blue-400">
+                            <span className="text-accent">
                               {entry.protein_g}g P
                             </span>
                           )}
                           {entry.carbs_g && (
-                            <span className="text-green-600 dark:text-green-400">
+                            <span className="text-primary">
                               {entry.carbs_g}g C
                             </span>
                           )}
                           {entry.fat_g && (
-                            <span className="text-yellow-600 dark:text-yellow-400">
+                            <span className="text-accent">
                               {entry.fat_g}g F
                             </span>
                           )}

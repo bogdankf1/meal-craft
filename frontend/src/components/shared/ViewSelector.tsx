@@ -56,7 +56,7 @@ export function ViewSelector({
     <TooltipProvider delayDuration={300}>
       <div
         className={cn(
-          "inline-flex items-center rounded-md border bg-muted px-1 gap-1",
+          "inline-flex items-center rounded-xl border-0 bg-muted shadow-[0_1px_6px_rgba(0,0,0,0.04)] px-1 gap-1",
           containerHeight,
           className
         )}
@@ -74,6 +74,7 @@ export function ViewSelector({
                   size="icon"
                   className={cn(
                     buttonSize,
+                    "rounded-xl",
                     !isActive && "hover:bg-background/80",
                     showLabels && "w-auto px-2"
                   )}
@@ -84,7 +85,7 @@ export function ViewSelector({
                 >
                   <span className={iconSize}>{view.icon}</span>
                   {showLabels && (
-                    <span className="ml-1.5 text-sm">{view.label}</span>
+                    <span className="ml-1.5 text-xs">{view.label}</span>
                   )}
                 </Button>
               </TooltipTrigger>

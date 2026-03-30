@@ -270,7 +270,7 @@ export function KitchenEquipmentInsights({
                 <ChefHat className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">
+                <h3 className="font-medium text-emerald-800 dark:text-emerald-200">
                   {t("recipes.title")}
                 </h3>
                 <p className="text-xs text-emerald-600 dark:text-emerald-400">
@@ -331,7 +331,7 @@ export function KitchenEquipmentInsights({
                 <GraduationCap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-purple-800 dark:text-purple-200">
+                <h3 className="font-medium text-purple-800 dark:text-purple-200">
                   {t("learning.title")}
                 </h3>
                 <p className="text-xs text-purple-600 dark:text-purple-400">
@@ -395,7 +395,7 @@ export function KitchenEquipmentInsights({
                 <ShoppingCart className="h-4 w-4 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-rose-800 dark:text-rose-200">
+                <h3 className="font-medium text-rose-800 dark:text-rose-200">
                   {t("wishlist.title")}
                 </h3>
                 <p className="text-xs text-rose-600 dark:text-rose-400">

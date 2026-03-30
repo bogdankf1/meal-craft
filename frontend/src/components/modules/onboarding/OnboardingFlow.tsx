@@ -116,7 +116,7 @@ export function OnboardingFlow() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-start justify-between gap-2 sm:block">
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
+              <h2 className="text-lg font-medium">{t("title")}</h2>
               <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
             </div>
             {/* Mobile-only action buttons */}

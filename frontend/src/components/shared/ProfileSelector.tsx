@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { useGetProfilesQuery, Profile } from "@/lib/api/profiles-api";
 import {
   Select,
@@ -54,7 +55,7 @@ export function ProfileSelector({
       open={open}
       onOpenChange={setOpen}
     >
-      <SelectTrigger className={className} data-spotlight={dataSpotlight}>
+      <SelectTrigger className={cn("rounded-xl text-[13px]", className)} data-spotlight={dataSpotlight}>
         <SelectValue placeholder={t("selectProfile")}>
           <div className="flex items-center gap-2">
             {value === null || value === "all" ? (
@@ -77,7 +78,7 @@ export function ProfileSelector({
           </div>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="rounded-xl">
         {showAllOption && (
           <SelectItem
             value="all"

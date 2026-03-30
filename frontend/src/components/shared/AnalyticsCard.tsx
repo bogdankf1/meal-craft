@@ -20,9 +20,9 @@ export function AnalyticsCard({
   fullWidth = false,
 }: AnalyticsCardProps) {
   return (
-    <Card className={cn("py-0 gap-0", fullWidth && "md:col-span-2", className)}>
+    <Card className={cn("py-0 gap-0 border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]", fullWidth && "md:col-span-2", className)}>
       <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-base font-medium flex items-center gap-2">
+        <CardTitle className="text-[15px] font-medium flex items-center gap-2">
           {icon}
           {title}
         </CardTitle>

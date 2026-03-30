@@ -218,13 +218,13 @@ export function KitchenEquipmentContent() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ModuleTabs tabs={tabs} defaultTab="overview">
         {/* Overview Tab */}
         <TabsContent value="overview">
           {/* Stats Cards */}
           {uiVisibility.showStatsCards && (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4">
               <StatsCard
                 title={t("stats.totalItems")}
                 value={analytics?.total_items || 0}
@@ -256,7 +256,7 @@ export function KitchenEquipmentContent() {
 
           {/* Insights Section - Recipes & Learning Integration */}
           {uiVisibility.showInsights && equipmentData?.items && equipmentData.items.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <KitchenEquipmentInsights
                 equipmentItems={equipmentData.items}
                 onNavigateToRecipes={() => router.push("/recipes")}
@@ -280,7 +280,7 @@ export function KitchenEquipmentContent() {
           )}
 
           {/* Filters Row */}
-          <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col gap-3 mb-4">
             {(uiVisibility.showSearchBar || uiVisibility.showFilters) && (
               <div className="flex flex-wrap items-center gap-2">
                 {uiVisibility.showSearchBar && (
@@ -340,7 +340,7 @@ export function KitchenEquipmentContent() {
             />
           ) : (
             <EmptyState
-              icon={<ChefHat className="h-12 w-12" />}
+              icon={<ChefHat className="h-8 w-8" />}
               title={t("empty.title")}
               description={t("empty.description")}
               action={{ label: t("addItem"), onClick: handleAddClick }}
@@ -368,7 +368,7 @@ export function KitchenEquipmentContent() {
             />
           ) : (
             <EmptyState
-              icon={<Archive className="h-12 w-12" />}
+              icon={<Archive className="h-8 w-8" />}
               title={t("archive.empty.title")}
               description={t("archive.empty.description")}
             />
@@ -377,10 +377,10 @@ export function KitchenEquipmentContent() {
 
         {/* Maintenance Tab */}
         <TabsContent value="maintenance">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Maintenance Stats */}
             {uiVisibility.showStatsCards && (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
                   title={t("maintenance.stats.total")}
                   value={maintenanceOverview?.total_equipment || 0}
@@ -417,19 +417,19 @@ export function KitchenEquipmentContent() {
             {/* Overdue Items */}
             {maintenanceOverview?.overdue_items &&
               maintenanceOverview.overdue_items.length > 0 && (
-                <Card className="border-destructive/50">
+                <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] bg-[var(--error-bg)]">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2 text-destructive">
+                    <CardTitle className="text-sm flex items-center gap-2 text-destructive">
                       <AlertTriangle className="h-5 w-5" />
                       {t("maintenance.overdueItems")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="divide-y divide-border">
                       {maintenanceOverview.overdue_items.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg border border-destructive/20"
+                          className="flex items-center justify-between py-2.5"
                         >
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-full bg-destructive/10">
@@ -468,23 +468,23 @@ export function KitchenEquipmentContent() {
             {/* Upcoming Maintenance */}
             {maintenanceOverview?.upcoming_items &&
               maintenanceOverview.upcoming_items.length > 0 && (
-                <Card className="border-warning/50">
+                <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem] bg-[var(--terra-ghost)]">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                    <CardTitle className="text-sm flex items-center gap-2 text-accent">
                       <Clock className="h-5 w-5" />
                       {t("maintenance.upcomingItems")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="divide-y divide-border">
                       {maintenanceOverview.upcoming_items.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-900"
+                          className="flex items-center justify-between py-2.5"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900">
-                              <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                            <div className="p-2 rounded-full bg-[var(--terra-ghost)]">
+                              <Clock className="h-4 w-4 text-accent" />
                             </div>
                             <div>
                               <p className="font-medium">{item.name}</p>
@@ -497,7 +497,7 @@ export function KitchenEquipmentContent() {
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="border-orange-300 text-orange-700 dark:text-orange-400">
+                            <Badge variant="outline" className="text-accent">
                               {t("maintenance.daysUntil", { days: Math.abs(item.days_overdue) })}
                             </Badge>
                             <Button
@@ -518,21 +518,21 @@ export function KitchenEquipmentContent() {
 
             {/* All Items with Maintenance Schedule */}
             {equipmentData && equipmentData.items.filter(item => item.maintenance_interval_days).length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
+              <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+                <CardHeader className="bg-[var(--green-ghost)] rounded-t-[1.375rem] pt-5 pb-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
                     {t("maintenance.scheduledItems")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="divide-y divide-border">
                     {equipmentData.items
                       .filter(item => item.maintenance_interval_days && !item.needs_maintenance)
                       .map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border"
+                          className="flex items-center justify-between py-2.5"
                         >
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-full bg-muted">
@@ -575,7 +575,7 @@ export function KitchenEquipmentContent() {
                 maintenanceOverview.upcoming_items.length === 0) &&
               (!equipmentData || equipmentData.items.filter(item => item.maintenance_interval_days).length === 0) && (
                 <EmptyState
-                  icon={<Wrench className="h-12 w-12" />}
+                  icon={<Wrench className="h-8 w-8" />}
                   title={t("maintenance.empty.title")}
                   description={t("maintenance.empty.description")}
                 />
@@ -585,10 +585,10 @@ export function KitchenEquipmentContent() {
 
         {/* Analysis Tab */}
         <TabsContent value="analysis">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Period selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {t("analysis.period")}:
               </span>
               <Select
@@ -607,7 +607,7 @@ export function KitchenEquipmentContent() {
             </div>
 
             {analytics && (
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {/* By Category */}
                 <AnalyticsCard title={t("analysis.byCategory")}>
                   <DistributionList
@@ -669,7 +669,7 @@ export function KitchenEquipmentContent() {
             {/* Empty state for analysis */}
             {(!analytics || analytics.total_items === 0) && (
               <EmptyState
-                icon={<BarChart3 className="h-12 w-12" />}
+                icon={<BarChart3 className="h-8 w-8" />}
                 title={t("analysis.empty.title")}
                 description={t("analysis.empty.description")}
                 action={{ label: t("addItem"), onClick: handleAddClick }}

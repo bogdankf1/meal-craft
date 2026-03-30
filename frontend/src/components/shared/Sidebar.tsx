@@ -192,7 +192,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       <div className="flex items-center justify-between h-16 px-4 border-b">
         {!isCollapsed && (
           <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">MealCraft</span>
+            <span className="text-xl font-medium text-primary">MealCraft</span>
           </Link>
         )}
         <Button
@@ -264,7 +264,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                     value={group.label}
                     className="border-none"
                   >
-                    <AccordionTrigger className="py-2 text-xs font-semibold uppercase text-muted-foreground hover:no-underline">
+                    <AccordionTrigger className="py-2 text-xs font-medium uppercase text-muted-foreground hover:no-underline">
                       {t(group.label)}
                     </AccordionTrigger>
                     <AccordionContent className="pb-2">
@@ -444,7 +444,7 @@ export function MobileSidebar({ isOpen, onClose, sidebarRef, backdropRef, isDrag
               className="flex items-center gap-2"
               onClick={handleNavClick}
             >
-              <span className="text-xl font-bold text-primary">MealCraft</span>
+              <span className="text-xl font-medium text-primary">MealCraft</span>
             </Link>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-5 w-5" />
@@ -483,7 +483,7 @@ export function MobileSidebar({ isOpen, onClose, sidebarRef, backdropRef, isDrag
                       value={group.label}
                       className="border-none"
                     >
-                      <AccordionTrigger className="py-2 text-xs font-semibold uppercase text-muted-foreground hover:no-underline">
+                      <AccordionTrigger className="py-2 text-xs font-medium uppercase text-muted-foreground hover:no-underline">
                         {t(group.label)}
                       </AccordionTrigger>
                       <AccordionContent className="pb-2">

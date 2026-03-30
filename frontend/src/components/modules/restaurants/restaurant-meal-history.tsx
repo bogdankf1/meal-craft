@@ -42,7 +42,7 @@ export function RestaurantMealHistory() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold">{t("history.title")}</h2>
+            <h2 className="text-lg font-medium">{t("history.title")}</h2>
             <p className="text-sm text-muted-foreground">{t("history.description")}</p>
           </div>
           <Select value={period} onValueChange={setPeriod}>
@@ -60,9 +60,9 @@ export function RestaurantMealHistory() {
         </div>
 
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <History className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold">{t("history.empty.title")}</h3>
-          <p className="text-sm text-muted-foreground max-w-md">
+          <History className="h-8 w-8 text-muted-foreground mb-4" />
+          <h3 className="text-[13px] font-medium">{t("history.empty.title")}</h3>
+          <p className="text-[13px] text-muted-foreground max-w-md">
             {t("history.empty.description")}
           </p>
         </div>
@@ -77,7 +77,7 @@ export function RestaurantMealHistory() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">{t("history.title")}</h2>
+          <h2 className="text-lg font-medium">{t("history.title")}</h2>
           <p className="text-sm text-muted-foreground">{t("history.description")}</p>
         </div>
         <Select value={period} onValueChange={setPeriod}>
@@ -99,19 +99,19 @@ export function RestaurantMealHistory() {
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">{t("history.totalMeals")}</div>
-            <div className="text-2xl font-bold">{history.total_meals}</div>
+            <div className="text-2xl font-medium">{history.total_meals}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">{t("history.uniqueRestaurants")}</div>
-            <div className="text-2xl font-bold">{uniqueRestaurantCount}</div>
+            <div className="text-2xl font-medium">{uniqueRestaurantCount}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">{t("history.avgMealsPerMonth")}</div>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-medium">
               {history.avg_monthly_meals?.toFixed(1) || 0}
             </div>
           </CardContent>
@@ -119,10 +119,10 @@ export function RestaurantMealHistory() {
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">{t("history.avgRating")}</div>
-            <div className="text-2xl font-bold flex items-center gap-1">
+            <div className="text-2xl font-medium flex items-center gap-1">
               {history.monthly_data?.[0]?.avg_rating?.toFixed(1) || "-"}
               {history.monthly_data?.[0]?.avg_rating && (
-                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                <Star className="h-5 w-5 text-accent fill-accent" />
               )}
             </div>
           </CardContent>
@@ -156,7 +156,7 @@ export function RestaurantMealHistory() {
                     </Badge>
                     {restaurant.avg_rating && (
                       <div className="flex items-center gap-1 text-sm">
-                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                        <Star className="h-3 w-3 text-accent fill-accent" />
                         {restaurant.avg_rating.toFixed(1)}
                       </div>
                     )}
@@ -189,7 +189,7 @@ export function RestaurantMealHistory() {
                     </Badge>
                     {month.avg_rating && (
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                        <Star className="h-3 w-3 text-accent fill-accent" />
                         {month.avg_rating.toFixed(1)}
                       </div>
                     )}

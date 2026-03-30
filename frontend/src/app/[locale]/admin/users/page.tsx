@@ -282,7 +282,7 @@ export default function AdminUsersPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => setSuspendUser(user)}
-                            className={user.is_active ? "text-destructive" : "text-green-600"}
+                            className={user.is_active ? "text-destructive" : "text-primary"}
                           >
                             {user.is_active ? (
                               <UserX className="h-4 w-4" />

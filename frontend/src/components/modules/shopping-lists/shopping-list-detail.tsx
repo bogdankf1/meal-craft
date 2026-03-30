@@ -46,18 +46,18 @@ interface ShoppingListDetailProps {
 
 function getCategoryBadgeColor(category: string | null): string {
   const colors: Record<string, string> = {
-    produce: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-    meat: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-    seafood: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-    dairy: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-    bakery: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
-    frozen: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300",
-    pantry: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-    beverages: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-    snacks: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
-    condiments: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-    spices: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300",
-    other: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+    produce: "bg-[var(--green-ghost)] text-primary",
+    meat: "bg-[var(--error-bg)] text-destructive",
+    seafood: "bg-accent/10 text-accent",
+    dairy: "bg-[var(--terra-ghost)] text-accent",
+    bakery: "bg-[var(--terra-ghost)] text-accent",
+    frozen: "bg-accent/10 text-accent",
+    pantry: "bg-[var(--terra-ghost)] text-accent",
+    beverages: "bg-muted text-muted-foreground",
+    snacks: "bg-muted text-muted-foreground",
+    condiments: "bg-accent/10 text-accent",
+    spices: "bg-[var(--terra-ghost)] text-accent",
+    other: "bg-muted text-muted-foreground",
   };
   return colors[category || "other"] || colors.other;
 }
@@ -198,7 +198,7 @@ export function ShoppingListDetail({ listId }: ShoppingListDetailProps) {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{list.name}</h1>
+            <h1 className="text-2xl font-medium">{list.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge
                 variant={list.status === "completed" ? "default" : "secondary"}
@@ -255,7 +255,7 @@ export function ShoppingListDetail({ listId }: ShoppingListDetailProps) {
       {/* Items Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{t("detail.itemsSection")}</h2>
+          <h2 className="text-lg font-medium">{t("detail.itemsSection")}</h2>
           <Button onClick={handleAddItem}>
             <Plus className="h-4 w-4 mr-2" />
             {t("detail.addItem")}

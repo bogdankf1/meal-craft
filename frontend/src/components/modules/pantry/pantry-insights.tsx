@@ -160,7 +160,7 @@ export function PantryInsights({
                 <Sun className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-800 dark:text-green-200">
+                <h3 className="font-medium text-green-800 dark:text-green-200">
                   {t("inSeason.title")}
                 </h3>
                 <p className="text-xs text-green-600 dark:text-green-400">
@@ -217,7 +217,7 @@ export function PantryInsights({
                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+                <h3 className="font-medium text-amber-800 dark:text-amber-200">
                   {t("lowStock.title")}
                 </h3>
                 <p className="text-xs text-amber-600 dark:text-amber-400">

@@ -79,15 +79,15 @@ export function NutritionCalendar({
 
     const percentage = (calories / calorieGoal) * 100;
     if (percentage >= 90 && percentage <= 110) {
-      return "bg-green-500/30 dark:bg-green-500/40";
+      return "bg-[var(--green-ghost)]";
     }
     if (percentage < 50) {
-      return "bg-yellow-500/30 dark:bg-yellow-500/40";
+      return "bg-[var(--terra-ghost)]";
     }
     if (percentage > 120) {
-      return "bg-red-500/30 dark:bg-red-500/40";
+      return "bg-[var(--error-bg)]";
     }
-    return "bg-blue-500/20 dark:bg-blue-500/30";
+    return "bg-accent/10";
   };
 
   return (
@@ -101,7 +101,7 @@ export function NutritionCalendar({
           <Button variant="outline" size="icon" onClick={handleNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <h2 className="text-lg font-semibold ml-2">
+          <h2 className="text-lg font-medium ml-2">
             {format(currentMonth, "MMMM yyyy")}
           </h2>
         </div>
@@ -187,19 +187,19 @@ export function NutritionCalendar({
       {calorieGoal && (
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500/30 dark:bg-green-500/40" />
+            <div className="w-3 h-3 rounded bg-[var(--green-ghost)]" />
             <span>{t("legend.onTarget")} (90-110%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-500/30 dark:bg-yellow-500/40" />
+            <div className="w-3 h-3 rounded bg-[var(--terra-ghost)]" />
             <span>{t("legend.under")} (&lt;50%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-500/30 dark:bg-red-500/40" />
+            <div className="w-3 h-3 rounded bg-[var(--error-bg)]" />
             <span>{t("legend.over")} (&gt;120%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-500/20 dark:bg-blue-500/30" />
+            <div className="w-3 h-3 rounded bg-accent/10" />
             <span>{t("legend.partial")}</span>
           </div>
         </div>

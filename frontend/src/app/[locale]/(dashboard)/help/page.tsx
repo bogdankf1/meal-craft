@@ -99,21 +99,21 @@ export default function HelpCenterPage() {
     switch (status) {
       case SupportTopicStatus.OPEN:
         return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <Badge variant="secondary" className="bg-accent/10 text-accent">
             <Clock className="w-3 h-3 mr-1" />
             {t("status.open")}
           </Badge>
         );
       case SupportTopicStatus.IN_PROGRESS:
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+          <Badge variant="secondary" className="bg-[var(--terra-ghost)] text-accent">
             <Loader2 className="w-3 h-3 mr-1" />
             {t("status.inProgress")}
           </Badge>
         );
       case SupportTopicStatus.RESOLVED:
         return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+          <Badge variant="secondary" className="bg-[var(--green-ghost)] text-primary">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             {t("status.resolved")}
           </Badge>
@@ -142,7 +142,7 @@ export default function HelpCenterPage() {
           </Button>
         </div>
 
-        <Card>
+        <Card className="border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
           <CardHeader className="border-b">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl">{topicDetail.title}</CardTitle>
@@ -173,7 +173,7 @@ export default function HelpCenterPage() {
                       }`}
                     >
                       {message.is_admin_reply && (
-                        <p className="text-xs font-semibold mb-1">
+                        <p className="text-xs font-medium mb-1">
                           {t("supportTeam")}
                         </p>
                       )}
@@ -238,7 +238,7 @@ export default function HelpCenterPage() {
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <h1 className="text-2xl font-medium">{t("title")}</h1>
           <p className="text-muted-foreground">{t("description")}</p>
         </div>
         <div className="flex gap-2">
@@ -311,10 +311,10 @@ export default function HelpCenterPage() {
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
       ) : topics.length === 0 ? (
-        <Card className="p-12 text-center">
-          <MessageCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">{t("noTopics")}</h3>
-          <p className="text-muted-foreground mb-4">{t("noTopicsDescription")}</p>
+        <Card className="p-12 text-center border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]">
+          <MessageCircle className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-[13px] font-medium mb-2">{t("noTopics")}</h3>
+          <p className="text-[13px] text-muted-foreground mb-4">{t("noTopicsDescription")}</p>
           <Button onClick={() => setIsNewTopicDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             {t("createFirstTopic")}
@@ -325,14 +325,14 @@ export default function HelpCenterPage() {
           {topics.map((topic: SupportTopic) => (
             <Card
               key={topic.id}
-              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              className="cursor-pointer hover:bg-muted/50 transition-colors border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]"
               onClick={() => setSelectedTopicId(topic.id)}
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">{topic.title}</h3>
+                      <h3 className="font-medium">{topic.title}</h3>
                       {getStatusBadge(topic.status)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">

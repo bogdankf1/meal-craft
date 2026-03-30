@@ -87,12 +87,12 @@ export function ColumnVisibilitySelector<T extends keyof ColumnVisibility>({
   return (
     <Popover modal={true}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9">
-          <Columns className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" className="h-9 rounded-xl text-[13px]">
+          <Columns className="h-3.5 w-3.5 mr-1.5" />
           {t("columns")}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-2" align="end">
+      <PopoverContent className="w-52 p-1.5 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)]" align="end">
         <div className="space-y-1">
           {columns.map((column) => {
             const isVisible = (columnVisibility as unknown as Record<string, boolean>)[column.key] ?? true;
@@ -101,7 +101,7 @@ export function ColumnVisibilitySelector<T extends keyof ColumnVisibility>({
             return (
               <div
                 key={column.key}
-                className="flex items-center justify-between px-2 py-1.5 rounded-sm hover:bg-muted"
+                className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-muted"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center gap-2">
@@ -115,7 +115,7 @@ export function ColumnVisibilitySelector<T extends keyof ColumnVisibility>({
                   />
                   <label
                     htmlFor={`column-${column.key}`}
-                    className={`text-sm cursor-pointer ${
+                    className={`text-[13px] cursor-pointer ${
                       isMandatory ? "text-muted-foreground" : ""
                     }`}
                   >
@@ -136,7 +136,7 @@ export function ColumnVisibilitySelector<T extends keyof ColumnVisibility>({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-sm"
+              className="w-full justify-start text-[13px] rounded-lg"
               onClick={handleResetToDefault}
             >
               <RotateCcw className="h-3 w-3 mr-2" />

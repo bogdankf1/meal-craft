@@ -135,7 +135,7 @@ export function GroceryCalendarView({
           <Button variant="outline" size="icon" onClick={goToNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <h2 className="text-lg font-semibold ml-2">
+          <h2 className="text-lg font-medium ml-2">
             {formatMonthYear(currentDate)}
           </h2>
         </div>
@@ -238,7 +238,7 @@ export function GroceryCalendarView({
                       side="right"
                     >
                       <div className="p-3 border-b">
-                        <div className="font-semibold">
+                        <div className="font-medium">
                           {day.date.toLocaleDateString(undefined, {
                             weekday: "long",
                             month: "long",

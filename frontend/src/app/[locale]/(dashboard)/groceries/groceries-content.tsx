@@ -275,7 +275,7 @@ export function GroceriesContent() {
                 <StatsCard
                   title={t("stats.expiringSoon")}
                   value={analytics?.expiring_soon?.toString() || "0"}
-                  icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+                  icon={<AlertTriangle className="h-5 w-5 text-accent" />}
                   variant={analytics?.expiring_soon ? "warning" : "default"}
                 />
                 <StatsCard
@@ -283,7 +283,7 @@ export function GroceriesContent() {
                   value={formatCurrency(
                     groceriesData?.items?.reduce((sum, item) => sum + (item.cost || 0), 0) || 0
                   )}
-                  icon={<DollarSign className="h-5 w-5 text-green-500" />}
+                  icon={<DollarSign className="h-5 w-5 text-primary" />}
                   variant="success"
                 />
               </div>
@@ -470,25 +470,25 @@ export function GroceriesContent() {
                     <StatsCard
                       title={t("waste.stats.totalWasted")}
                       value={wasteAnalytics.total_wasted_items.toString()}
-                      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+                      icon={<Trash2 className="h-5 w-5 text-destructive" />}
                       variant="danger"
                     />
                     <StatsCard
                       title={t("waste.stats.costWasted")}
                       value={formatCurrency(wasteAnalytics.total_wasted_cost)}
-                      icon={<DollarSign className="h-5 w-5 text-red-500" />}
+                      icon={<DollarSign className="h-5 w-5 text-destructive" />}
                       variant="danger"
                     />
                     <StatsCard
                       title={t("waste.stats.wastedThisMonth")}
                       value={wasteAnalytics.wasted_this_month.toString()}
-                      icon={<CalendarDays className="h-5 w-5 text-orange-500" />}
+                      icon={<CalendarDays className="h-5 w-5 text-accent" />}
                       variant={wasteAnalytics.wasted_this_month > 0 ? "warning" : "default"}
                     />
                     <StatsCard
                       title={t("waste.stats.wasteRate")}
                       value={`${wasteAnalytics.waste_rate}%`}
-                      icon={<Percent className="h-5 w-5 text-purple-500" />}
+                      icon={<Percent className="h-5 w-5 text-muted-foreground" />}
                       variant={wasteAnalytics.waste_rate > 10 ? "warning" : "default"}
                     />
                   </div>
@@ -498,12 +498,12 @@ export function GroceriesContent() {
                 {wasteAnalytics.suggestions.length > 0 && (
                   <AnalyticsCard
                     title={t("waste.analytics.suggestions")}
-                    icon={<Lightbulb className="h-4 w-4 text-yellow-500" />}
+                    icon={<Lightbulb className="h-4 w-4 text-accent" />}
                   >
                     <ul className="space-y-2">
                       {wasteAnalytics.suggestions.map((suggestion, index) => (
                         <li key={index} className="flex items-start gap-2 text-sm">
-                          <span className="text-yellow-500 mt-0.5">•</span>
+                          <span className="text-accent mt-0.5">•</span>
                           <span>{suggestion}</span>
                         </li>
                       ))}
@@ -551,7 +551,7 @@ export function GroceriesContent() {
                         value: month.wasted_count,
                         label: month.month_label.split(" ")[0],
                       }))}
-                      color="bg-red-500"
+                      color="bg-destructive"
                       emptyMessage={t("waste.analytics.noWasteData")}
                     />
                   </AnalyticsCard>
@@ -580,7 +580,7 @@ export function GroceriesContent() {
                             </div>
                           </div>
                           {item.cost && (
-                            <span className="text-sm font-medium text-red-500">
+                            <span className="text-sm font-medium text-destructive">
                               {formatCurrency(item.cost)}
                             </span>
                           )}
@@ -614,12 +614,12 @@ export function GroceriesContent() {
                     <StatsCard
                       title={t("analysis.thisWeek")}
                       value={analytics.items_this_week?.toString() || "0"}
-                      icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+                      icon={<CalendarDays className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("analysis.thisMonth")}
                       value={analytics.items_this_month?.toString() || "0"}
-                      icon={<ShoppingBag className="h-5 w-5 text-purple-500" />}
+                      icon={<ShoppingBag className="h-5 w-5 text-muted-foreground" />}
                     />
                     <StatsCard
                       title={t("analysis.avgPerItem")}
@@ -628,12 +628,12 @@ export function GroceriesContent() {
                           ? analytics.total_spent_this_month / analytics.items_this_month
                           : 0
                       )}
-                      icon={<TrendingUp className="h-5 w-5 text-green-500" />}
+                      icon={<TrendingUp className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("analysis.expiryStatus")}
                       value={`${analytics.expired || 0} / ${analytics.expiring_soon || 0}`}
-                      icon={<Clock className="h-5 w-5 text-orange-500" />}
+                      icon={<Clock className="h-5 w-5 text-accent" />}
                       variant={analytics.expired > 0 ? "danger" : analytics.expiring_soon > 0 ? "warning" : "default"}
                     />
                   </div>
@@ -741,7 +741,7 @@ export function GroceriesContent() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">{t("history.title")}</h2>
+                <h2 className="text-lg font-medium">{t("history.title")}</h2>
                 <p className="text-sm text-muted-foreground">{t("history.description")}</p>
               </div>
               <Select value={historyMonths.toString()} onValueChange={(v) => setHistoryMonths(parseInt(v))}>
@@ -768,22 +768,22 @@ export function GroceriesContent() {
                     <StatsCard
                       title={t("history.totalInPeriod")}
                       value={historyData.total_items.toString()}
-                      icon={<Package className="h-5 w-5 text-blue-500" />}
+                      icon={<Package className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("stats.totalSpent")}
                       value={formatCurrency(historyData.total_spent)}
-                      icon={<DollarSign className="h-5 w-5 text-green-500" />}
+                      icon={<DollarSign className="h-5 w-5 text-primary" />}
                     />
                     <StatsCard
                       title={t("history.avgMonthlyItems")}
                       value={Math.round(historyData.avg_monthly_items).toString()}
-                      icon={<Repeat className="h-5 w-5 text-purple-500" />}
+                      icon={<Repeat className="h-5 w-5 text-muted-foreground" />}
                     />
                     <StatsCard
                       title={t("history.avgMonthlySpending")}
                       value={formatCurrency(historyData.avg_monthly_spending)}
-                      icon={<TrendingUp className="h-5 w-5 text-orange-500" />}
+                      icon={<TrendingUp className="h-5 w-5 text-accent" />}
                     />
                   </div>
                 )}
@@ -795,7 +795,7 @@ export function GroceriesContent() {
                   >
                     <BarChart
                       data={itemsTrendData}
-                      color="bg-blue-500"
+                      color="bg-primary"
                       emptyMessage={t("history.noData")}
                     />
                   </AnalyticsCard>
@@ -807,7 +807,7 @@ export function GroceriesContent() {
                     <BarChart
                       data={spendingTrendData}
                       formatValue={formatCurrency}
-                      color="bg-green-500"
+                      color="bg-primary"
                       emptyMessage={t("history.noData")}
                     />
                   </AnalyticsCard>

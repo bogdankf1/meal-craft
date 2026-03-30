@@ -29,10 +29,10 @@ const MEAL_TYPE_ICONS: Record<MealType, React.ReactNode> = {
 };
 
 const MEAL_TYPE_COLORS: Record<MealType, string> = {
-  breakfast: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  lunch: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  dinner: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  snack: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  breakfast: "bg-[var(--terra-ghost)] text-accent",
+  lunch: "bg-[var(--green-ghost)] text-primary",
+  dinner: "bg-accent/10 text-accent",
+  snack: "bg-muted text-muted-foreground",
 };
 
 // Type guard to check if meal has profile info
@@ -117,7 +117,7 @@ export function MealCalendar({
             </div>
             <div
               className={cn(
-                "text-lg font-semibold",
+                "text-lg font-medium",
                 isSameDay(day, today) && "text-primary"
               )}
             >

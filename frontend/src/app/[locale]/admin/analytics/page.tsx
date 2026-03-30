@@ -62,11 +62,11 @@ function StatCard({
           <Skeleton className="h-8 w-20" />
         ) : (
           <>
-            <div className="text-2xl font-bold">{value}</div>
+            <div className="text-2xl font-medium">{value}</div>
             {description && (
               <p className={`text-xs ${
-                trend === "up" ? "text-green-500" :
-                trend === "down" ? "text-red-500" :
+                trend === "up" ? "text-primary" :
+                trend === "down" ? "text-destructive" :
                 "text-muted-foreground"
               }`}>
                 {description}
@@ -200,25 +200,25 @@ export default function AdminAnalyticsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-muted/50 rounded-lg">
-                    <p className="text-2xl font-bold">{engagement?.dau || 0}</p>
+                    <p className="text-2xl font-medium">{engagement?.dau || 0}</p>
                     <p className="text-xs text-muted-foreground">{t("analytics.engagement.dau")}</p>
                   </div>
                   <div className="text-center p-4 bg-muted/50 rounded-lg">
-                    <p className="text-2xl font-bold">{engagement?.wau || 0}</p>
+                    <p className="text-2xl font-medium">{engagement?.wau || 0}</p>
                     <p className="text-xs text-muted-foreground">{t("analytics.engagement.wau")}</p>
                   </div>
                   <div className="text-center p-4 bg-muted/50 rounded-lg">
-                    <p className="text-2xl font-bold">{engagement?.mau || 0}</p>
+                    <p className="text-2xl font-medium">{engagement?.mau || 0}</p>
                     <p className="text-xs text-muted-foreground">{t("analytics.engagement.mau")}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-lg font-bold">{dauMauRatio}%</p>
+                    <p className="text-lg font-medium">{dauMauRatio}%</p>
                     <p className="text-xs text-muted-foreground">{t("analytics.engagement.dauMauRatio")}</p>
                   </div>
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-lg font-bold">
+                    <p className="text-lg font-medium">
                       {engagement?.retention_rate_30d?.toFixed(1) || 0}%
                     </p>
                     <p className="text-xs text-muted-foreground">{t("analytics.engagement.retention30")}</p>

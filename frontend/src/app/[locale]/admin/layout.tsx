@@ -124,7 +124,7 @@ export default function AdminLayout({
         <div className="flex items-center justify-between h-16 px-4 border-b">
           {!isCollapsed && (
             <Link href="/admin" className="flex items-center gap-2">
-              <span className="text-xl font-bold text-primary">
+              <span className="text-xl font-medium text-primary">
                 {t("title")}
               </span>
             </Link>
@@ -230,7 +230,7 @@ export default function AdminLayout({
           {/* Header */}
           <div className="flex items-center justify-between h-14 px-4 border-b">
             <Link href="/admin" onClick={() => setSidebarOpen(false)}>
-              <span className="text-xl font-bold text-primary">
+              <span className="text-xl font-medium text-primary">
                 {t("title")}
               </span>
             </Link>
@@ -312,7 +312,7 @@ export default function AdminLayout({
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <span className="text-lg font-bold text-primary">{t("title")}</span>
+          <span className="text-lg font-medium text-primary">{t("title")}</span>
           <div className="w-10" />
         </header>
 

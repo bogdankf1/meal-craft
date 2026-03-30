@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { ReduxProvider } from "@/components/providers/redux-provider";
@@ -12,7 +12,7 @@ import { OnboardingSyncProvider } from "@/components/providers/onboarding-sync-p
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+const roboto = Roboto({ subsets: ["latin", "cyrillic"], weight: ["300", "400", "500"] });
 
 export const metadata: Metadata = {
   title: "MealCraft - Your Ultimate Meal Planning Platform",
@@ -30,7 +30,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={roboto.className}>
         <SessionProvider>
           <AuthSyncProvider>
             <ReduxProvider>

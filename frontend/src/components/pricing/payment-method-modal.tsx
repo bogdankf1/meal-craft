@@ -101,7 +101,7 @@ export function PaymentMethodModal({
         </DialogHeader>
 
         <div className="py-4 overflow-y-auto flex-1 min-h-0">
-          <Label className="text-base font-semibold mb-4 block">
+          <Label className="text-base font-medium mb-4 block">
             {t("selectMethod")}
           </Label>
 
@@ -148,7 +148,7 @@ export function PaymentMethodModal({
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-base">{method.name}</span>
+                        <span className="font-medium text-base">{method.name}</span>
                         {!method.available && (
                           <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
                             {t("comingSoon")}
