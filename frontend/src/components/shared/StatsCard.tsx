@@ -36,32 +36,32 @@ export function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <Card className={cn("py-0 gap-0 border-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)] rounded-[1.375rem]", variantStyles[variant], className)}>
+    <Card className={cn("py-0 gap-0", variantStyles[variant], className)}>
       <CardContent className="py-3 px-4">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <p className="text-xs font-medium text-muted-foreground">{title}</p>
-            <p className="text-lg font-medium">{value}</p>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-xl font-bold">{value}</p>
             {description && (
-              <p className="text-[11px] text-muted-foreground">{description}</p>
+              <p className="text-xs text-muted-foreground">{description}</p>
             )}
           </div>
           {icon && (
-            <div className="h-9 w-9 rounded-xl bg-[var(--green-ghost)] flex items-center justify-center shrink-0">{icon}</div>
+            <div className="p-1.5 rounded-lg bg-background/50">{icon}</div>
           )}
         </div>
         {trend && (
-          <div className="mt-2 flex items-center gap-1 text-xs">
+          <div className="mt-3 flex items-center gap-1 text-sm">
             {trend.direction === "up" && (
-              <TrendingUp className="h-3 w-3 text-primary" />
+              <TrendingUp className="h-4 w-4 text-green-500" />
             )}
             {trend.direction === "down" && (
-              <TrendingDown className="h-3 w-3 text-destructive" />
+              <TrendingDown className="h-4 w-4 text-red-500" />
             )}
             <span
               className={cn(
-                trend.direction === "up" && "text-primary",
-                trend.direction === "down" && "text-destructive"
+                trend.direction === "up" && "text-green-600",
+                trend.direction === "down" && "text-red-600"
               )}
             >
               {trend.value}
