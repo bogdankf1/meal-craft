@@ -106,6 +106,18 @@ export default function DashboardLayout({
         <main>
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
         </main>
+
+        {/* Footer */}
+        <footer className="px-4 pb-6 sm:px-6 lg:px-8 text-center">
+          <a
+            href="https://built-by-bohdan.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Built by Bohdan
+          </a>
+        </footer>
       </div>
 
       {/* Onboarding spotlight overlay */}
