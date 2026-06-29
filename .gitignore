@@ -52,3 +52,7 @@ htmlcov/
 # Database
 *.db
 *.sqlite3
+
+# Project-local (kept on disk, not tracked)
+.claudeproject
+frontend/README.md
