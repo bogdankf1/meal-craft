@@ -1,25 +1,33 @@
+"""Service layer for pantry operations.
+
+Business/DB logic extracted verbatim from the pantry route handlers. Ownership
+lookups use ``get_owned_or_404`` and pagination metadata uses ``paginate``.
+Transaction/quantity-adjustment logic delegates to the existing
+``app.services.pantry_service.PantryService`` (reused, not duplicated).
+
+This module raises ``HTTPException`` directly to preserve the exact status codes
+and detail strings of the original handlers.
+"""
 from datetime import date, datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from fastapi import HTTPException, status, UploadFile
+from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func
-from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_owned_or_404
+from app.utils.pagination import paginate
 from app.models.user import User
-from app.models.pantry import PantryItem, PantryTransaction
+from app.models.pantry import PantryItem
 from app.services.pantry_service import PantryService
+from app.services.ai_service import AIService
 from app.schemas.pantry import (
-    PantryItemCreate,
     PantryItemBatchCreate,
     PantryItemUpdate,
     PantryItemResponse,
     PantryItemListResponse,
-    PantryFilters,
     BulkActionRequest,
     BulkActionResponse,
     PantryAnalytics,
@@ -38,30 +46,25 @@ from app.schemas.pantry import (
     ParseTextResponse,
     PantryTransactionResponse,
     PantryTransactionListResponse,
-    PantryTransactionCreate,
 )
-from app.services.ai_service import AIService
-
-router = APIRouter(prefix="/pantry", tags=["pantry"])
 
 
 # ============ CRUD Operations ============
 
-@router.get("", response_model=PantryItemListResponse)
 async def list_pantry_items(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     storage_location: Optional[str] = None,
     is_archived: Optional[bool] = False,
     expiring_within_days: Optional[int] = None,
     low_stock: Optional[bool] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "created_at",
     sort_order: str = "desc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> PantryItemListResponse:
     """List pantry items with filters and pagination."""
     query = select(PantryItem).where(PantryItem.user_id == current_user.id)
 
@@ -116,7 +119,7 @@ async def list_pantry_items(
             if item.minimum_quantity and item.quantity and item.quantity <= item.minimum_quantity
         ]
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return PantryItemListResponse(
         items=[PantryItemResponse.model_validate(item) for item in items],
@@ -127,12 +130,11 @@ async def list_pantry_items(
     )
 
 
-@router.post("", response_model=list[PantryItemResponse])
 async def create_pantry_items(
+    db: AsyncSession,
+    current_user: User,
     batch: PantryItemBatchCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> list[PantryItemResponse]:
     """Create one or more pantry items."""
     created_items = []
 
@@ -160,13 +162,12 @@ async def create_pantry_items(
     return [PantryItemResponse.model_validate(item) for item in created_items]
 
 
-# ============ Analytics (must come before /{item_id} routes) ============
+# ============ Analytics ============
 
-@router.get("/analytics/overview", response_model=PantryAnalytics)
 async def get_pantry_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> PantryAnalytics:
     """Get pantry analytics overview."""
     today = date.today()
     week_from_now = today + timedelta(days=7)
@@ -235,12 +236,11 @@ async def get_pantry_analytics(
     )
 
 
-@router.get("/waste/analytics", response_model=WasteAnalytics)
 async def get_waste_analytics(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> WasteAnalytics:
     """Get waste analytics data."""
     today = date.today()
     week_ago = today - timedelta(days=7)
@@ -424,12 +424,11 @@ def _generate_waste_suggestions(
     return suggestions[:5]
 
 
-@router.get("/history", response_model=PantryHistory)
 async def get_pantry_history(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> PantryHistory:
     """Get pantry history data."""
     today = date.today()
     start_date = today - relativedelta(months=months)
@@ -535,14 +534,13 @@ async def get_pantry_history(
     )
 
 
-# ============ Parse Endpoints (must come before /{item_id} routes) ============
+# ============ Parse Endpoints ============
 
-@router.post("/parse-text", response_model=ParseTextResponse)
 async def parse_pantry_text(
+    db: AsyncSession,
+    current_user: User,
     request: ParseTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseTextResponse:
     """Parse text to extract pantry items using AI."""
     ai_service = AIService()
 
@@ -569,14 +567,13 @@ async def parse_pantry_text(
         )
 
 
-@router.post("/parse-voice", response_model=ParseTextResponse)
 async def parse_pantry_voice(
-    audio: UploadFile = File(...),
-    language: str = Form("auto"),
-    default_storage_location: str = Form("pantry"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+    default_storage_location: str = "pantry",
+) -> ParseTextResponse:
     """Parse voice recording to extract pantry items using AI."""
     ai_service = AIService()
 
@@ -607,15 +604,14 @@ async def parse_pantry_voice(
         )
 
 
-@router.post("/parse-image", response_model=ParseTextResponse)
 async def parse_pantry_image(
-    images: list[UploadFile] = File(None),
-    image: UploadFile = File(None),
-    import_type: str = Form("pantry"),
-    default_storage_location: str = Form("pantry"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    images: Optional[list[UploadFile]] = None,
+    image: Optional[UploadFile] = None,
+    import_type: str = "pantry",
+    default_storage_location: str = "pantry",
+) -> ParseTextResponse:
     """Parse image(s) to extract pantry items using AI."""
     ai_service = AIService()
 
@@ -667,51 +663,33 @@ async def parse_pantry_image(
         )
 
 
-# ============ Single Item CRUD (with /{item_id}) ============
+# ============ Single Item CRUD ============
 
-@router.get("/{item_id}", response_model=PantryItemResponse)
 async def get_pantry_item(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> PantryItemResponse:
     """Get a single pantry item by ID."""
-    result = await db.execute(
-        select(PantryItem).where(
-            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, PantryItem, item_id, current_user,
+        detail="Pantry item not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pantry item not found"
-        )
 
     return PantryItemResponse.model_validate(item)
 
 
-@router.put("/{item_id}", response_model=PantryItemResponse)
 async def update_pantry_item(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
     item_data: PantryItemUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> PantryItemResponse:
     """Update a pantry item."""
-    result = await db.execute(
-        select(PantryItem).where(
-            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, PantryItem, item_id, current_user,
+        detail="Pantry item not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pantry item not found"
-        )
 
     update_data = item_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -728,25 +706,16 @@ async def update_pantry_item(
     return PantryItemResponse.model_validate(item)
 
 
-@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_pantry_item(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a pantry item."""
-    result = await db.execute(
-        select(PantryItem).where(
-            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, PantryItem, item_id, current_user,
+        detail="Pantry item not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pantry item not found"
-        )
 
     await db.delete(item)
     await db.commit()
@@ -754,12 +723,11 @@ async def delete_pantry_item(
 
 # ============ Bulk Operations ============
 
-@router.post("/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_pantry_items(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple pantry items."""
     result = await db.execute(
         select(PantryItem).where(
@@ -790,12 +758,11 @@ async def bulk_archive_pantry_items(
     )
 
 
-@router.post("/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_pantry_items(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple pantry items."""
     result = await db.execute(
         select(PantryItem).where(
@@ -826,12 +793,11 @@ async def bulk_unarchive_pantry_items(
     )
 
 
-@router.post("/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_pantry_items(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple pantry items."""
     result = await db.execute(
         select(PantryItem).where(
@@ -865,26 +831,17 @@ async def bulk_delete_pantry_items(
 
 # ============ Waste Tracking ============
 
-@router.post("/{item_id}/waste", response_model=PantryItemResponse)
 async def mark_as_wasted(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
     request: MarkAsWastedRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> PantryItemResponse:
     """Mark a pantry item as wasted."""
-    result = await db.execute(
-        select(PantryItem).where(
-            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, PantryItem, item_id, current_user,
+        detail="Pantry item not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pantry item not found"
-        )
 
     item.is_wasted = True
     item.wasted_at = datetime.utcnow()
@@ -898,12 +855,11 @@ async def mark_as_wasted(
     return PantryItemResponse.model_validate(item)
 
 
-@router.post("/bulk-waste", response_model=BulkActionResponse)
 async def bulk_mark_as_wasted(
+    db: AsyncSession,
+    current_user: User,
     request: BulkMarkAsWastedRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Mark multiple pantry items as wasted."""
     result = await db.execute(
         select(PantryItem).where(
@@ -939,25 +895,16 @@ async def bulk_mark_as_wasted(
     )
 
 
-@router.post("/{item_id}/unwaste", response_model=PantryItemResponse)
 async def unmark_as_wasted(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> PantryItemResponse:
     """Remove wasted status from a pantry item."""
-    result = await db.execute(
-        select(PantryItem).where(
-            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, PantryItem, item_id, current_user,
+        detail="Pantry item not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pantry item not found"
-        )
 
     item.is_wasted = False
     item.wasted_at = None
@@ -972,14 +919,13 @@ async def unmark_as_wasted(
 
 # ============ Pantry Transactions ============
 
-@router.get("/transactions/all", response_model=PantryTransactionListResponse)
 async def list_all_transactions(
-    transaction_type: Optional[str] = Query(None, description="Filter by type: add, deduct, waste, adjust, expire"),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    transaction_type: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 20,
+) -> PantryTransactionListResponse:
     """Get all pantry transactions for the user."""
     pantry_service = PantryService(db)
     offset = (page - 1) * per_page
@@ -1010,7 +956,7 @@ async def list_all_transactions(
             item_name=t.pantry_item.item_name if t.pantry_item else None,
         ))
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return PantryTransactionListResponse(
         items=items,
@@ -1021,28 +967,19 @@ async def list_all_transactions(
     )
 
 
-@router.get("/{item_id}/transactions", response_model=PantryTransactionListResponse)
 async def get_item_transactions(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    page: int = 1,
+    per_page: int = 20,
+) -> PantryTransactionListResponse:
     """Get transaction history for a specific pantry item."""
     # Verify item belongs to user
-    item_result = await db.execute(
-        select(PantryItem).where(
-            and_(PantryItem.id == item_id, PantryItem.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, PantryItem, item_id, current_user,
+        detail="Pantry item not found",
     )
-    item = item_result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pantry item not found"
-        )
 
     pantry_service = PantryService(db)
     offset = (page - 1) * per_page
@@ -1073,7 +1010,7 @@ async def get_item_transactions(
             item_name=item.item_name,
         ))
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return PantryTransactionListResponse(
         items=items,
@@ -1084,14 +1021,13 @@ async def get_item_transactions(
     )
 
 
-@router.post("/{item_id}/adjust", response_model=PantryTransactionResponse)
 async def adjust_pantry_quantity(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    new_quantity: float = Query(..., ge=0, description="New quantity to set"),
-    notes: Optional[str] = Query(None, max_length=500, description="Notes for the adjustment"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    new_quantity: float,
+    notes: Optional[str] = None,
+) -> PantryTransactionResponse:
     """Manually adjust a pantry item's quantity.
 
     Creates an 'adjust' transaction recording the change.

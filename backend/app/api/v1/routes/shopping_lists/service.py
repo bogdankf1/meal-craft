@@ -1,19 +1,23 @@
+"""Service layer for shopping list operations.
+
+Business/DB logic extracted verbatim from the shopping list route handlers.
+Ownership lookups use ``get_owned_or_404``. This module raises ``HTTPException``
+directly to preserve the exact status codes and detail strings of the original
+handlers.
 """
-Shopping Lists API routes - Full CRUD implementation.
-"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import selectinload
-from typing import Optional, List
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from typing import Optional, List
 from uuid import UUID
 import math
 import io
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from fastapi import HTTPException, status, UploadFile
+from sqlalchemy import select, func, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.api.deps import get_owned_or_404
 from app.models.user import User
 from app.models.grocery import ShoppingList, ShoppingListItem, Grocery
 from app.schemas.shopping_lists import (
@@ -41,8 +45,6 @@ from app.schemas.shopping_lists import (
 )
 from app.services.ai_service import ai_service
 
-router = APIRouter()
-
 
 def compute_list_summary(shopping_list: ShoppingList) -> dict:
     """Compute summary fields for a shopping list."""
@@ -55,20 +57,19 @@ def compute_list_summary(shopping_list: ShoppingList) -> dict:
     }
 
 
-@router.get("", response_model=ShoppingListListResponse)
 async def list_shopping_lists(
-    search: Optional[str] = Query(None, description="Search in list name"),
-    status: Optional[str] = Query(None, description="Filter by status (active, completed, archived)"),
-    is_archived: bool = Query(False, description="Include archived lists"),
-    date_from: Optional[date] = Query(None, description="Created date from"),
-    date_to: Optional[date] = Query(None, description="Created date to"),
-    sort_by: str = Query("created_at", description="Sort field"),
-    sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    is_archived: bool = False,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    page: int = 1,
+    per_page: int = 50,
+) -> ShoppingListListResponse:
     """List shopping lists with filters, sorting, and pagination."""
     # Build base query with eager loading of items
     query = select(ShoppingList).options(
@@ -148,12 +149,11 @@ async def list_shopping_lists(
     )
 
 
-@router.post("", response_model=ShoppingListResponse, status_code=status.HTTP_201_CREATED)
 async def create_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     request: ShoppingListCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ShoppingListResponse:
     """Create a new shopping list with optional initial items."""
     shopping_list = ShoppingList(
         user_id=current_user.id,
@@ -206,11 +206,10 @@ async def create_shopping_list(
     )
 
 
-@router.get("/analytics", response_model=ShoppingListAnalytics)
 async def get_shopping_list_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> ShoppingListAnalytics:
     """Get shopping list analytics data."""
     today = date.today()
     week_ago = today - timedelta(days=7)
@@ -345,12 +344,11 @@ async def get_shopping_list_analytics(
     )
 
 
-@router.get("/history", response_model=ShoppingListHistory)
 async def get_shopping_list_history(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> ShoppingListHistory:
     """Get historical shopping list analytics."""
     today = date.today()
     start_date = today - relativedelta(months=months)
@@ -479,13 +477,12 @@ async def get_shopping_list_history(
     )
 
 
-@router.get("/suggestions", response_model=SuggestionsResponse)
 async def get_suggestions(
-    months: int = Query(3, ge=1, le=12, description="Months to analyze for suggestions"),
-    limit: int = Query(20, ge=1, le=50, description="Max suggestions to return"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+    limit: int = 20,
+) -> SuggestionsResponse:
     """Get item suggestions based on grocery purchase history."""
     start_date = date.today() - relativedelta(months=months)
 
@@ -544,7 +541,7 @@ async def get_suggestions(
     )
 
 
-# ==================== Import/Parse Endpoints ====================
+# ==================== Import/Parse Helpers ====================
 
 
 def _convert_ai_item_to_shopping_list_item(item: dict) -> ShoppingListItemCreate:
@@ -605,12 +602,11 @@ def _simple_parse_shopping_list_text(text: str) -> ParseShoppingListResponse:
     )
 
 
-@router.post("/parse-text", response_model=ParseShoppingListResponse)
 async def parse_shopping_list_text(
+    db: AsyncSession,
+    current_user: User,
     request: ParseShoppingListTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseShoppingListResponse:
     """Parse shopping list items from text using AI."""
     try:
         # Use AI service to parse the text (reuse grocery parser)
@@ -640,13 +636,12 @@ async def parse_shopping_list_text(
         return _simple_parse_shopping_list_text(request.text)
 
 
-@router.post("/parse-voice", response_model=ParseShoppingListResponse)
 async def parse_shopping_list_voice(
-    audio: UploadFile = File(...),
-    language: str = Form(default="auto"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+) -> ParseShoppingListResponse:
     """Parse shopping list items from voice recording using AI transcription."""
     try:
         # Read audio file content
@@ -713,14 +708,13 @@ async def parse_shopping_list_voice(
         )
 
 
-@router.post("/parse-image", response_model=ParseShoppingListResponse)
 async def parse_shopping_list_image(
-    image: Optional[UploadFile] = File(None),
-    images: Optional[List[UploadFile]] = File(None),
-    import_type: str = Form(default="shopping_list"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    image: Optional[UploadFile] = None,
+    images: Optional[List[UploadFile]] = None,
+    import_type: str = "shopping_list",
+) -> ParseShoppingListResponse:
     """Parse shopping list items from image (handwritten list, screenshot, etc.)."""
     try:
         # Get the image(s) to process
@@ -777,27 +771,17 @@ async def parse_shopping_list_image(
         )
 
 
-@router.get("/{list_id}", response_model=ShoppingListResponse)
 async def get_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ShoppingListResponse:
     """Get a single shopping list by ID with all items."""
-    result = await db.execute(
-        select(ShoppingList).options(
-            selectinload(ShoppingList.items)
-        ).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    shopping_list = await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
+        options=[selectinload(ShoppingList.items)],
     )
-    shopping_list = result.scalar_one_or_none()
-
-    if not shopping_list:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     summary = compute_list_summary(shopping_list)
     return ShoppingListResponse(
@@ -816,28 +800,18 @@ async def get_shopping_list(
     )
 
 
-@router.put("/{list_id}", response_model=ShoppingListResponse)
 async def update_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
     request: ShoppingListUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ShoppingListResponse:
     """Update a shopping list."""
-    result = await db.execute(
-        select(ShoppingList).options(
-            selectinload(ShoppingList.items)
-        ).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    shopping_list = await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
+        options=[selectinload(ShoppingList.items)],
     )
-    shopping_list = result.scalar_one_or_none()
-
-    if not shopping_list:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     # Update only provided fields
     update_data = request.model_dump(exclude_unset=True)
@@ -870,52 +844,32 @@ async def update_shopping_list(
     )
 
 
-@router.delete("/{list_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a shopping list and all its items."""
-    result = await db.execute(
-        select(ShoppingList).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    shopping_list = await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
     )
-    shopping_list = result.scalar_one_or_none()
-
-    if not shopping_list:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     await db.delete(shopping_list)
     await db.commit()
 
 
-# ==================== Item Management ====================
-
-@router.post("/{list_id}/items", response_model=List[ShoppingListItemResponse], status_code=status.HTTP_201_CREATED)
 async def add_items_to_list(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
     request: AddItemsRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> List[ShoppingListItemResponse]:
     """Add items to a shopping list."""
-    result = await db.execute(
-        select(ShoppingList).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
     )
-    shopping_list = result.scalar_one_or_none()
-
-    if not shopping_list:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     created_items = []
     for item_data in request.items:
@@ -938,26 +892,19 @@ async def add_items_to_list(
     return [ShoppingListItemResponse.model_validate(i) for i in created_items]
 
 
-@router.put("/{list_id}/items/{item_id}", response_model=ShoppingListItemResponse)
 async def update_item(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
     item_id: UUID,
     request: ShoppingListItemUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ShoppingListItemResponse:
     """Update a shopping list item."""
     # Verify list ownership
-    list_result = await db.execute(
-        select(ShoppingList).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
     )
-    if not list_result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     # Get item
     item_result = await db.execute(
@@ -987,25 +934,18 @@ async def update_item(
     return ShoppingListItemResponse.model_validate(item)
 
 
-@router.delete("/{list_id}/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_item(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
     item_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a shopping list item."""
     # Verify list ownership
-    list_result = await db.execute(
-        select(ShoppingList).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
     )
-    if not list_result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     # Get and delete item
     item_result = await db.execute(
@@ -1025,25 +965,18 @@ async def delete_item(
     await db.commit()
 
 
-@router.post("/{list_id}/toggle-items", response_model=BulkActionResponse)
 async def toggle_items_purchased(
+    db: AsyncSession,
+    current_user: User,
     list_id: UUID,
     request: ToggleItemsRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Toggle purchased status for multiple items."""
     # Verify list ownership
-    list_result = await db.execute(
-        select(ShoppingList).where(
-            and_(ShoppingList.id == list_id, ShoppingList.user_id == current_user.id)
-        )
+    await get_owned_or_404(
+        db, ShoppingList, list_id, current_user,
+        detail="Shopping list not found",
     )
-    if not list_result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Shopping list not found"
-        )
 
     # Get items
     items_result = await db.execute(
@@ -1075,14 +1008,11 @@ async def toggle_items_purchased(
     )
 
 
-# ==================== Bulk Operations ====================
-
-@router.post("/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_lists(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple shopping lists."""
     result = await db.execute(
         select(ShoppingList).where(
@@ -1113,12 +1043,11 @@ async def bulk_archive_lists(
     )
 
 
-@router.post("/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_lists(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple shopping lists."""
     result = await db.execute(
         select(ShoppingList).where(
@@ -1149,12 +1078,11 @@ async def bulk_unarchive_lists(
     )
 
 
-@router.post("/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_lists(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple shopping lists."""
     result = await db.execute(
         select(ShoppingList).where(
@@ -1186,12 +1114,11 @@ async def bulk_delete_lists(
     )
 
 
-@router.post("/bulk-complete", response_model=BulkActionResponse)
 async def bulk_complete_lists(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Mark multiple shopping lists as completed."""
     result = await db.execute(
         select(ShoppingList).where(

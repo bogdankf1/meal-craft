@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Plus,
   AlertTriangle,
@@ -75,6 +75,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { useUserStore } from "@/lib/store/user-store";
+import { useArchivableListState } from "@/lib/hooks/use-archivable-list-state";
+import { useModuleTabNavigation } from "@/lib/hooks/use-module-tab-navigation";
 
 export function PantryContent() {
   const t = useTranslations("pantry");
@@ -82,30 +84,34 @@ export function PantryContent() {
   const { preferences } = useUserStore();
   const { uiVisibility } = preferences;
 
-  // State for active items
-  const [filters, setFilters] = useState<PantryFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "created_at",
-    sort_order: "desc",
-    is_archived: false,
+  const {
+    filters,
+    setFilters,
+    archiveFilters,
+    setArchiveFilters,
+    formOpen,
+    setFormOpen,
+    bulkFormOpen,
+    setBulkFormOpen,
+    editingItem,
+    historyMonths,
+    setHistoryMonths,
+    currentView,
+    setCurrentView,
+    archiveView,
+    setArchiveView,
+    handleAddClick,
+    handleEditClick,
+    handlePageChange,
+    handleArchivePageChange,
+  } = useArchivableListState<PantryFilters, PantryItem>({
+    initialFilters: {
+      page: 1,
+      per_page: 20,
+      sort_by: "created_at",
+      sort_order: "desc",
+    },
   });
-
-  // State for archived items
-  const [archiveFilters, setArchiveFilters] = useState<PantryFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "created_at",
-    sort_order: "desc",
-    is_archived: true,
-  });
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [bulkFormOpen, setBulkFormOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
-  const [historyMonths, setHistoryMonths] = useState(3);
-  const [currentView, setCurrentView] = useState<string>("table");
-  const [archiveView, setArchiveView] = useState<string>("table");
   const [shoppingListDialogOpen, setShoppingListDialogOpen] = useState(false);
   const [itemsToAddToShoppingList, setItemsToAddToShoppingList] = useState<
     { name: string; quantity?: number | null; unit?: string | null; category?: string | null }[]
@@ -138,13 +144,7 @@ export function PantryContent() {
 
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const navigateToTab = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const { navigateToTab } = useModuleTabNavigation();
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
@@ -158,26 +158,8 @@ export function PantryContent() {
 
   const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
 
-  const handleAddClick = () => {
-    setEditingItem(null);
-    setFormOpen(true);
-  };
-
   const handleBulkAddClick = () => {
     setBulkFormOpen(true);
-  };
-
-  const handleEditClick = (item: PantryItem) => {
-    setEditingItem(item);
-    setFormOpen(true);
-  };
-
-  const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page });
-  };
-
-  const handleArchivePageChange = (page: number) => {
-    setArchiveFilters({ ...archiveFilters, page });
   };
 
   const hasPantryItems = (pantryData?.total || 0) > 0;

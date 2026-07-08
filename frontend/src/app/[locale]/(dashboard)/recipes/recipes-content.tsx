@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useModuleTabNavigation } from "@/lib/hooks/use-module-tab-navigation";
 import { format, parseISO } from "date-fns";
 import {
   Plus,
@@ -74,7 +75,6 @@ export function RecipesContent() {
   const t = useTranslations("recipes");
   const tCommon = useTranslations("common");
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { preferences } = useUserStore();
   const { uiVisibility } = preferences;
@@ -156,11 +156,7 @@ export function RecipesContent() {
   // Lazy query for fetching recipe details when adding to shopping list
   const [fetchRecipe] = useLazyGetRecipeQuery();
 
-  const navigateToTab = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const { navigateToTab } = useModuleTabNavigation();
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },

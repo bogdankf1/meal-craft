@@ -1,16 +1,22 @@
-"""Learning & Skills API routes."""
+"""Service layer for learning & skills operations.
+
+Business/DB logic extracted verbatim from the learning route handlers.
+Ownership lookups use ``get_owned_or_404`` and pagination metadata uses
+``paginate``. This module raises ``HTTPException`` directly (as recipes does)
+so the exact status codes and detail strings of the original handlers survive.
+"""
 
 from datetime import datetime, date, timedelta
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, or_
 from dateutil.relativedelta import relativedelta
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_owned_or_404
+from app.utils.pagination import paginate
 from app.models.user import User
 from app.models.learning import (
     Skill,
@@ -18,53 +24,37 @@ from app.models.learning import (
     LearningPath,
     UserLearningPath,
     SkillPracticeLog,
-    learning_path_skills,
 )
-from app.schemas.learning import (
-    # Skill schemas
+from app.api.v1.routes.learning.schemas import (
     SkillCreate,
     SkillUpdate,
     SkillResponse,
     SkillListResponse,
-    SkillFilters,
-    # User skill schemas
     UserSkillCreate,
     UserSkillUpdate,
     UserSkillResponse,
     UserSkillListResponse,
-    UserSkillFilters,
-    # Learning path schemas
     LearningPathCreate,
-    LearningPathUpdate,
     LearningPathResponse,
     LearningPathListResponse,
-    LearningPathFilters,
-    # User learning path schemas
     UserLearningPathCreate,
     UserLearningPathUpdate,
     UserLearningPathResponse,
     UserLearningPathListResponse,
-    # Practice log schemas
     SkillPracticeLogCreate,
     SkillPracticeLogResponse,
     SkillPracticeLogListResponse,
-    PracticeLogFilters,
-    # Bulk action schemas
     BulkSkillIds,
     BulkActionResponse,
-    # Analytics schemas
     LearningAnalytics,
     SkillsByCategory,
     SkillsByProficiency,
     SkillsByStatus,
     RecentPractice,
     LearningStreak,
-    # History schemas
     LearningHistory,
     MonthlyLearningData,
 )
-
-router = APIRouter(prefix="/learning", tags=["learning"])
 
 
 # ============ Helper Functions ============
@@ -234,19 +224,18 @@ async def _update_learning_paths_progress(db: AsyncSession, user_id) -> None:
 
 # ============ Skills Library CRUD ============
 
-@router.get("/skills", response_model=SkillListResponse)
 async def list_skills(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     difficulty: Optional[str] = None,
     is_active: Optional[bool] = True,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "name",
     sort_order: str = "asc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SkillListResponse:
     """List skills from the library with filters and pagination."""
     query = select(Skill)
 
@@ -301,7 +290,7 @@ async def list_skills(
         )
         user_counts[skill.id] = count_result.scalar() or 0
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return SkillListResponse(
         items=[
@@ -319,12 +308,11 @@ async def list_skills(
     )
 
 
-@router.get("/skills/{skill_id}", response_model=SkillResponse)
 async def get_skill(
+    db: AsyncSession,
+    current_user: User,
     skill_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SkillResponse:
     """Get a single skill by ID."""
     result = await db.execute(
         select(Skill).where(Skill.id == skill_id)
@@ -354,12 +342,11 @@ async def get_skill(
     return _skill_to_response(skill, user_count=user_count, is_added=is_added)
 
 
-@router.post("/skills", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
 async def create_skill(
+    db: AsyncSession,
+    current_user: User,
     skill_data: SkillCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SkillResponse:
     """Create a new skill in the library (admin only in the future)."""
     skill = Skill(
         name=skill_data.name,
@@ -381,13 +368,12 @@ async def create_skill(
     return _skill_to_response(skill)
 
 
-@router.put("/skills/{skill_id}", response_model=SkillResponse)
 async def update_skill(
+    db: AsyncSession,
+    current_user: User,
     skill_id: UUID,
     skill_data: SkillUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SkillResponse:
     """Update a skill (admin only in the future)."""
     result = await db.execute(
         select(Skill).where(Skill.id == skill_id)
@@ -413,12 +399,11 @@ async def update_skill(
     return _skill_to_response(skill)
 
 
-@router.delete("/skills/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_skill(
+    db: AsyncSession,
+    current_user: User,
     skill_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a skill (admin only in the future)."""
     result = await db.execute(
         select(Skill).where(Skill.id == skill_id)
@@ -437,20 +422,19 @@ async def delete_skill(
 
 # ============ User Skills (My Skills) ============
 
-@router.get("/my-skills", response_model=UserSkillListResponse)
 async def list_user_skills(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     proficiency_level: Optional[str] = None,
-    user_status: Optional[str] = Query(None, alias="status"),
+    user_status: Optional[str] = None,
     is_favorite: Optional[bool] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "created_at",
     sort_order: str = "desc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserSkillListResponse:
     """List user's skills with filters and pagination."""
     query = select(UserSkill).where(UserSkill.user_id == current_user.id)
 
@@ -502,7 +486,7 @@ async def list_user_skills(
     for us in user_skills:
         await db.refresh(us, ["skill"])
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return UserSkillListResponse(
         items=[_user_skill_to_response(us) for us in user_skills],
@@ -513,12 +497,11 @@ async def list_user_skills(
     )
 
 
-@router.post("/my-skills", response_model=UserSkillResponse, status_code=status.HTTP_201_CREATED)
 async def add_user_skill(
+    db: AsyncSession,
+    current_user: User,
     skill_data: UserSkillCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserSkillResponse:
     """Add a skill to user's list."""
     # Check if skill exists
     skill_result = await db.execute(
@@ -563,12 +546,11 @@ async def add_user_skill(
     return _user_skill_to_response(user_skill)
 
 
-@router.post("/my-skills/bulk-add", response_model=BulkActionResponse)
 async def bulk_add_skills(
+    db: AsyncSession,
+    current_user: User,
     request: BulkSkillIds,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Add multiple skills to user's list."""
     # Get existing user skills
     existing_result = await db.execute(
@@ -610,50 +592,30 @@ async def bulk_add_skills(
     )
 
 
-@router.get("/my-skills/{user_skill_id}", response_model=UserSkillResponse)
 async def get_user_skill(
+    db: AsyncSession,
+    current_user: User,
     user_skill_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserSkillResponse:
     """Get a user skill by ID."""
-    result = await db.execute(
-        select(UserSkill).where(
-            and_(UserSkill.id == user_skill_id, UserSkill.user_id == current_user.id)
-        )
+    user_skill = await get_owned_or_404(
+        db, UserSkill, user_skill_id, current_user, detail="User skill not found"
     )
-    user_skill = result.scalar_one_or_none()
-
-    if not user_skill:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User skill not found"
-        )
 
     await db.refresh(user_skill, ["skill"])
     return _user_skill_to_response(user_skill)
 
 
-@router.put("/my-skills/{user_skill_id}", response_model=UserSkillResponse)
 async def update_user_skill(
+    db: AsyncSession,
+    current_user: User,
     user_skill_id: UUID,
     skill_data: UserSkillUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserSkillResponse:
     """Update a user skill."""
-    result = await db.execute(
-        select(UserSkill).where(
-            and_(UserSkill.id == user_skill_id, UserSkill.user_id == current_user.id)
-        )
+    user_skill = await get_owned_or_404(
+        db, UserSkill, user_skill_id, current_user, detail="User skill not found"
     )
-    user_skill = result.scalar_one_or_none()
-
-    if not user_skill:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User skill not found"
-        )
 
     update_data = skill_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -676,36 +638,25 @@ async def update_user_skill(
     return _user_skill_to_response(user_skill)
 
 
-@router.delete("/my-skills/{user_skill_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_user_skill(
+    db: AsyncSession,
+    current_user: User,
     user_skill_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Remove a skill from user's list."""
-    result = await db.execute(
-        select(UserSkill).where(
-            and_(UserSkill.id == user_skill_id, UserSkill.user_id == current_user.id)
-        )
+    user_skill = await get_owned_or_404(
+        db, UserSkill, user_skill_id, current_user, detail="User skill not found"
     )
-    user_skill = result.scalar_one_or_none()
-
-    if not user_skill:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User skill not found"
-        )
 
     await db.delete(user_skill)
     await db.commit()
 
 
-@router.post("/my-skills/bulk-remove", response_model=BulkActionResponse)
 async def bulk_remove_skills(
+    db: AsyncSession,
+    current_user: User,
     request: BulkSkillIds,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Remove multiple skills from user's list."""
     result = await db.execute(
         select(UserSkill).where(
@@ -739,20 +690,19 @@ async def bulk_remove_skills(
 
 # ============ Learning Paths ============
 
-@router.get("/paths", response_model=LearningPathListResponse)
 async def list_learning_paths(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     difficulty: Optional[str] = None,
     is_featured: Optional[bool] = None,
     is_active: Optional[bool] = True,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "name",
     sort_order: str = "asc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> LearningPathListResponse:
     """List learning paths with filters and pagination."""
     query = select(LearningPath)
 
@@ -801,7 +751,7 @@ async def list_learning_paths(
     )
     user_paths = {up.learning_path_id: up for up in user_paths_result.scalars().all()}
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     items = []
     for path in paths:
@@ -822,12 +772,11 @@ async def list_learning_paths(
     )
 
 
-@router.get("/paths/{path_id}", response_model=LearningPathResponse)
 async def get_learning_path(
+    db: AsyncSession,
+    current_user: User,
     path_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> LearningPathResponse:
     """Get a learning path by ID."""
     result = await db.execute(
         select(LearningPath).where(LearningPath.id == path_id)
@@ -860,12 +809,11 @@ async def get_learning_path(
     )
 
 
-@router.post("/paths", response_model=LearningPathResponse, status_code=status.HTTP_201_CREATED)
 async def create_learning_path(
+    db: AsyncSession,
+    current_user: User,
     path_data: LearningPathCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> LearningPathResponse:
     """Create a new learning path (admin only in the future)."""
     # Verify all skills exist
     skills_result = await db.execute(
@@ -902,14 +850,13 @@ async def create_learning_path(
 
 # ============ User Learning Paths ============
 
-@router.get("/my-paths", response_model=UserLearningPathListResponse)
 async def list_user_learning_paths(
-    user_status: Optional[str] = Query(None, alias="status"),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    user_status: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 20,
+) -> UserLearningPathListResponse:
     """List user's learning paths with progress."""
     query = select(UserLearningPath).where(UserLearningPath.user_id == current_user.id)
 
@@ -959,7 +906,7 @@ async def list_user_learning_paths(
             learning_path=path_response,
         ))
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return UserLearningPathListResponse(
         items=items,
@@ -970,12 +917,11 @@ async def list_user_learning_paths(
     )
 
 
-@router.post("/my-paths", response_model=UserLearningPathResponse, status_code=status.HTTP_201_CREATED)
 async def start_learning_path(
+    db: AsyncSession,
+    current_user: User,
     path_data: UserLearningPathCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserLearningPathResponse:
     """Start a learning path."""
     # Check if path exists
     path_result = await db.execute(
@@ -1040,12 +986,11 @@ async def start_learning_path(
     )
 
 
-@router.post("/my-paths/{learning_path_id}/add-all-skills", response_model=BulkActionResponse)
 async def add_all_path_skills_to_user(
+    db: AsyncSession,
+    current_user: User,
     learning_path_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Add all skills from a learning path to user's skills."""
     # Get the learning path with skills
     path_result = await db.execute(
@@ -1097,26 +1042,16 @@ async def add_all_path_skills_to_user(
     )
 
 
-@router.put("/my-paths/{user_path_id}", response_model=UserLearningPathResponse)
 async def update_user_learning_path(
+    db: AsyncSession,
+    current_user: User,
     user_path_id: UUID,
     path_data: UserLearningPathUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserLearningPathResponse:
     """Update user's learning path progress."""
-    result = await db.execute(
-        select(UserLearningPath).where(
-            and_(UserLearningPath.id == user_path_id, UserLearningPath.user_id == current_user.id)
-        )
+    user_path = await get_owned_or_404(
+        db, UserLearningPath, user_path_id, current_user, detail="User learning path not found"
     )
-    user_path = result.scalar_one_or_none()
-
-    if not user_path:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User learning path not found"
-        )
 
     update_data = path_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -1161,18 +1096,17 @@ async def update_user_learning_path(
 
 # ============ Practice Logs ============
 
-@router.get("/practice-logs", response_model=SkillPracticeLogListResponse)
 async def list_practice_logs(
+    db: AsyncSession,
+    current_user: User,
     skill_id: Optional[UUID] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "practiced_at",
     sort_order: str = "desc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SkillPracticeLogListResponse:
     """List user's practice logs with filters."""
     query = select(SkillPracticeLog).where(SkillPracticeLog.user_id == current_user.id)
 
@@ -1208,7 +1142,7 @@ async def list_practice_logs(
     for log in logs:
         await db.refresh(log, ["skill"])
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return SkillPracticeLogListResponse(
         items=[_practice_log_to_response(log) for log in logs],
@@ -1219,12 +1153,11 @@ async def list_practice_logs(
     )
 
 
-@router.post("/practice-logs", response_model=SkillPracticeLogResponse, status_code=status.HTTP_201_CREATED)
 async def log_practice(
+    db: AsyncSession,
+    current_user: User,
     log_data: SkillPracticeLogCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SkillPracticeLogResponse:
     """Log a practice session for a skill."""
     # Check if user has this skill
     user_skill_result = await db.execute(
@@ -1273,11 +1206,10 @@ async def log_practice(
 
 # ============ Analytics ============
 
-@router.get("/analytics", response_model=LearningAnalytics)
 async def get_learning_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> LearningAnalytics:
     """Get learning analytics overview."""
     # Get all user skills
     user_skills_result = await db.execute(
@@ -1437,12 +1369,11 @@ async def get_learning_analytics(
 
 # ============ History ============
 
-@router.get("/history", response_model=LearningHistory)
 async def get_learning_history(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> LearningHistory:
     """Get learning history data."""
     today = date.today()
     start_date = today - relativedelta(months=months)

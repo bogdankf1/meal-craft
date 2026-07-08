@@ -1,29 +1,37 @@
+"""Service layer for grocery operations.
+
+Business/DB logic extracted verbatim from the grocery route handlers. Ownership
+lookups use ``get_owned_or_404``.
+
+Note: like the recipes package, this module raises ``HTTPException`` directly
+(via ``get_owned_or_404`` and inline raises) rather than translating in the
+router, to preserve the exact status codes and detail strings of the original
+handlers.
 """
-Groceries API routes - Full CRUD implementation.
-"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import selectinload
-from typing import Optional, List
+
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel
 import math
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from fastapi import HTTPException, status, UploadFile
+from sqlalchemy import select, func, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import httpx
+
+from app.api.deps import get_owned_or_404
 from app.models.user import User
-from app.models.grocery import Grocery, GroceryCategory
+from app.models.grocery import Grocery
 from app.models.pantry import PantryItem
-from app.schemas.groceries import (
+from app.services.ai_service import ai_service
+from app.api.v1.routes.groceries.schemas import (
     GroceryCreate,
     GroceryBatchCreate,
     GroceryUpdate,
     GroceryResponse,
     GroceryListResponse,
-    GroceryFilters,
     BulkActionRequest,
     BulkActionResponse,
     GroceryAnalytics,
@@ -41,29 +49,27 @@ from app.schemas.groceries import (
     WasteByReason,
     WasteByCategory,
     MonthlyWasteData,
+    MoveToPantryRequest,
+    BulkMoveToPantryRequest,
+    MoveToPantryResponse,
 )
-import httpx
-from app.services.ai_service import ai_service
-
-router = APIRouter()
 
 
-@router.get("", response_model=GroceryListResponse)
 async def list_groceries(
-    search: Optional[str] = Query(None, description="Search in item name"),
-    category: Optional[str] = Query(None, description="Filter by category"),
-    store: Optional[str] = Query(None, description="Filter by store"),
-    is_archived: bool = Query(False, description="Include archived items"),
-    date_from: Optional[date] = Query(None, description="Purchase date from"),
-    date_to: Optional[date] = Query(None, description="Purchase date to"),
-    expiring_within_days: Optional[int] = Query(None, ge=0, description="Items expiring within N days"),
-    sort_by: str = Query("created_at", description="Sort field"),
-    sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    store: Optional[str] = None,
+    is_archived: bool = False,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    expiring_within_days: Optional[int] = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    page: int = 1,
+    per_page: int = 50,
+) -> GroceryListResponse:
     """List groceries with filters, sorting, and pagination."""
     # Build base query
     query = select(Grocery).where(Grocery.user_id == current_user.id)
@@ -127,12 +133,11 @@ async def list_groceries(
     )
 
 
-@router.post("", response_model=List[GroceryResponse], status_code=status.HTTP_201_CREATED)
 async def create_groceries(
+    db: AsyncSession,
+    current_user: User,
     request: GroceryBatchCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> List[GroceryResponse]:
     """Create one or more grocery items."""
     created_groceries = []
 
@@ -161,11 +166,10 @@ async def create_groceries(
     return [GroceryResponse.model_validate(g) for g in created_groceries]
 
 
-@router.get("/analytics", response_model=GroceryAnalytics)
 async def get_grocery_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> GroceryAnalytics:
     """Get grocery analytics data."""
     today = date.today()
     week_ago = today - timedelta(days=7)
@@ -309,12 +313,11 @@ async def get_grocery_analytics(
     )
 
 
-@router.get("/history", response_model=GroceryHistory)
 async def get_grocery_history(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze (1-24)"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> GroceryHistory:
     """Get historical grocery analytics for the specified number of months."""
     today = date.today()
     start_date = today - relativedelta(months=months)
@@ -441,49 +444,29 @@ async def get_grocery_history(
     )
 
 
-@router.get("/{grocery_id}", response_model=GroceryResponse)
 async def get_grocery(
+    db: AsyncSession,
+    current_user: User,
     grocery_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> GroceryResponse:
     """Get a single grocery item by ID."""
-    result = await db.execute(
-        select(Grocery).where(
-            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
-        )
+    grocery = await get_owned_or_404(
+        db, Grocery, grocery_id, current_user, detail="Grocery item not found"
     )
-    grocery = result.scalar_one_or_none()
-
-    if not grocery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grocery item not found"
-        )
 
     return GroceryResponse.model_validate(grocery)
 
 
-@router.put("/{grocery_id}", response_model=GroceryResponse)
 async def update_grocery(
+    db: AsyncSession,
+    current_user: User,
     grocery_id: UUID,
     request: GroceryUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> GroceryResponse:
     """Update a grocery item."""
-    result = await db.execute(
-        select(Grocery).where(
-            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
-        )
+    grocery = await get_owned_or_404(
+        db, Grocery, grocery_id, current_user, detail="Grocery item not found"
     )
-    grocery = result.scalar_one_or_none()
-
-    if not grocery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grocery item not found"
-        )
 
     # Update only provided fields
     update_data = request.model_dump(exclude_unset=True)
@@ -499,36 +482,25 @@ async def update_grocery(
     return GroceryResponse.model_validate(grocery)
 
 
-@router.delete("/{grocery_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_grocery(
+    db: AsyncSession,
+    current_user: User,
     grocery_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a grocery item."""
-    result = await db.execute(
-        select(Grocery).where(
-            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
-        )
+    grocery = await get_owned_or_404(
+        db, Grocery, grocery_id, current_user, detail="Grocery item not found"
     )
-    grocery = result.scalar_one_or_none()
-
-    if not grocery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grocery item not found"
-        )
 
     await db.delete(grocery)
     await db.commit()
 
 
-@router.post("/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_groceries(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple grocery items."""
     result = await db.execute(
         select(Grocery).where(
@@ -559,12 +531,11 @@ async def bulk_archive_groceries(
     )
 
 
-@router.post("/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_groceries(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple grocery items."""
     result = await db.execute(
         select(Grocery).where(
@@ -595,12 +566,11 @@ async def bulk_unarchive_groceries(
     )
 
 
-@router.post("/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_groceries(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple grocery items."""
     result = await db.execute(
         select(Grocery).where(
@@ -632,26 +602,16 @@ async def bulk_delete_groceries(
     )
 
 
-@router.post("/{grocery_id}/waste", response_model=GroceryResponse)
 async def mark_as_wasted(
+    db: AsyncSession,
+    current_user: User,
     grocery_id: UUID,
     request: MarkAsWastedRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> GroceryResponse:
     """Mark a grocery item as wasted."""
-    result = await db.execute(
-        select(Grocery).where(
-            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
-        )
+    grocery = await get_owned_or_404(
+        db, Grocery, grocery_id, current_user, detail="Grocery item not found"
     )
-    grocery = result.scalar_one_or_none()
-
-    if not grocery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grocery item not found"
-        )
 
     grocery.is_wasted = True
     grocery.wasted_at = datetime.utcnow()
@@ -665,12 +625,11 @@ async def mark_as_wasted(
     return GroceryResponse.model_validate(grocery)
 
 
-@router.post("/bulk-waste", response_model=BulkActionResponse)
 async def bulk_mark_as_wasted(
+    db: AsyncSession,
+    current_user: User,
     request: BulkMarkAsWastedRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Mark multiple grocery items as wasted."""
     result = await db.execute(
         select(Grocery).where(
@@ -706,25 +665,15 @@ async def bulk_mark_as_wasted(
     )
 
 
-@router.post("/{grocery_id}/unwaste", response_model=GroceryResponse)
 async def unmark_as_wasted(
+    db: AsyncSession,
+    current_user: User,
     grocery_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> GroceryResponse:
     """Remove wasted status from a grocery item."""
-    result = await db.execute(
-        select(Grocery).where(
-            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
-        )
+    grocery = await get_owned_or_404(
+        db, Grocery, grocery_id, current_user, detail="Grocery item not found"
     )
-    grocery = result.scalar_one_or_none()
-
-    if not grocery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grocery item not found"
-        )
 
     grocery.is_wasted = False
     grocery.wasted_at = None
@@ -737,12 +686,11 @@ async def unmark_as_wasted(
     return GroceryResponse.model_validate(grocery)
 
 
-@router.get("/waste/analytics", response_model=WasteAnalytics)
 async def get_waste_analytics(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> WasteAnalytics:
     """Get waste analytics data with trends and suggestions."""
     today = date.today()
     week_ago = today - timedelta(days=7)
@@ -948,12 +896,11 @@ def _generate_waste_suggestions(
     return suggestions[:5]  # Return top 5 suggestions
 
 
-@router.post("/parse-text", response_model=ParseTextResponse)
 async def parse_grocery_text(
+    db: AsyncSession,
+    current_user: User,
     request: ParseTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseTextResponse:
     """Parse grocery items from text using AI."""
     default_date = request.default_purchase_date or date.today()
 
@@ -1054,14 +1001,13 @@ def _simple_parse_text(text: str, default_date: date) -> ParseTextResponse:
     )
 
 
-@router.post("/parse-voice", response_model=ParseTextResponse)
 async def parse_grocery_voice(
-    audio: UploadFile = File(...),
-    language: str = Form(default="auto"),
-    default_purchase_date: Optional[date] = Form(default=None),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+    default_purchase_date: Optional[date] = None,
+) -> ParseTextResponse:
     """Parse grocery items from voice recording using AI transcription."""
     purchase_date = default_purchase_date or date.today()
 
@@ -1148,12 +1094,11 @@ async def parse_grocery_voice(
         )
 
 
-@router.post("/parse-receipt-url", response_model=ParseTextResponse)
 async def parse_receipt_url(
+    db: AsyncSession,
+    current_user: User,
     request: ParseReceiptUrlRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseTextResponse:
     """Parse grocery items from a digital receipt URL."""
     purchase_date = request.default_purchase_date or date.today()
 
@@ -1210,15 +1155,14 @@ async def parse_receipt_url(
         )
 
 
-@router.post("/parse-image", response_model=ParseTextResponse)
 async def parse_grocery_image(
-    image: Optional[UploadFile] = File(None),
-    images: Optional[List[UploadFile]] = File(None),
-    import_type: str = Form(default="delivery_app"),
-    default_purchase_date: Optional[date] = Form(default=None),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    image: Optional[UploadFile] = None,
+    images: Optional[List[UploadFile]] = None,
+    import_type: str = "delivery_app",
+    default_purchase_date: Optional[date] = None,
+) -> ParseTextResponse:
     """Parse grocery items from image(s) using AI vision."""
     purchase_date = default_purchase_date or date.today()
 
@@ -1399,46 +1343,16 @@ def parse_quantity_from_off(product: dict) -> tuple:
     return quantity, unit
 
 
-# ============ Move to Pantry ============
-
-class MoveToPantryRequest(BaseModel):
-    """Request to move a grocery item to pantry."""
-    storage_location: str = "pantry"
-
-
-class BulkMoveToPantryRequest(BaseModel):
-    """Request to move multiple grocery items to pantry."""
-    ids: List[UUID]
-    storage_location: str = "pantry"
-
-
-class MoveToPantryResponse(BaseModel):
-    """Response from moving items to pantry."""
-    success: bool
-    moved_count: int
-    message: str
-
-
-@router.post("/{grocery_id}/move-to-pantry", response_model=MoveToPantryResponse)
 async def move_to_pantry(
+    db: AsyncSession,
+    current_user: User,
     grocery_id: UUID,
     request: MoveToPantryRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MoveToPantryResponse:
     """Move a grocery item to pantry (archives the grocery and creates pantry item)."""
-    result = await db.execute(
-        select(Grocery).where(
-            and_(Grocery.id == grocery_id, Grocery.user_id == current_user.id)
-        )
+    grocery = await get_owned_or_404(
+        db, Grocery, grocery_id, current_user, detail="Grocery item not found"
     )
-    grocery = result.scalar_one_or_none()
-
-    if not grocery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Grocery item not found"
-        )
 
     # Create pantry item from grocery
     pantry_item = PantryItem(
@@ -1465,12 +1379,11 @@ async def move_to_pantry(
     )
 
 
-@router.post("/bulk-move-to-pantry", response_model=MoveToPantryResponse)
 async def bulk_move_to_pantry(
+    db: AsyncSession,
+    current_user: User,
     request: BulkMoveToPantryRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MoveToPantryResponse:
     """Move multiple grocery items to pantry."""
     result = await db.execute(
         select(Grocery).where(
@@ -1513,11 +1426,9 @@ async def bulk_move_to_pantry(
     )
 
 
-@router.get("/lookup-barcode/{barcode}", response_model=BarcodeLookupResponse)
 async def lookup_barcode(
     barcode: str,
-    current_user: User = Depends(get_current_user),
-):
+) -> BarcodeLookupResponse:
     """
     Look up product information by barcode using Open Food Facts API.
     Returns product name, brand, category, and other details if found.

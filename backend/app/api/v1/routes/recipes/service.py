@@ -1,17 +1,25 @@
-"""Recipe API Routes"""
+"""Service layer for recipe operations.
 
-import math
+Business/DB logic extracted verbatim from the recipe route handlers. Ownership
+lookups use ``get_owned_or_404`` and pagination metadata uses ``paginate``.
+
+Note: unlike some sibling service modules, this module raises ``HTTPException``
+directly (via ``get_owned_or_404`` and inline raises) rather than translating
+in the router, to preserve the exact status codes and detail strings of the
+original handlers.
+"""
+
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, status
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select, func, desc, asc, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_owned_or_404
+from app.utils.pagination import paginate
 from app.models.user import User
 from app.models.recipe import (
     Recipe,
@@ -21,9 +29,10 @@ from app.models.recipe import (
     RecipeCollection,
     recipe_collection_association,
 )
-from app.services.ai_service import AIService
-from app.schemas.recipe import (
-    RecipeCreate,
+from app.services.ai_service import AIService, ai_service
+from app.services.pantry_service import PantryService
+from app.models.pantry import PantryItem
+from app.api.v1.routes.recipes.schemas import (
     RecipeBatchCreate,
     RecipeUpdate,
     RecipeUpdateIngredients,
@@ -32,7 +41,6 @@ from app.schemas.recipe import (
     RecipeListResponse,
     RecipeScaledResponse,
     RecipeIngredientScaled,
-    RecipeFilters,
     CookingHistoryCreate,
     CookingHistoryResponse,
     CookingHistoryListResponse,
@@ -61,36 +69,30 @@ from app.schemas.recipe import (
     RecipeAvailabilityStatus,
     RecipeIngredientAvailability,
 )
-from app.services.ai_service import ai_service
-from app.services.pantry_service import PantryService
-from app.models.pantry import PantryItem
-
-router = APIRouter(prefix="/recipes")
 
 
 # ============ Recipe CRUD ============
 
-@router.get("", response_model=RecipeListResponse)
 async def get_recipes(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     cuisine_type: Optional[str] = None,
     difficulty: Optional[str] = None,
     is_favorite: Optional[bool] = None,
     is_archived: Optional[bool] = False,
-    tags: Optional[str] = None,  # Comma-separated
+    tags: Optional[str] = None,
     max_prep_time: Optional[int] = None,
     max_cook_time: Optional[int] = None,
     max_total_time: Optional[int] = None,
     min_rating: Optional[int] = None,
     collection_id: Optional[UUID] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    sort_by: str = Query("created_at"),
-    sort_order: str = Query("desc"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    page: int = 1,
+    per_page: int = 20,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+) -> RecipeListResponse:
     """Get paginated list of recipes with filters."""
     # Base query
     query = select(Recipe).where(Recipe.user_id == current_user.id)
@@ -196,16 +198,15 @@ async def get_recipes(
         total=total,
         page=page,
         per_page=per_page,
-        total_pages=math.ceil(total / per_page) if total > 0 else 0,
+        total_pages=paginate(total, page, per_page).total_pages,
     )
 
 
-@router.get("/history", response_model=RecipeHistory)
 async def get_recipe_history(
-    months: int = Query(3, ge=1, le=12),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> RecipeHistory:
     """Get recipe history (additions and cooking over time)."""
     from dateutil.relativedelta import relativedelta
 
@@ -256,20 +257,13 @@ async def get_recipe_history(
 
 # ============ Recipe Availability ============
 
-@router.get("/{recipe_id}/availability", response_model=RecipeAvailabilityStatus)
 async def get_recipe_availability(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
-    servings: Optional[int] = Query(None, description="Check for this many servings (default: recipe servings)"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Check if pantry has enough ingredients to make this recipe.
-
-    Returns availability status for each ingredient, including:
-    - Whether the ingredient is available in pantry
-    - How much is needed vs available
-    - Maximum servings possible with current pantry
-    """
+    servings: Optional[int] = None,
+) -> RecipeAvailabilityStatus:
+    """Check if pantry has enough ingredients to make this recipe."""
     pantry_service = PantryService(db)
     availability = await pantry_service.check_recipe_availability(
         user_id=current_user.id,
@@ -307,28 +301,22 @@ async def get_recipe_availability(
     )
 
 
-@router.get("/{recipe_id}", response_model=RecipeResponse)
 async def get_recipe(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RecipeResponse:
     """Get a single recipe by ID."""
-    query = (
-        select(Recipe)
-        .where(Recipe.id == recipe_id, Recipe.user_id == current_user.id)
-        .options(
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user,
+        detail="Recipe not found",
+        options=[
             selectinload(Recipe.ingredients),
             selectinload(Recipe.nutrition),
             selectinload(Recipe.collections),
             selectinload(Recipe.cooking_history),
-        )
+        ],
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     return RecipeResponse(
         id=recipe.id,
@@ -370,12 +358,11 @@ async def get_recipe(
     )
 
 
-@router.post("", response_model=List[RecipeResponse])
 async def create_recipes(
+    db: AsyncSession,
+    current_user: User,
     data: RecipeBatchCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> List[Recipe]:
     """Create one or more recipes."""
     created_recipes = []
     ai_service = AIService()
@@ -490,23 +477,16 @@ async def create_recipes(
     return result_recipes
 
 
-@router.put("/{recipe_id}", response_model=RecipeResponse)
 async def update_recipe(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
     data: RecipeUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> Recipe:
     """Update a recipe."""
-    query = select(Recipe).where(
-        Recipe.id == recipe_id,
-        Recipe.user_id == current_user.id
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user, detail="Recipe not found"
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     # Update fields
     update_data = data.model_dump(exclude_unset=True)
@@ -537,23 +517,16 @@ async def update_recipe(
     return recipe
 
 
-@router.put("/{recipe_id}/ingredients", response_model=RecipeResponse)
 async def update_recipe_ingredients(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
     data: RecipeUpdateIngredients,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> Recipe:
     """Update recipe ingredients (replaces all)."""
-    query = select(Recipe).where(
-        Recipe.id == recipe_id,
-        Recipe.user_id == current_user.id
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user, detail="Recipe not found"
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     # Delete existing ingredients
     await db.execute(
@@ -591,22 +564,15 @@ async def update_recipe_ingredients(
     return recipe
 
 
-@router.delete("/{recipe_id}")
 async def delete_recipe(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Delete a recipe."""
-    query = select(Recipe).where(
-        Recipe.id == recipe_id,
-        Recipe.user_id == current_user.id
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user, detail="Recipe not found"
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     await db.delete(recipe)
     await db.commit()
@@ -614,28 +580,22 @@ async def delete_recipe(
     return {"success": True, "message": "Recipe deleted"}
 
 
-@router.post("/{recipe_id}/calculate-nutrition", response_model=RecipeResponse)
 async def calculate_recipe_nutrition(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> Recipe:
     """Calculate or recalculate nutrition for a recipe using AI."""
-    query = (
-        select(Recipe)
-        .where(Recipe.id == recipe_id, Recipe.user_id == current_user.id)
-        .options(
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user,
+        detail="Recipe not found",
+        options=[
             selectinload(Recipe.ingredients),
             selectinload(Recipe.nutrition),
             selectinload(Recipe.collections),
             selectinload(Recipe.cooking_history),
-        )
+        ],
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     if not recipe.ingredients:
         raise HTTPException(status_code=400, detail="Recipe has no ingredients to calculate nutrition from")
@@ -705,11 +665,10 @@ async def calculate_recipe_nutrition(
     return recipe
 
 
-@router.post("/bulk/calculate-nutrition")
 async def bulk_calculate_nutrition(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> dict:
     """Calculate nutrition for all user's recipes that don't have nutrition data."""
     # Get all recipes without nutrition
     query = (
@@ -787,28 +746,22 @@ async def bulk_calculate_nutrition(
 
 # ============ Scaling ============
 
-@router.get("/{recipe_id}/scale", response_model=RecipeScaledResponse)
 async def get_scaled_recipe(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
-    servings: int = Query(..., ge=1),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    servings: int,
+) -> RecipeScaledResponse:
     """Get recipe with scaled ingredients for different serving size."""
-    query = (
-        select(Recipe)
-        .where(Recipe.id == recipe_id, Recipe.user_id == current_user.id)
-        .options(
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user,
+        detail="Recipe not found",
+        options=[
             selectinload(Recipe.ingredients),
             selectinload(Recipe.nutrition),
             selectinload(Recipe.collections),
-        )
+        ],
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     scale_factor = servings / recipe.servings
 
@@ -833,22 +786,15 @@ async def get_scaled_recipe(
 
 # ============ Favorites ============
 
-@router.post("/{recipe_id}/favorite", response_model=RecipeResponse)
 async def toggle_favorite(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> Recipe:
     """Toggle favorite status."""
-    query = select(Recipe).where(
-        Recipe.id == recipe_id,
-        Recipe.user_id == current_user.id
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user, detail="Recipe not found"
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     recipe.is_favorite = not recipe.is_favorite
     await db.commit()
@@ -859,24 +805,17 @@ async def toggle_favorite(
 
 # ============ Cooking History ============
 
-@router.post("/{recipe_id}/cook", response_model=CookingHistoryResponse)
 async def record_cooking(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
     data: CookingHistoryCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> CookingHistoryResponse:
     """Record that a recipe was cooked."""
     # Verify recipe exists
-    query = select(Recipe).where(
-        Recipe.id == recipe_id,
-        Recipe.user_id == current_user.id
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user, detail="Recipe not found"
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     # Create history entry
     # Ensure cooked_at is timezone-naive for PostgreSQL
@@ -921,13 +860,12 @@ async def record_cooking(
     )
 
 
-@router.get("/history/all", response_model=CookingHistoryListResponse)
 async def get_cooking_history(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    page: int = 1,
+    per_page: int = 20,
+) -> CookingHistoryListResponse:
     """Get all cooking history for the user."""
     # Count
     count_query = select(func.count()).select_from(CookingHistory).where(
@@ -974,18 +912,17 @@ async def get_cooking_history(
         total=total,
         page=page,
         per_page=per_page,
-        total_pages=math.ceil(total / per_page) if total > 0 else 0,
+        total_pages=paginate(total, page, per_page).total_pages,
     )
 
 
 # ============ Collections ============
 
-@router.get("/collections/all", response_model=List[RecipeCollectionResponse])
 async def get_collections(
+    db: AsyncSession,
+    current_user: User,
     include_archived: bool = False,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> List[RecipeCollectionResponse]:
     """Get all recipe collections."""
     query = select(RecipeCollection).where(
         RecipeCollection.user_id == current_user.id
@@ -1017,12 +954,11 @@ async def get_collections(
     ]
 
 
-@router.post("/collections", response_model=RecipeCollectionResponse)
 async def create_collection(
+    db: AsyncSession,
+    current_user: User,
     data: RecipeCollectionCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RecipeCollectionResponse:
     """Create a new collection."""
     collection = RecipeCollection(
         user_id=current_user.id,
@@ -1049,26 +985,17 @@ async def create_collection(
     )
 
 
-@router.get("/collections/{collection_id}", response_model=RecipeCollectionWithRecipes)
 async def get_collection_with_recipes(
+    db: AsyncSession,
+    current_user: User,
     collection_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RecipeCollectionWithRecipes:
     """Get a collection with its recipes."""
-    query = (
-        select(RecipeCollection)
-        .where(
-            RecipeCollection.id == collection_id,
-            RecipeCollection.user_id == current_user.id
-        )
-        .options(selectinload(RecipeCollection.recipes).selectinload(Recipe.ingredients))
+    collection = await get_owned_or_404(
+        db, RecipeCollection, collection_id, current_user,
+        detail="Collection not found",
+        options=[selectinload(RecipeCollection.recipes).selectinload(Recipe.ingredients)],
     )
-    result = await db.execute(query)
-    collection = result.scalar_one_or_none()
-
-    if not collection:
-        raise HTTPException(status_code=404, detail="Collection not found")
 
     recipes = [
         RecipeListItem(
@@ -1113,23 +1040,16 @@ async def get_collection_with_recipes(
     )
 
 
-@router.put("/collections/{collection_id}", response_model=RecipeCollectionResponse)
 async def update_collection(
+    db: AsyncSession,
+    current_user: User,
     collection_id: UUID,
     data: RecipeCollectionUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RecipeCollection:
     """Update a collection."""
-    query = select(RecipeCollection).where(
-        RecipeCollection.id == collection_id,
-        RecipeCollection.user_id == current_user.id
+    collection = await get_owned_or_404(
+        db, RecipeCollection, collection_id, current_user, detail="Collection not found"
     )
-    result = await db.execute(query)
-    collection = result.scalar_one_or_none()
-
-    if not collection:
-        raise HTTPException(status_code=404, detail="Collection not found")
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -1141,22 +1061,15 @@ async def update_collection(
     return collection
 
 
-@router.delete("/collections/{collection_id}")
 async def delete_collection(
+    db: AsyncSession,
+    current_user: User,
     collection_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Delete a collection (does not delete recipes)."""
-    query = select(RecipeCollection).where(
-        RecipeCollection.id == collection_id,
-        RecipeCollection.user_id == current_user.id
+    collection = await get_owned_or_404(
+        db, RecipeCollection, collection_id, current_user, detail="Collection not found"
     )
-    result = await db.execute(query)
-    collection = result.scalar_one_or_none()
-
-    if not collection:
-        raise HTTPException(status_code=404, detail="Collection not found")
 
     await db.delete(collection)
     await db.commit()
@@ -1164,24 +1077,19 @@ async def delete_collection(
     return {"success": True, "message": "Collection deleted"}
 
 
-@router.post("/collections/{collection_id}/add", response_model=BulkActionResponse)
 async def add_recipes_to_collection(
+    db: AsyncSession,
+    current_user: User,
     collection_id: UUID,
     data: AddToCollectionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Add recipes to a collection."""
     # Verify collection
-    collection_query = select(RecipeCollection).where(
-        RecipeCollection.id == collection_id,
-        RecipeCollection.user_id == current_user.id
-    ).options(selectinload(RecipeCollection.recipes))
-    result = await db.execute(collection_query)
-    collection = result.scalar_one_or_none()
-
-    if not collection:
-        raise HTTPException(status_code=404, detail="Collection not found")
+    collection = await get_owned_or_404(
+        db, RecipeCollection, collection_id, current_user,
+        detail="Collection not found",
+        options=[selectinload(RecipeCollection.recipes)],
+    )
 
     # Get recipes
     recipes_query = select(Recipe).where(
@@ -1209,24 +1117,19 @@ async def add_recipes_to_collection(
     )
 
 
-@router.post("/collections/{collection_id}/remove", response_model=BulkActionResponse)
 async def remove_recipes_from_collection(
+    db: AsyncSession,
+    current_user: User,
     collection_id: UUID,
     data: RemoveFromCollectionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Remove recipes from a collection."""
     # Verify collection
-    collection_query = select(RecipeCollection).where(
-        RecipeCollection.id == collection_id,
-        RecipeCollection.user_id == current_user.id
-    ).options(selectinload(RecipeCollection.recipes))
-    result = await db.execute(collection_query)
-    collection = result.scalar_one_or_none()
-
-    if not collection:
-        raise HTTPException(status_code=404, detail="Collection not found")
+    collection = await get_owned_or_404(
+        db, RecipeCollection, collection_id, current_user,
+        detail="Collection not found",
+        options=[selectinload(RecipeCollection.recipes)],
+    )
 
     # Remove recipes
     removed_count = 0
@@ -1252,12 +1155,11 @@ async def remove_recipes_from_collection(
 
 # ============ Bulk Actions ============
 
-@router.post("/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_recipes(
+    db: AsyncSession,
+    current_user: User,
     data: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple recipes."""
     query = select(Recipe).where(
         Recipe.id.in_(data.ids),
@@ -1278,12 +1180,11 @@ async def bulk_archive_recipes(
     )
 
 
-@router.post("/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_recipes(
+    db: AsyncSession,
+    current_user: User,
     data: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple recipes."""
     query = select(Recipe).where(
         Recipe.id.in_(data.ids),
@@ -1304,12 +1205,11 @@ async def bulk_unarchive_recipes(
     )
 
 
-@router.post("/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_recipes(
+    db: AsyncSession,
+    current_user: User,
     data: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple recipes."""
     query = select(Recipe).where(
         Recipe.id.in_(data.ids),
@@ -1331,13 +1231,12 @@ async def bulk_delete_recipes(
     )
 
 
-@router.post("/bulk-favorite", response_model=BulkActionResponse)
 async def bulk_favorite_recipes(
+    db: AsyncSession,
+    current_user: User,
     data: BulkActionRequest,
-    favorite: bool = Query(True),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    favorite: bool = True,
+) -> BulkActionResponse:
     """Set favorite status for multiple recipes."""
     query = select(Recipe).where(
         Recipe.id.in_(data.ids),
@@ -1361,11 +1260,10 @@ async def bulk_favorite_recipes(
 
 # ============ Analytics ============
 
-@router.get("/analytics/overview", response_model=RecipeAnalytics)
 async def get_recipe_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> RecipeAnalytics:
     """Get recipe analytics overview."""
     # Total counts
     total_query = select(func.count()).select_from(Recipe).where(
@@ -1547,12 +1445,11 @@ async def get_recipe_analytics(
 
 # ============ AI Suggestions ============
 
-@router.post("/suggest", response_model=RecipeSuggestionResponse)
 async def suggest_recipes(
+    db: AsyncSession,
+    current_user: User,
     data: RecipeSuggestionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RecipeSuggestionResponse:
     """
     Generate AI-powered recipe suggestions based on user preferences.
 
@@ -1801,12 +1698,11 @@ async def suggest_recipes(
 
 # ============ Import/Parse ============
 
-@router.post("/parse-text", response_model=ParseRecipeResponse)
 async def parse_recipe_text(
+    db: AsyncSession,
+    current_user: User,
     data: ParseRecipeTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseRecipeResponse:
     """Parse free-form text into a recipe."""
     try:
         parsed_recipes = await ai_service.parse_recipe_text(
@@ -1833,15 +1729,14 @@ async def parse_recipe_text(
         )
 
 
-@router.post("/parse-voice", response_model=ParseRecipeResponse)
 async def parse_recipe_voice(
-    audio: UploadFile = File(...),
-    language: str = Form("auto"),
-    default_category: Optional[str] = Form(None),
-    default_servings: int = Form(4),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+    default_category: Optional[str] = None,
+    default_servings: int = 4,
+) -> ParseRecipeResponse:
     """Transcribe voice recording and parse as recipe."""
     try:
         audio_content = await audio.read()
@@ -1870,15 +1765,14 @@ async def parse_recipe_voice(
         )
 
 
-@router.post("/parse-image", response_model=ParseRecipeResponse)
 async def parse_recipe_image(
-    images: List[UploadFile] = File(...),
-    import_type: str = Form("recipe"),  # recipe, screenshot
-    default_category: Optional[str] = Form(None),
-    default_servings: int = Form(4),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    images: List[UploadFile],
+    import_type: str = "recipe",
+    default_category: Optional[str] = None,
+    default_servings: int = 4,
+) -> ParseRecipeResponse:
     """Parse recipe from image(s) - handwritten, cookbook, screenshot."""
     try:
         image_data = []
@@ -1912,12 +1806,11 @@ async def parse_recipe_image(
         )
 
 
-@router.post("/parse-url", response_model=ParseRecipeResponse)
 async def parse_recipe_url(
+    db: AsyncSession,
+    current_user: User,
     data: ParseRecipeUrlRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseRecipeResponse:
     """Parse recipe from a URL (website)."""
     try:
         parsed_recipes = await ai_service.parse_recipe_url(
@@ -1944,25 +1837,19 @@ async def parse_recipe_url(
 
 # ============ Shopping List Integration ============
 
-@router.post("/{recipe_id}/add-to-shopping-list")
 async def add_recipe_to_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     recipe_id: UUID,
     data: AddToShoppingListRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Add recipe ingredients to a shopping list."""
     # Get recipe with ingredients
-    query = (
-        select(Recipe)
-        .where(Recipe.id == recipe_id, Recipe.user_id == current_user.id)
-        .options(selectinload(Recipe.ingredients))
+    recipe = await get_owned_or_404(
+        db, Recipe, recipe_id, current_user,
+        detail="Recipe not found",
+        options=[selectinload(Recipe.ingredients)],
     )
-    result = await db.execute(query)
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
 
     # Calculate scale factor if servings differ
     scale_factor = 1.0

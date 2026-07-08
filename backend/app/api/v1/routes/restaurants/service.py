@@ -1,35 +1,43 @@
+"""Service layer for restaurant meal operations.
+
+Business/DB logic extracted verbatim from the restaurant route handlers.
+Ownership lookups use ``get_owned_or_404``.
+
+Note: this module raises ``HTTPException`` directly (via ``get_owned_or_404``
+and inline raises) rather than translating in the router, to preserve the exact
+status codes and detail strings of the original handlers.
+
+Pagination is kept inline (``math.ceil(total / per_page) if total > 0 else 1``)
+because the list endpoints use ``else 1`` for the empty case, which differs from
+``app.utils.pagination.paginate`` (``else 0``); adopting ``paginate`` would change
+behavior, so it is intentionally NOT used here.
 """
-Restaurant Meals API routes - Full CRUD implementation.
-"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, extract
+from sqlalchemy import select, func, and_, or_
 from typing import Optional, List
-from datetime import date, datetime, timedelta, time
+from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from uuid import UUID
 import math
 import re
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_owned_or_404
 from app.models.user import User
 from app.models.restaurant import Restaurant, RestaurantMeal
 from app.services.ai_service import ai_service
-from app.schemas.restaurant import (
+from app.api.v1.routes.restaurants.schemas import (
     # Restaurant schemas
     RestaurantCreate,
     RestaurantUpdate,
     RestaurantResponse,
     RestaurantListResponse,
-    RestaurantFilters,
     # Meal schemas
     RestaurantMealCreate,
     RestaurantMealBatchCreate,
     RestaurantMealUpdate,
     RestaurantMealResponse,
     RestaurantMealListResponse,
-    RestaurantMealFilters,
     # Bulk actions
     BulkActionRequest,
     BulkActionResponse,
@@ -39,7 +47,6 @@ from app.schemas.restaurant import (
     MealsByMealType,
     TopRestaurant,
     MealsByTag,
-    HomeVsOutRatio,
     RestaurantMealHistory,
     MonthlyMealData,
     # Import
@@ -50,30 +57,27 @@ from app.schemas.restaurant import (
     ImportSource,
 )
 
-router = APIRouter()
-
 
 # ============ Restaurant Meals CRUD ============
 
-@router.get("/meals", response_model=RestaurantMealListResponse)
 async def list_restaurant_meals(
-    search: Optional[str] = Query(None, description="Search in restaurant name, items, description"),
-    restaurant_id: Optional[UUID] = Query(None, description="Filter by restaurant"),
-    meal_type: Optional[str] = Query(None, description="Filter by meal type"),
-    order_type: Optional[str] = Query(None, description="Filter by order type"),
-    rating_min: Optional[int] = Query(None, ge=1, le=5, description="Minimum rating"),
-    rating_max: Optional[int] = Query(None, ge=1, le=5, description="Maximum rating"),
-    tags: Optional[str] = Query(None, description="Comma-separated tags"),
-    date_from: Optional[date] = Query(None, description="Date from"),
-    date_to: Optional[date] = Query(None, description="Date to"),
-    is_archived: bool = Query(False, description="Include archived items"),
-    sort_by: str = Query("meal_date", description="Sort field"),
-    sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    search: Optional[str] = None,
+    restaurant_id: Optional[UUID] = None,
+    meal_type: Optional[str] = None,
+    order_type: Optional[str] = None,
+    rating_min: Optional[int] = None,
+    rating_max: Optional[int] = None,
+    tags: Optional[str] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    is_archived: bool = False,
+    sort_by: str = "meal_date",
+    sort_order: str = "desc",
+    page: int = 1,
+    per_page: int = 50,
+) -> RestaurantMealListResponse:
     """List restaurant meals with filters, sorting, and pagination."""
     query = select(RestaurantMeal).where(RestaurantMeal.user_id == current_user.id)
 
@@ -144,12 +148,11 @@ async def list_restaurant_meals(
     )
 
 
-@router.post("/meals", response_model=List[RestaurantMealResponse], status_code=status.HTTP_201_CREATED)
 async def create_restaurant_meals(
+    db: AsyncSession,
+    current_user: User,
     request: RestaurantMealBatchCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> List[RestaurantMealResponse]:
     """Create one or more restaurant meals with automatic nutrition estimation."""
     created_meals = []
 
@@ -219,11 +222,10 @@ async def create_restaurant_meals(
     return [RestaurantMealResponse.model_validate(m) for m in created_meals]
 
 
-@router.get("/meals/analytics", response_model=RestaurantMealAnalytics)
 async def get_restaurant_meal_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> RestaurantMealAnalytics:
     """Get restaurant meal analytics data."""
     today = date.today()
     week_ago = today - timedelta(days=7)
@@ -379,12 +381,11 @@ async def get_restaurant_meal_analytics(
     )
 
 
-@router.get("/meals/history", response_model=RestaurantMealHistory)
 async def get_restaurant_meal_history(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> RestaurantMealHistory:
     """Get historical restaurant meal analytics."""
     today = date.today()
     start_date = today - relativedelta(months=months)
@@ -486,49 +487,31 @@ async def get_restaurant_meal_history(
     )
 
 
-@router.get("/meals/{meal_id}", response_model=RestaurantMealResponse)
 async def get_restaurant_meal(
+    db: AsyncSession,
+    current_user: User,
     meal_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RestaurantMealResponse:
     """Get a single restaurant meal by ID."""
-    result = await db.execute(
-        select(RestaurantMeal).where(
-            and_(RestaurantMeal.id == meal_id, RestaurantMeal.user_id == current_user.id)
-        )
+    meal = await get_owned_or_404(
+        db, RestaurantMeal, meal_id, current_user,
+        detail="Restaurant meal not found",
     )
-    meal = result.scalar_one_or_none()
-
-    if not meal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant meal not found"
-        )
 
     return RestaurantMealResponse.model_validate(meal)
 
 
-@router.put("/meals/{meal_id}", response_model=RestaurantMealResponse)
 async def update_restaurant_meal(
+    db: AsyncSession,
+    current_user: User,
     meal_id: UUID,
     request: RestaurantMealUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RestaurantMealResponse:
     """Update a restaurant meal."""
-    result = await db.execute(
-        select(RestaurantMeal).where(
-            and_(RestaurantMeal.id == meal_id, RestaurantMeal.user_id == current_user.id)
-        )
+    meal = await get_owned_or_404(
+        db, RestaurantMeal, meal_id, current_user,
+        detail="Restaurant meal not found",
     )
-    meal = result.scalar_one_or_none()
-
-    if not meal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant meal not found"
-        )
 
     # Update only provided fields
     update_data = request.model_dump(exclude_unset=True)
@@ -544,25 +527,16 @@ async def update_restaurant_meal(
     return RestaurantMealResponse.model_validate(meal)
 
 
-@router.post("/meals/{meal_id}/calculate-nutrition", response_model=RestaurantMealResponse)
 async def calculate_restaurant_meal_nutrition(
+    db: AsyncSession,
+    current_user: User,
     meal_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RestaurantMealResponse:
     """Calculate or recalculate nutrition for a restaurant meal using AI."""
-    result = await db.execute(
-        select(RestaurantMeal).where(
-            and_(RestaurantMeal.id == meal_id, RestaurantMeal.user_id == current_user.id)
-        )
+    meal = await get_owned_or_404(
+        db, RestaurantMeal, meal_id, current_user,
+        detail="Restaurant meal not found",
     )
-    meal = result.scalar_one_or_none()
-
-    if not meal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant meal not found"
-        )
 
     if not meal.items_ordered:
         raise HTTPException(
@@ -603,25 +577,16 @@ async def calculate_restaurant_meal_nutrition(
     return RestaurantMealResponse.model_validate(meal)
 
 
-@router.delete("/meals/{meal_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_restaurant_meal(
+    db: AsyncSession,
+    current_user: User,
     meal_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a restaurant meal."""
-    result = await db.execute(
-        select(RestaurantMeal).where(
-            and_(RestaurantMeal.id == meal_id, RestaurantMeal.user_id == current_user.id)
-        )
+    meal = await get_owned_or_404(
+        db, RestaurantMeal, meal_id, current_user,
+        detail="Restaurant meal not found",
     )
-    meal = result.scalar_one_or_none()
-
-    if not meal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant meal not found"
-        )
 
     await db.delete(meal)
     await db.commit()
@@ -629,12 +594,11 @@ async def delete_restaurant_meal(
 
 # ============ Bulk Actions ============
 
-@router.post("/meals/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_meals(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple restaurant meals."""
     result = await db.execute(
         select(RestaurantMeal).where(
@@ -665,12 +629,11 @@ async def bulk_archive_meals(
     )
 
 
-@router.post("/meals/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_meals(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple restaurant meals."""
     result = await db.execute(
         select(RestaurantMeal).where(
@@ -701,12 +664,11 @@ async def bulk_unarchive_meals(
     )
 
 
-@router.post("/meals/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_meals(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple restaurant meals."""
     result = await db.execute(
         select(RestaurantMeal).where(
@@ -740,12 +702,11 @@ async def bulk_delete_meals(
 
 # ============ Import Endpoints ============
 
-@router.post("/meals/parse-text", response_model=ParseTextResponse)
 async def parse_meal_text(
+    db: AsyncSession,
+    current_user: User,
     request: ParseTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseTextResponse:
     """Parse restaurant meal from text input.
 
     Supports multiple formats:
@@ -867,14 +828,13 @@ async def parse_meal_text(
     )
 
 
-@router.post("/meals/parse-voice", response_model=ParseTextResponse)
 async def parse_meal_voice(
-    audio: UploadFile = File(...),
-    language: str = Form(default="auto"),
-    default_date: Optional[date] = Form(default=None),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+    default_date: Optional[date] = None,
+) -> ParseTextResponse:
     """Parse restaurant meal from voice recording using AI transcription."""
     meal_date = default_date or date.today()
 
@@ -962,15 +922,14 @@ async def parse_meal_voice(
         )
 
 
-@router.post("/meals/parse-image", response_model=ParseTextResponse)
 async def parse_meal_image(
-    image: Optional[UploadFile] = File(None),
-    images: Optional[List[UploadFile]] = File(None),
-    import_type: str = Form(default="food"),  # food, receipt, app_screenshot
-    default_date: Optional[date] = Form(default=None),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    image: Optional[UploadFile] = None,
+    images: Optional[List[UploadFile]] = None,
+    import_type: str = "food",
+    default_date: Optional[date] = None,
+) -> ParseTextResponse:
     """Parse restaurant meal from image(s) using AI vision."""
     meal_date = default_date or date.today()
 
@@ -1061,19 +1020,18 @@ async def parse_meal_image(
 
 # ============ Restaurants (Places) CRUD ============
 
-@router.get("", response_model=RestaurantListResponse)
 async def list_restaurants(
-    search: Optional[str] = Query(None, description="Search in name, cuisine, location"),
-    cuisine_type: Optional[str] = Query(None, description="Filter by cuisine type"),
-    is_favorite: Optional[bool] = Query(None, description="Filter favorites only"),
-    is_archived: bool = Query(False, description="Include archived items"),
-    sort_by: str = Query("name", description="Sort field"),
-    sort_order: str = Query("asc", description="Sort order (asc/desc)"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    search: Optional[str] = None,
+    cuisine_type: Optional[str] = None,
+    is_favorite: Optional[bool] = None,
+    is_archived: bool = False,
+    sort_by: str = "name",
+    sort_order: str = "asc",
+    page: int = 1,
+    per_page: int = 50,
+) -> RestaurantListResponse:
     """List saved restaurants."""
     query = select(Restaurant).where(Restaurant.user_id == current_user.id)
 
@@ -1140,12 +1098,11 @@ async def list_restaurants(
     )
 
 
-@router.post("", response_model=RestaurantResponse, status_code=status.HTTP_201_CREATED)
 async def create_restaurant(
+    db: AsyncSession,
+    current_user: User,
     request: RestaurantCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RestaurantResponse:
     """Create a new restaurant."""
     restaurant = Restaurant(
         user_id=current_user.id,
@@ -1167,25 +1124,16 @@ async def create_restaurant(
     return response
 
 
-@router.get("/{restaurant_id}", response_model=RestaurantResponse)
 async def get_restaurant(
+    db: AsyncSession,
+    current_user: User,
     restaurant_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RestaurantResponse:
     """Get a single restaurant by ID."""
-    result = await db.execute(
-        select(Restaurant).where(
-            and_(Restaurant.id == restaurant_id, Restaurant.user_id == current_user.id)
-        )
+    restaurant = await get_owned_or_404(
+        db, Restaurant, restaurant_id, current_user,
+        detail="Restaurant not found",
     )
-    restaurant = result.scalar_one_or_none()
-
-    if not restaurant:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant not found"
-        )
 
     # Get meal count
     meal_count_result = await db.execute(
@@ -1203,26 +1151,17 @@ async def get_restaurant(
     return response
 
 
-@router.put("/{restaurant_id}", response_model=RestaurantResponse)
 async def update_restaurant(
+    db: AsyncSession,
+    current_user: User,
     restaurant_id: UUID,
     request: RestaurantUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> RestaurantResponse:
     """Update a restaurant."""
-    result = await db.execute(
-        select(Restaurant).where(
-            and_(Restaurant.id == restaurant_id, Restaurant.user_id == current_user.id)
-        )
+    restaurant = await get_owned_or_404(
+        db, Restaurant, restaurant_id, current_user,
+        detail="Restaurant not found",
     )
-    restaurant = result.scalar_one_or_none()
-
-    if not restaurant:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant not found"
-        )
 
     update_data = request.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -1247,25 +1186,16 @@ async def update_restaurant(
     return response
 
 
-@router.delete("/{restaurant_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_restaurant(
+    db: AsyncSession,
+    current_user: User,
     restaurant_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a restaurant."""
-    result = await db.execute(
-        select(Restaurant).where(
-            and_(Restaurant.id == restaurant_id, Restaurant.user_id == current_user.id)
-        )
+    restaurant = await get_owned_or_404(
+        db, Restaurant, restaurant_id, current_user,
+        detail="Restaurant not found",
     )
-    restaurant = result.scalar_one_or_none()
-
-    if not restaurant:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Restaurant not found"
-        )
 
     await db.delete(restaurant)
     await db.commit()

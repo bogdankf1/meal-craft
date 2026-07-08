@@ -16,6 +16,7 @@ from app.utils.ingredient_matcher import (
     find_pantry_match,
     calculate_available_quantity,
 )
+from app.utils.pagination import paginate, Page
 
 __all__ = [
     # Unit conversion
@@ -32,4 +33,7 @@ __all__ = [
     "normalize_ingredient_name",
     "find_pantry_match",
     "calculate_available_quantity",
+    # Pagination
+    "paginate",
+    "Page",
 ]

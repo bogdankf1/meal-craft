@@ -1,26 +1,30 @@
-"""Kitchen Equipment API routes."""
+"""Service layer for kitchen equipment operations.
 
-from datetime import date, datetime, timedelta
+Business/DB logic extracted verbatim from the kitchen equipment route handlers.
+Ownership lookups use ``get_owned_or_404`` and pagination metadata uses
+``paginate``. This module raises ``HTTPException`` directly to preserve the exact
+status codes and detail strings of the original handlers.
+"""
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy import select, and_, func
+from sqlalchemy.ext.asyncio import AsyncSession
 from dateutil.relativedelta import relativedelta
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_owned_or_404
+from app.utils.pagination import paginate
 from app.models.user import User
 from app.models.kitchen_equipment import KitchenEquipment
+from app.services.ai_service import AIService
 from app.schemas.kitchen_equipment import (
-    KitchenEquipmentCreate,
     KitchenEquipmentBatchCreate,
     KitchenEquipmentUpdate,
     KitchenEquipmentResponse,
     KitchenEquipmentListResponse,
-    KitchenEquipmentFilters,
     BulkActionRequest,
     BulkActionResponse,
     KitchenEquipmentAnalytics,
@@ -36,9 +40,6 @@ from app.schemas.kitchen_equipment import (
     ParseTextRequest,
     ParseTextResponse,
 )
-from app.services.ai_service import AIService
-
-router = APIRouter(prefix="/kitchen-equipment", tags=["kitchen-equipment"])
 
 
 def _equipment_to_response(item: KitchenEquipment) -> KitchenEquipmentResponse:
@@ -68,21 +69,20 @@ def _equipment_to_response(item: KitchenEquipment) -> KitchenEquipmentResponse:
 
 # ============ CRUD Operations ============
 
-@router.get("", response_model=KitchenEquipmentListResponse)
 async def list_kitchen_equipment(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     condition: Optional[str] = None,
     location: Optional[str] = None,
     is_archived: Optional[bool] = False,
     needs_maintenance: Optional[bool] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "created_at",
     sort_order: str = "desc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> KitchenEquipmentListResponse:
     """List kitchen equipment with filters and pagination."""
     query = select(KitchenEquipment).where(KitchenEquipment.user_id == current_user.id)
 
@@ -129,7 +129,7 @@ async def list_kitchen_equipment(
     if needs_maintenance is not None:
         items = [item for item in items if item.needs_maintenance == needs_maintenance]
 
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = paginate(total, page, per_page).total_pages
 
     return KitchenEquipmentListResponse(
         items=[_equipment_to_response(item) for item in items],
@@ -140,12 +140,11 @@ async def list_kitchen_equipment(
     )
 
 
-@router.post("", response_model=list[KitchenEquipmentResponse])
 async def create_kitchen_equipment(
+    db: AsyncSession,
+    current_user: User,
     batch: KitchenEquipmentBatchCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> list[KitchenEquipmentResponse]:
     """Create one or more kitchen equipment items."""
     created_items = []
 
@@ -175,13 +174,12 @@ async def create_kitchen_equipment(
     return [_equipment_to_response(item) for item in created_items]
 
 
-# ============ Analytics (must come before /{item_id} routes) ============
+# ============ Analytics ============
 
-@router.get("/analytics/overview", response_model=KitchenEquipmentAnalytics)
 async def get_equipment_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> KitchenEquipmentAnalytics:
     """Get kitchen equipment analytics overview."""
     # Get all active equipment
     result = await db.execute(
@@ -291,11 +289,10 @@ async def get_equipment_analytics(
     )
 
 
-@router.get("/maintenance/overview", response_model=MaintenanceAnalytics)
 async def get_maintenance_overview(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> MaintenanceAnalytics:
     """Get detailed maintenance overview."""
     result = await db.execute(
         select(KitchenEquipment).where(
@@ -347,12 +344,11 @@ async def get_maintenance_overview(
     )
 
 
-@router.get("/history", response_model=KitchenEquipmentHistory)
 async def get_equipment_history(
-    months: int = Query(3, ge=1, le=24, description="Number of months to analyze"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> KitchenEquipmentHistory:
     """Get kitchen equipment history data."""
     today = date.today()
     start_date = today - relativedelta(months=months)
@@ -426,14 +422,13 @@ async def get_equipment_history(
     )
 
 
-# ============ Parse Endpoints (must come before /{item_id} routes) ============
+# ============ Parse Endpoints ============
 
-@router.post("/parse-text", response_model=ParseTextResponse)
 async def parse_equipment_text(
+    db: AsyncSession,
+    current_user: User,
     request: ParseTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseTextResponse:
     """Parse text to extract kitchen equipment using AI."""
     ai_service = AIService()
 
@@ -461,15 +456,14 @@ async def parse_equipment_text(
         )
 
 
-@router.post("/parse-voice", response_model=ParseTextResponse)
 async def parse_equipment_voice(
-    audio: UploadFile = File(...),
-    language: str = Form("auto"),
-    default_category: str = Form(None),
-    default_location: str = Form("cabinet"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+    default_category: str = None,
+    default_location: str = "cabinet",
+) -> ParseTextResponse:
     """Parse voice recording to extract kitchen equipment using AI."""
     ai_service = AIService()
 
@@ -501,16 +495,15 @@ async def parse_equipment_voice(
         )
 
 
-@router.post("/parse-image", response_model=ParseTextResponse)
 async def parse_equipment_image(
-    images: list[UploadFile] = File(None),
-    image: UploadFile = File(None),
-    import_type: str = Form("equipment"),
-    default_category: str = Form(None),
-    default_location: str = Form("cabinet"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    images: list[UploadFile] = None,
+    image: UploadFile = None,
+    import_type: str = "equipment",
+    default_category: str = None,
+    default_location: str = "cabinet",
+) -> ParseTextResponse:
     """Parse image(s) to extract kitchen equipment using AI."""
     ai_service = AIService()
 
@@ -563,51 +556,33 @@ async def parse_equipment_image(
         )
 
 
-# ============ Single Item CRUD (with /{item_id}) ============
+# ============ Single Item CRUD ============
 
-@router.get("/{item_id}", response_model=KitchenEquipmentResponse)
 async def get_kitchen_equipment(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> KitchenEquipmentResponse:
     """Get a single kitchen equipment item by ID."""
-    result = await db.execute(
-        select(KitchenEquipment).where(
-            and_(KitchenEquipment.id == item_id, KitchenEquipment.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, KitchenEquipment, item_id, current_user,
+        detail="Kitchen equipment not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kitchen equipment not found"
-        )
 
     return _equipment_to_response(item)
 
 
-@router.put("/{item_id}", response_model=KitchenEquipmentResponse)
 async def update_kitchen_equipment(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
     item_data: KitchenEquipmentUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> KitchenEquipmentResponse:
     """Update a kitchen equipment item."""
-    result = await db.execute(
-        select(KitchenEquipment).where(
-            and_(KitchenEquipment.id == item_id, KitchenEquipment.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, KitchenEquipment, item_id, current_user,
+        detail="Kitchen equipment not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kitchen equipment not found"
-        )
 
     update_data = item_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -622,25 +597,16 @@ async def update_kitchen_equipment(
     return _equipment_to_response(item)
 
 
-@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_kitchen_equipment(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a kitchen equipment item."""
-    result = await db.execute(
-        select(KitchenEquipment).where(
-            and_(KitchenEquipment.id == item_id, KitchenEquipment.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, KitchenEquipment, item_id, current_user,
+        detail="Kitchen equipment not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kitchen equipment not found"
-        )
 
     await db.delete(item)
     await db.commit()
@@ -648,26 +614,17 @@ async def delete_kitchen_equipment(
 
 # ============ Maintenance Operations ============
 
-@router.post("/{item_id}/maintenance", response_model=KitchenEquipmentResponse)
 async def record_maintenance(
+    db: AsyncSession,
+    current_user: User,
     item_id: UUID,
     request: RecordMaintenanceRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> KitchenEquipmentResponse:
     """Record maintenance for a kitchen equipment item."""
-    result = await db.execute(
-        select(KitchenEquipment).where(
-            and_(KitchenEquipment.id == item_id, KitchenEquipment.user_id == current_user.id)
-        )
+    item = await get_owned_or_404(
+        db, KitchenEquipment, item_id, current_user,
+        detail="Kitchen equipment not found",
     )
-    item = result.scalar_one_or_none()
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Kitchen equipment not found"
-        )
 
     item.last_maintenance_date = request.maintenance_date
     if request.maintenance_notes:
@@ -679,12 +636,11 @@ async def record_maintenance(
     return _equipment_to_response(item)
 
 
-@router.post("/bulk-maintenance", response_model=BulkActionResponse)
 async def bulk_record_maintenance(
+    db: AsyncSession,
+    current_user: User,
     request: BulkRecordMaintenanceRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Record maintenance for multiple kitchen equipment items."""
     result = await db.execute(
         select(KitchenEquipment).where(
@@ -719,12 +675,11 @@ async def bulk_record_maintenance(
 
 # ============ Bulk Operations ============
 
-@router.post("/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_equipment(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple kitchen equipment items."""
     result = await db.execute(
         select(KitchenEquipment).where(
@@ -755,12 +710,11 @@ async def bulk_archive_equipment(
     )
 
 
-@router.post("/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_equipment(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple kitchen equipment items."""
     result = await db.execute(
         select(KitchenEquipment).where(
@@ -791,12 +745,11 @@ async def bulk_unarchive_equipment(
     )
 
 
-@router.post("/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_equipment(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple kitchen equipment items."""
     result = await db.execute(
         select(KitchenEquipment).where(
@@ -828,13 +781,12 @@ async def bulk_delete_equipment(
     )
 
 
-@router.post("/bulk-update-condition", response_model=BulkActionResponse)
 async def bulk_update_condition(
+    db: AsyncSession,
+    current_user: User,
     request: BulkActionRequest,
-    condition: str = Query(..., description="New condition for items"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    condition: str,
+) -> BulkActionResponse:
     """Update condition for multiple kitchen equipment items."""
     result = await db.execute(
         select(KitchenEquipment).where(

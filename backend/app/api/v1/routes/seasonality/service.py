@@ -1,5 +1,14 @@
-"""Seasonality API routes - Local & Seasonal Produce Guide."""
+"""Service layer for seasonality operations.
 
+Business/DB logic extracted verbatim from the seasonality route handlers.
+Pagination metadata uses ``paginate``. This module raises ``HTTPException``
+directly to preserve the exact status codes and detail strings of the original
+handlers.
+
+Note: seasonal produce / specialties are shared (non user-owned) reference data,
+so the ``get_owned_or_404`` helper does not apply here; lookups remain inline
+with their original bare-404 detail strings.
+"""
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
@@ -7,14 +16,13 @@ import calendar
 import json
 import re
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, or_, any_
 from openai import OpenAI
 
-from app.core.database import get_db
 from app.core.config import settings
-from app.api.deps import get_current_user
+from app.utils.pagination import paginate
 from app.models.user import User
 from app.models.seasonality import (
     SeasonalProduce,
@@ -22,38 +30,25 @@ from app.models.seasonality import (
     UserSeasonalPreference,
 )
 from app.schemas.seasonality import (
-    # Produce schemas
     SeasonalProduceCreate,
-    SeasonalProduceUpdate,
     SeasonalProduceResponse,
     SeasonalProduceListResponse,
-    SeasonalProduceFilters,
-    # Specialty schemas
     LocalSpecialtyCreate,
-    LocalSpecialtyUpdate,
     LocalSpecialtyResponse,
     LocalSpecialtyListResponse,
-    LocalSpecialtyFilters,
-    # User preference schemas
-    UserSeasonalPreferenceCreate,
     UserSeasonalPreferenceUpdate,
     UserSeasonalPreferenceResponse,
-    # AI recommendation schemas
     SeasonalRecommendationRequest,
     SeasonalRecommendationResponse,
     SeasonalRecommendation,
     WeeklyPicksRequest,
     WeeklyPicksResponse,
     WeeklyPick,
-    # Calendar schemas
     SeasonalCalendarResponse,
     MonthlySeasonalData,
-    # Country info
     CountryInfo,
     SupportedCountriesResponse,
 )
-
-router = APIRouter(prefix="/seasonality", tags=["seasonality"])
 
 
 # Country data with hemisphere info
@@ -167,10 +162,9 @@ def _specialty_to_response(specialty: LocalSpecialty) -> LocalSpecialtyResponse:
 
 # ============ Supported Countries ============
 
-@router.get("/countries", response_model=SupportedCountriesResponse)
 async def get_supported_countries(
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession,
+) -> SupportedCountriesResponse:
     """Get list of supported countries with produce/specialty counts."""
     countries = []
 
@@ -209,11 +203,10 @@ async def get_supported_countries(
 
 # ============ User Preferences ============
 
-@router.get("/preferences", response_model=UserSeasonalPreferenceResponse)
 async def get_user_preferences(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> UserSeasonalPreferenceResponse:
     """Get current user's seasonality preferences."""
     result = await db.execute(
         select(UserSeasonalPreference).where(
@@ -245,12 +238,11 @@ async def get_user_preferences(
     )
 
 
-@router.put("/preferences", response_model=UserSeasonalPreferenceResponse)
 async def update_user_preferences(
+    db: AsyncSession,
+    current_user: User,
     data: UserSeasonalPreferenceUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> UserSeasonalPreferenceResponse:
     """Update current user's seasonality preferences."""
     result = await db.execute(
         select(UserSeasonalPreference).where(
@@ -283,12 +275,11 @@ async def update_user_preferences(
     )
 
 
-@router.post("/preferences/favorites/{produce_id}")
 async def add_favorite_produce(
+    db: AsyncSession,
+    current_user: User,
     produce_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Add a produce item to favorites."""
     result = await db.execute(
         select(UserSeasonalPreference).where(
@@ -312,12 +303,11 @@ async def add_favorite_produce(
     return {"success": True, "message": "Added to favorites"}
 
 
-@router.delete("/preferences/favorites/{produce_id}")
 async def remove_favorite_produce(
+    db: AsyncSession,
+    current_user: User,
     produce_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Remove a produce item from favorites."""
     result = await db.execute(
         select(UserSeasonalPreference).where(
@@ -337,22 +327,21 @@ async def remove_favorite_produce(
 
 # ============ Seasonal Produce ============
 
-@router.get("/produce", response_model=SeasonalProduceListResponse)
 async def get_seasonal_produce(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     category: Optional[str] = None,
     country_code: Optional[str] = None,
     region: Optional[str] = None,
-    month: Optional[int] = Query(None, ge=1, le=12),
+    month: Optional[int] = None,
     in_season_only: bool = False,
     peak_only: bool = False,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 50,
     sort_by: str = "name",
     sort_order: str = "asc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SeasonalProduceListResponse:
     """Get seasonal produce with filters."""
     current_month = month or datetime.now().month
 
@@ -421,16 +410,15 @@ async def get_seasonal_produce(
         total=total or 0,
         page=page,
         per_page=per_page,
-        total_pages=(total + per_page - 1) // per_page if total else 0,
+        total_pages=paginate(total or 0, page, per_page).total_pages,
     )
 
 
-@router.get("/produce/{produce_id}", response_model=SeasonalProduceResponse)
 async def get_produce_by_id(
+    db: AsyncSession,
+    current_user: User,
     produce_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SeasonalProduceResponse:
     """Get a specific produce item by ID."""
     result = await db.execute(
         select(SeasonalProduce).where(SeasonalProduce.id == produce_id)
@@ -452,12 +440,11 @@ async def get_produce_by_id(
     return _produce_to_response(produce, datetime.now().month, favorite_ids)
 
 
-@router.delete("/produce/{produce_id}")
 async def delete_produce(
+    db: AsyncSession,
+    current_user: User,
     produce_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Delete a produce item by ID. Also removes it from favorites."""
     result = await db.execute(
         select(SeasonalProduce).where(SeasonalProduce.id == produce_id)
@@ -488,20 +475,19 @@ async def delete_produce(
 
 # ============ Local Specialties ============
 
-@router.get("/specialties", response_model=LocalSpecialtyListResponse)
 async def get_local_specialties(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     specialty_type: Optional[str] = None,
     country_code: Optional[str] = None,
     region: Optional[str] = None,
     is_featured: Optional[bool] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    page: int = 1,
+    per_page: int = 20,
     sort_by: str = "name",
     sort_order: str = "asc",
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> LocalSpecialtyListResponse:
     """Get local specialties with filters."""
     # If no country specified, use user's preference
     if not country_code:
@@ -559,16 +545,15 @@ async def get_local_specialties(
         total=total or 0,
         page=page,
         per_page=per_page,
-        total_pages=(total + per_page - 1) // per_page if total else 0,
+        total_pages=paginate(total or 0, page, per_page).total_pages,
     )
 
 
-@router.get("/specialties/{specialty_id}", response_model=LocalSpecialtyResponse)
 async def get_specialty_by_id(
+    db: AsyncSession,
+    current_user: User,
     specialty_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> LocalSpecialtyResponse:
     """Get a specific local specialty by ID."""
     result = await db.execute(
         select(LocalSpecialty).where(LocalSpecialty.id == specialty_id)
@@ -583,12 +568,11 @@ async def get_specialty_by_id(
 
 # ============ Seasonal Calendar ============
 
-@router.get("/calendar/{country_code}", response_model=SeasonalCalendarResponse)
 async def get_seasonal_calendar(
+    db: AsyncSession,
+    current_user: User,
     country_code: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SeasonalCalendarResponse:
     """Get full year seasonal calendar for a country."""
     if country_code not in COUNTRY_DATA:
         raise HTTPException(status_code=400, detail="Unsupported country")
@@ -647,12 +631,11 @@ async def get_seasonal_calendar(
 
 # ============ AI-Powered Recommendations ============
 
-@router.post("/recommendations", response_model=SeasonalRecommendationResponse)
 async def get_seasonal_recommendations(
+    db: AsyncSession,
+    current_user: User,
     request: SeasonalRecommendationRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SeasonalRecommendationResponse:
     """Get AI-powered seasonal recommendations for a country/month."""
     if request.country_code not in COUNTRY_DATA:
         raise HTTPException(status_code=400, detail="Unsupported country")
@@ -776,12 +759,11 @@ Return ONLY valid JSON in this format:
         )
 
 
-@router.post("/weekly-picks", response_model=WeeklyPicksResponse)
 async def get_weekly_picks(
+    db: AsyncSession,
+    current_user: User,
     request: WeeklyPicksRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> WeeklyPicksResponse:
     """Get AI-powered weekly shopping picks."""
     if request.country_code not in COUNTRY_DATA:
         raise HTTPException(status_code=400, detail="Unsupported country")
@@ -896,13 +878,12 @@ Return ONLY valid JSON:
 
 # ============ Save AI Recommendation as Produce ============
 
-@router.post("/recommendations/save", response_model=SeasonalProduceResponse)
 async def save_recommendation_as_produce(
+    db: AsyncSession,
+    current_user: User,
     data: SeasonalProduceCreate,
-    add_to_favorites: bool = Query(False, description="Also add to favorites"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    add_to_favorites: bool = False,
+) -> SeasonalProduceResponse:
     """Save an AI recommendation as a seasonal produce entry in the database."""
     # Check if produce with same name and country already exists
     existing = await db.execute(
@@ -984,12 +965,11 @@ async def save_recommendation_as_produce(
 
 # ============ Admin Endpoints (for seeding data) ============
 
-@router.post("/produce", response_model=SeasonalProduceResponse)
 async def create_seasonal_produce(
+    db: AsyncSession,
+    current_user: User,
     data: SeasonalProduceCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SeasonalProduceResponse:
     """Create a new seasonal produce entry (admin only)."""
     produce = SeasonalProduce(**data.model_dump())
     db.add(produce)
@@ -998,12 +978,11 @@ async def create_seasonal_produce(
     return _produce_to_response(produce)
 
 
-@router.post("/specialties", response_model=LocalSpecialtyResponse)
 async def create_local_specialty(
+    db: AsyncSession,
+    current_user: User,
     data: LocalSpecialtyCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> LocalSpecialtyResponse:
     """Create a new local specialty entry (admin only)."""
     specialty = LocalSpecialty(**data.model_dump())
     db.add(specialty)

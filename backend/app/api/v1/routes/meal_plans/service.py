@@ -1,22 +1,36 @@
-"""Meal Plan API Routes"""
+"""Service layer for meal plan operations.
 
-import math
+Business/DB logic extracted verbatim from the meal plan route handlers.
+Ownership lookups use ``get_owned_or_404`` and pagination metadata uses
+``paginate``.
+
+Note: like the recipes package, this module raises ``HTTPException`` directly
+(via ``get_owned_or_404`` and inline raises) rather than translating in the
+router, to preserve the exact status codes and detail strings of the original
+handlers.
+"""
+
 from datetime import datetime, date, timedelta
 from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi import HTTPException, UploadFile
 from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_owned_or_404
+from app.utils.pagination import paginate
 from app.models.user import User
-from app.models.meal_plan import MealPlan, Meal, MealType
-from app.models.recipe import Recipe, RecipeIngredient
+from app.models.meal_plan import MealPlan, Meal
+from app.models.recipe import Recipe
 from app.models.grocery import ShoppingList, ShoppingListItem
-from app.schemas.meal_plan import (
+from app.models.profile import Profile
+from app.models.recipe import CookingHistory
+from app.models.pantry import PantryItem
+from app.services.ai_service import ai_service
+from app.services.pantry_service import PantryService
+from app.api.v1.routes.meal_plans.schemas import (
     MealCreate,
     MealUpdate,
     MealResponse,
@@ -26,7 +40,6 @@ from app.schemas.meal_plan import (
     MealPlanWithMeals,
     MealPlanListItem,
     MealPlanListResponse,
-    MealPlanFilters,
     MealBulkCreate,
     RepeatMealPlanRequest,
     BulkMealActionRequest,
@@ -44,7 +57,6 @@ from app.schemas.meal_plan import (
     ShoppingListItemPreview,
     ParseMealPlanTextRequest,
     ParseMealPlanResponse,
-    ParsedMealPlanMeal,
     CombinedWeekPlan,
     MealWithProfile,
     ProfileInfo,
@@ -58,13 +70,6 @@ from app.schemas.meal_plan import (
     SimpleMealResponse,
     WeekMealsResponse,
 )
-from app.models.profile import Profile
-from app.models.recipe import CookingHistory
-from app.models.pantry import PantryItem
-from app.services.ai_service import ai_service
-from app.services.pantry_service import PantryService
-
-router = APIRouter(prefix="/meal-plans")
 
 
 # ============ Helper Functions ============
@@ -99,21 +104,20 @@ async def build_meal_response(meal: Meal, recipe: Optional[Recipe] = None) -> Me
 
 # ============ Meal Plan CRUD ============
 
-@router.get("", response_model=MealPlanListResponse)
 async def get_meal_plans(
+    db: AsyncSession,
+    current_user: User,
     search: Optional[str] = None,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     is_template: Optional[bool] = None,
     is_archived: Optional[bool] = False,
     profile_id: Optional[UUID] = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    sort_by: str = Query("date_start"),
-    sort_order: str = Query("desc"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    page: int = 1,
+    per_page: int = 20,
+    sort_by: str = "date_start",
+    sort_order: str = "desc",
+) -> MealPlanListResponse:
     """Get paginated list of meal plans with filters."""
     query = select(MealPlan).where(MealPlan.user_id == current_user.id)
 
@@ -197,16 +201,15 @@ async def get_meal_plans(
         total=total,
         page=page,
         per_page=per_page,
-        total_pages=math.ceil(total / per_page) if total > 0 else 0,
+        total_pages=paginate(total, page, per_page).total_pages,
     )
 
 
-@router.get("/current-week", response_model=Optional[MealPlanWithMeals])
 async def get_current_week_plan(
+    db: AsyncSession,
+    current_user: User,
     profile_id: Optional[UUID] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> Optional[MealPlanWithMeals]:
     """Get the meal plan for the current week (if exists)."""
     today = date.today()
     monday, sunday = get_week_bounds(today)
@@ -276,12 +279,11 @@ async def get_current_week_plan(
     )
 
 
-@router.get("/current-week/combined", response_model=CombinedWeekPlan)
 async def get_combined_week_plans(
-    target_date: Optional[date] = Query(None, description="Target date to find the week for"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    target_date: Optional[date] = None,
+) -> CombinedWeekPlan:
     """Get combined meal plans for all profiles for a specific week."""
     reference_date = target_date if target_date else date.today()
     monday, sunday = get_week_bounds(reference_date)
@@ -378,13 +380,12 @@ async def get_combined_week_plans(
 
 # ============ Calendar-Centric Endpoints (Simple Meal CRUD) ============
 
-@router.get("/week", response_model=WeekMealsResponse)
 async def get_week_meals(
-    target_date: Optional[date] = Query(None, description="Any date within the target week (defaults to today)"),
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile. None = all members (shared + all profiles)"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    target_date: Optional[date] = None,
+    profile_id: Optional[UUID] = None,
+) -> WeekMealsResponse:
     """Get all meals for a week, regardless of which plan they belong to.
 
     - If profile_id is None: Returns shared meals (profile_id=null) + all profile meals
@@ -479,12 +480,11 @@ async def get_week_meals(
     )
 
 
-@router.post("/meals", response_model=SimpleMealResponse)
 async def create_meal_simple(
+    db: AsyncSession,
+    current_user: User,
     data: SimpleMealCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SimpleMealResponse:
     """Create a meal for a specific date.
 
     Auto-creates a MealPlan for the week if one doesn't exist.
@@ -545,14 +545,9 @@ async def create_meal_simple(
     # Verify recipe if provided
     recipe = None
     if data.recipe_id:
-        recipe_query = select(Recipe).where(
-            Recipe.id == data.recipe_id,
-            Recipe.user_id == current_user.id
+        recipe = await get_owned_or_404(
+            db, Recipe, data.recipe_id, current_user, detail="Recipe not found"
         )
-        recipe_result = await db.execute(recipe_query)
-        recipe = recipe_result.scalar_one_or_none()
-        if not recipe:
-            raise HTTPException(status_code=404, detail="Recipe not found")
 
     # Create the meal
     meal = Meal(
@@ -591,13 +586,12 @@ async def create_meal_simple(
     )
 
 
-@router.put("/meals/{meal_id}", response_model=SimpleMealResponse)
 async def update_meal_simple(
+    db: AsyncSession,
+    current_user: User,
     meal_id: UUID,
     data: SimpleMealUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> SimpleMealResponse:
     """Update a meal directly by its ID (without needing plan ID)."""
     # Find meal and verify ownership
     query = (
@@ -620,14 +614,9 @@ async def update_meal_simple(
     update_data = data.model_dump(exclude_unset=True, by_alias=True)
 
     if "recipe_id" in update_data and update_data["recipe_id"]:
-        recipe_query = select(Recipe).where(
-            Recipe.id == update_data["recipe_id"],
-            Recipe.user_id == current_user.id
+        recipe = await get_owned_or_404(
+            db, Recipe, update_data["recipe_id"], current_user, detail="Recipe not found"
         )
-        recipe_result = await db.execute(recipe_query)
-        recipe = recipe_result.scalar_one_or_none()
-        if not recipe:
-            raise HTTPException(status_code=404, detail="Recipe not found")
 
     for field, value in update_data.items():
         if field == "meal_type" and value:
@@ -668,12 +657,11 @@ async def update_meal_simple(
     )
 
 
-@router.delete("/meals/{meal_id}")
 async def delete_meal_simple(
+    db: AsyncSession,
+    current_user: User,
     meal_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Delete a meal directly by its ID (without needing plan ID)."""
     # Find meal and verify ownership
     query = (
@@ -698,11 +686,10 @@ async def delete_meal_simple(
 
 # ============ Analytics (must be before /{plan_id} route) ============
 
-@router.get("/analytics/overview", response_model=MealPlanAnalytics)
 async def get_meal_plan_analytics(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+) -> MealPlanAnalytics:
     """Get meal plan analytics overview."""
     # Total counts
     total_plans_query = select(func.count()).select_from(MealPlan).where(
@@ -831,12 +818,11 @@ async def get_meal_plan_analytics(
     )
 
 
-@router.get("/history", response_model=MealPlanHistory)
 async def get_meal_plan_history(
-    months: int = Query(3, ge=1, le=12),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    months: int = 3,
+) -> MealPlanHistory:
     """Get meal plan history over time."""
     from dateutil.relativedelta import relativedelta
 
@@ -901,23 +887,17 @@ async def get_meal_plan_history(
 
 # ============ Get Single Meal Plan ============
 
-@router.get("/{plan_id}", response_model=MealPlanWithMeals)
 async def get_meal_plan(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealPlanWithMeals:
     """Get a single meal plan by ID with all meals."""
-    query = (
-        select(MealPlan)
-        .where(MealPlan.id == plan_id, MealPlan.user_id == current_user.id)
-        .options(selectinload(MealPlan.meals).selectinload(Meal.recipe))
+    plan = await get_owned_or_404(
+        db, MealPlan, plan_id, current_user,
+        detail="Meal plan not found",
+        options=[selectinload(MealPlan.meals).selectinload(Meal.recipe)],
     )
-    result = await db.execute(query)
-    plan = result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
 
     meals = []
     for meal in sorted(plan.meals, key=lambda m: (m.date, m.meal_type)):
@@ -938,12 +918,11 @@ async def get_meal_plan(
     )
 
 
-@router.post("", response_model=MealPlanResponse)
 async def create_meal_plan(
+    db: AsyncSession,
+    current_user: User,
     data: MealPlanCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealPlanResponse:
     """Create a new meal plan."""
     if data.date_end < data.date_start:
         raise HTTPException(status_code=400, detail="End date must be after start date")
@@ -977,23 +956,18 @@ async def create_meal_plan(
     )
 
 
-@router.put("/{plan_id}", response_model=MealPlanResponse)
 async def update_meal_plan(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     data: MealPlanUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealPlanResponse:
     """Update a meal plan."""
-    query = select(MealPlan).where(
-        MealPlan.id == plan_id,
-        MealPlan.user_id == current_user.id
-    ).options(selectinload(MealPlan.meals))
-    result = await db.execute(query)
-    plan = result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
+    plan = await get_owned_or_404(
+        db, MealPlan, plan_id, current_user,
+        detail="Meal plan not found",
+        options=[selectinload(MealPlan.meals)],
+    )
 
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -1017,22 +991,15 @@ async def update_meal_plan(
     )
 
 
-@router.delete("/{plan_id}")
 async def delete_meal_plan(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Delete a meal plan and all its meals."""
-    query = select(MealPlan).where(
-        MealPlan.id == plan_id,
-        MealPlan.user_id == current_user.id
+    plan = await get_owned_or_404(
+        db, MealPlan, plan_id, current_user, detail="Meal plan not found"
     )
-    result = await db.execute(query)
-    plan = result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
 
     await db.delete(plan)
     await db.commit()
@@ -1042,24 +1009,18 @@ async def delete_meal_plan(
 
 # ============ Repeat/Copy Meal Plan ============
 
-@router.post("/repeat", response_model=MealPlanWithMeals)
 async def repeat_meal_plan(
+    db: AsyncSession,
+    current_user: User,
     data: RepeatMealPlanRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealPlanWithMeals:
     """Copy a meal plan to new dates."""
     # Get source plan
-    query = (
-        select(MealPlan)
-        .where(MealPlan.id == data.source_meal_plan_id, MealPlan.user_id == current_user.id)
-        .options(selectinload(MealPlan.meals))
+    source_plan = await get_owned_or_404(
+        db, MealPlan, data.source_meal_plan_id, current_user,
+        detail="Source meal plan not found",
+        options=[selectinload(MealPlan.meals)],
     )
-    result = await db.execute(query)
-    source_plan = result.scalar_one_or_none()
-
-    if not source_plan:
-        raise HTTPException(status_code=404, detail="Source meal plan not found")
 
     # Calculate date offset
     days_offset = (data.new_start_date - source_plan.date_start).days
@@ -1123,24 +1084,17 @@ async def repeat_meal_plan(
 
 # ============ Meal CRUD ============
 
-@router.post("/{plan_id}/meals", response_model=MealResponse)
 async def create_meal(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     data: MealCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealResponse:
     """Add a meal to a meal plan."""
     # Verify plan exists
-    plan_query = select(MealPlan).where(
-        MealPlan.id == plan_id,
-        MealPlan.user_id == current_user.id
+    plan = await get_owned_or_404(
+        db, MealPlan, plan_id, current_user, detail="Meal plan not found"
     )
-    plan_result = await db.execute(plan_query)
-    plan = plan_result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
 
     # Verify date is within plan range
     if not (plan.date_start <= data.date <= plan.date_end):
@@ -1152,14 +1106,9 @@ async def create_meal(
     # Verify recipe if provided
     recipe = None
     if data.recipe_id:
-        recipe_query = select(Recipe).where(
-            Recipe.id == data.recipe_id,
-            Recipe.user_id == current_user.id
+        recipe = await get_owned_or_404(
+            db, Recipe, data.recipe_id, current_user, detail="Recipe not found"
         )
-        recipe_result = await db.execute(recipe_query)
-        recipe = recipe_result.scalar_one_or_none()
-        if not recipe:
-            raise HTTPException(status_code=404, detail="Recipe not found")
 
     meal = Meal(
         meal_plan_id=plan_id,
@@ -1179,24 +1128,17 @@ async def create_meal(
     return await build_meal_response(meal, recipe)
 
 
-@router.post("/{plan_id}/meals/bulk", response_model=List[MealResponse])
 async def bulk_create_meals(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     data: MealBulkCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> List[MealResponse]:
     """Add multiple meals to a meal plan."""
     # Verify plan exists
-    plan_query = select(MealPlan).where(
-        MealPlan.id == plan_id,
-        MealPlan.user_id == current_user.id
+    plan = await get_owned_or_404(
+        db, MealPlan, plan_id, current_user, detail="Meal plan not found"
     )
-    plan_result = await db.execute(plan_query)
-    plan = plan_result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
 
     # Get all recipe IDs
     recipe_ids = [m.recipe_id for m in data.meals if m.recipe_id]
@@ -1239,14 +1181,13 @@ async def bulk_create_meals(
     return responses
 
 
-@router.put("/{plan_id}/meals/{meal_id}", response_model=MealResponse)
 async def update_meal(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     meal_id: UUID,
     data: MealUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealResponse:
     """Update a meal."""
     # Verify ownership
     query = (
@@ -1269,14 +1210,9 @@ async def update_meal(
     update_data = data.model_dump(exclude_unset=True)
 
     if "recipe_id" in update_data and update_data["recipe_id"]:
-        recipe_query = select(Recipe).where(
-            Recipe.id == update_data["recipe_id"],
-            Recipe.user_id == current_user.id
+        recipe = await get_owned_or_404(
+            db, Recipe, update_data["recipe_id"], current_user, detail="Recipe not found"
         )
-        recipe_result = await db.execute(recipe_query)
-        recipe = recipe_result.scalar_one_or_none()
-        if not recipe:
-            raise HTTPException(status_code=404, detail="Recipe not found")
 
     for field, value in update_data.items():
         if field == "meal_type" and value:
@@ -1295,13 +1231,12 @@ async def update_meal(
     return await build_meal_response(meal, recipe)
 
 
-@router.delete("/{plan_id}/meals/{meal_id}")
 async def delete_meal(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     meal_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Delete a meal from a plan."""
     query = (
         select(Meal)
@@ -1324,13 +1259,12 @@ async def delete_meal(
     return {"success": True, "message": "Meal deleted"}
 
 
-@router.post("/{plan_id}/meals/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_meals(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     data: BulkMealActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple meals from a plan."""
     query = (
         select(Meal)
@@ -1359,12 +1293,11 @@ async def bulk_delete_meals(
 
 # ============ Bulk Meal Plan Actions ============
 
-@router.post("/bulk-archive", response_model=BulkActionResponse)
 async def bulk_archive_meal_plans(
+    db: AsyncSession,
+    current_user: User,
     data: BulkMealPlanActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Archive multiple meal plans."""
     query = select(MealPlan).where(
         MealPlan.id.in_(data.ids),
@@ -1385,12 +1318,11 @@ async def bulk_archive_meal_plans(
     )
 
 
-@router.post("/bulk-unarchive", response_model=BulkActionResponse)
 async def bulk_unarchive_meal_plans(
+    db: AsyncSession,
+    current_user: User,
     data: BulkMealPlanActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Unarchive multiple meal plans."""
     query = select(MealPlan).where(
         MealPlan.id.in_(data.ids),
@@ -1411,12 +1343,11 @@ async def bulk_unarchive_meal_plans(
     )
 
 
-@router.post("/bulk-delete", response_model=BulkActionResponse)
 async def bulk_delete_meal_plans(
+    db: AsyncSession,
+    current_user: User,
     data: BulkMealPlanActionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> BulkActionResponse:
     """Delete multiple meal plans."""
     query = select(MealPlan).where(
         MealPlan.id.in_(data.ids),
@@ -1440,12 +1371,11 @@ async def bulk_delete_meal_plans(
 
 # ============ Shopping List Generation ============
 
-@router.post("/generate-shopping-list", response_model=GenerateShoppingListResponse)
 async def generate_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     data: GenerateShoppingListRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> GenerateShoppingListResponse:
     """Generate a shopping list from a meal plan's recipes.
 
     When check_pantry is True (default), subtracts available pantry stock
@@ -1457,20 +1387,15 @@ async def generate_shopping_list(
     )
 
     # Get meal plan with meals and recipes
-    query = (
-        select(MealPlan)
-        .where(MealPlan.id == data.meal_plan_id, MealPlan.user_id == current_user.id)
-        .options(
+    plan = await get_owned_or_404(
+        db, MealPlan, data.meal_plan_id, current_user,
+        detail="Meal plan not found",
+        options=[
             selectinload(MealPlan.meals)
             .selectinload(Meal.recipe)
             .selectinload(Recipe.ingredients)
-        )
+        ],
     )
-    result = await db.execute(query)
-    plan = result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
 
     # Get pantry items if checking pantry
     pantry_items = []
@@ -1509,14 +1434,10 @@ async def generate_shopping_list(
 
     # Create or get shopping list
     if data.shopping_list_id:
-        list_query = select(ShoppingList).where(
-            ShoppingList.id == data.shopping_list_id,
-            ShoppingList.user_id == current_user.id
+        shopping_list = await get_owned_or_404(
+            db, ShoppingList, data.shopping_list_id, current_user,
+            detail="Shopping list not found",
         )
-        list_result = await db.execute(list_query)
-        shopping_list = list_result.scalar_one_or_none()
-        if not shopping_list:
-            raise HTTPException(status_code=404, detail="Shopping list not found")
     else:
         list_name = data.shopping_list_name or f"Shopping for {plan.name}"
         shopping_list = ShoppingList(
@@ -1598,12 +1519,11 @@ async def generate_shopping_list(
     )
 
 
-@router.post("/{plan_id}/shopping-list-preview", response_model=ShoppingListPreviewResponse)
 async def preview_shopping_list(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ShoppingListPreviewResponse:
     """Preview what shopping list would look like before creating.
 
     Shows which items are already in pantry vs need to be purchased.
@@ -1614,20 +1534,15 @@ async def preview_shopping_list(
     )
 
     # Get meal plan with meals and recipes
-    query = (
-        select(MealPlan)
-        .where(MealPlan.id == plan_id, MealPlan.user_id == current_user.id)
-        .options(
+    plan = await get_owned_or_404(
+        db, MealPlan, plan_id, current_user,
+        detail="Meal plan not found",
+        options=[
             selectinload(MealPlan.meals)
             .selectinload(Meal.recipe)
             .selectinload(Recipe.ingredients)
-        )
+        ],
     )
-    result = await db.execute(query)
-    plan = result.scalar_one_or_none()
-
-    if not plan:
-        raise HTTPException(status_code=404, detail="Meal plan not found")
 
     # Get pantry items
     pantry_query = select(PantryItem).where(
@@ -1728,12 +1643,11 @@ async def preview_shopping_list(
 
 # ============ Import/Parse ============
 
-@router.post("/parse-text", response_model=ParseMealPlanResponse)
 async def parse_meal_plan_text(
+    db: AsyncSession,
+    current_user: User,
     data: ParseMealPlanTextRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> ParseMealPlanResponse:
     """Parse free-form text into a meal plan."""
     try:
         # Default start date to next Monday
@@ -1767,15 +1681,14 @@ async def parse_meal_plan_text(
         )
 
 
-@router.post("/parse-voice", response_model=ParseMealPlanResponse)
 async def parse_meal_plan_voice(
-    audio: UploadFile = File(...),
-    language: str = Form("auto"),
-    start_date: Optional[date] = Form(None),
-    default_servings: int = Form(2),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    audio: UploadFile,
+    language: str = "auto",
+    start_date: Optional[date] = None,
+    default_servings: int = 2,
+) -> ParseMealPlanResponse:
     """Transcribe voice recording and parse as meal plan."""
     try:
         audio_content = await audio.read()
@@ -1811,14 +1724,13 @@ async def parse_meal_plan_voice(
         )
 
 
-@router.post("/parse-image", response_model=ParseMealPlanResponse)
 async def parse_meal_plan_image(
-    image: UploadFile = File(...),
-    start_date: Optional[date] = Form(None),
-    default_servings: int = Form(2),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    image: UploadFile,
+    start_date: Optional[date] = None,
+    default_servings: int = 2,
+) -> ParseMealPlanResponse:
     """Parse meal plan from image (handwritten plan, screenshot)."""
     try:
         image_content = await image.read()
@@ -1855,14 +1767,13 @@ async def parse_meal_plan_image(
 
 # ============ Cooking & Pantry Integration ============
 
-@router.post("/{plan_id}/meals/{meal_id}/cook", response_model=MarkMealCookedResponse)
 async def mark_meal_cooked(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     meal_id: UUID,
-    data: MarkMealCookedRequest = MarkMealCookedRequest(),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    data: MarkMealCookedRequest,
+) -> MarkMealCookedResponse:
     """Mark a meal as cooked and optionally deduct ingredients from pantry.
 
     This endpoint:
@@ -1964,14 +1875,13 @@ async def mark_meal_cooked(
     )
 
 
-@router.get("/{plan_id}/meals/{meal_id}/availability", response_model=MealAvailabilityResponse)
 async def check_meal_availability(
+    db: AsyncSession,
+    current_user: User,
     plan_id: UUID,
     meal_id: UUID,
     servings: Optional[int] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> MealAvailabilityResponse:
     """Check if pantry has enough ingredients to make this meal.
 
     Returns availability status for each ingredient, including:

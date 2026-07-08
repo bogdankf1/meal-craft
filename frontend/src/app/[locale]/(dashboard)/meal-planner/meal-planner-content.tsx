@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useModuleTabNavigation } from "@/lib/hooks/use-module-tab-navigation";
 import { format, parseISO, addDays } from "date-fns";
 import {
   Archive,
@@ -120,15 +120,7 @@ export function MealPlannerContent() {
   const [bulkUnarchive] = useBulkUnarchiveMealPlansMutation();
   const [bulkDelete] = useBulkDeleteMealPlansMutation();
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const navigateToTab = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const { navigateToTab } = useModuleTabNavigation();
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" />, alwaysShow: true },

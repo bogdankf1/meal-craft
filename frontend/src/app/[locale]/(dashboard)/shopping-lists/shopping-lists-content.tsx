@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   ShoppingCart,
@@ -62,6 +61,8 @@ import {
 } from "@/lib/api/shopping-lists-api";
 import { useCurrency } from "@/components/providers/currency-provider";
 import { useUserStore } from "@/lib/store/user-store";
+import { useArchivableListState } from "@/lib/hooks/use-archivable-list-state";
+import { useModuleTabNavigation } from "@/lib/hooks/use-module-tab-navigation";
 
 export function ShoppingListsContent() {
   const t = useTranslations("shoppingLists");
@@ -71,29 +72,32 @@ export function ShoppingListsContent() {
   const { preferences } = useUserStore();
   const uiVisibility = preferences.uiVisibility;
 
-  // State for active items
-  const [filters, setFilters] = useState<ShoppingListFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "created_at",
-    sort_order: "desc",
-    is_archived: false,
+  const {
+    filters,
+    setFilters,
+    archiveFilters,
+    setArchiveFilters,
+    formOpen,
+    setFormOpen,
+    editingItem: editingList,
+    historyMonths,
+    setHistoryMonths,
+    currentView,
+    setCurrentView,
+    archiveView,
+    setArchiveView,
+    handleAddClick,
+    handleEditClick,
+    handlePageChange,
+    handleArchivePageChange,
+  } = useArchivableListState<ShoppingListFilters, ShoppingListSummary>({
+    initialFilters: {
+      page: 1,
+      per_page: 20,
+      sort_by: "created_at",
+      sort_order: "desc",
+    },
   });
-
-  // State for archived items
-  const [archiveFilters, setArchiveFilters] = useState<ShoppingListFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "created_at",
-    sort_order: "desc",
-    is_archived: true,
-  });
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingList, setEditingList] = useState<ShoppingListSummary | null>(null);
-  const [historyMonths, setHistoryMonths] = useState(3);
-  const [currentView, setCurrentView] = useState<string>("table");
-  const [archiveView, setArchiveView] = useState<string>("table");
 
   // View options
   const viewOptions: ViewOption[] = [
@@ -119,14 +123,7 @@ export function ShoppingListsContent() {
     useGetShoppingListHistoryQuery(historyMonths);
 
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const navigateToTab = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const { navigateToTab } = useModuleTabNavigation();
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" />, alwaysShow: true },
@@ -142,26 +139,8 @@ export function ShoppingListsContent() {
     return true;
   });
 
-  const handleAddClick = () => {
-    setEditingList(null);
-    setFormOpen(true);
-  };
-
-  const handleEditClick = (list: ShoppingListSummary) => {
-    setEditingList(list);
-    setFormOpen(true);
-  };
-
   const handleViewClick = (list: ShoppingListSummary) => {
     router.push(`/shopping-lists/${list.id}`);
-  };
-
-  const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page });
-  };
-
-  const handleArchivePageChange = (page: number) => {
-    setArchiveFilters({ ...archiveFilters, page });
   };
 
   const formatCurrency = (amount: number) => {

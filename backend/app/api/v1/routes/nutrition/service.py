@@ -1,64 +1,58 @@
+"""Service layer for nutrition operations.
+
+Business/DB logic extracted verbatim from the nutrition route handlers.
+Ownership lookups use ``get_owned_or_404``. This module raises ``HTTPException``
+directly to preserve the exact status codes and detail strings of the original
+handlers.
 """
-Nutrition API routes - Goals, Logs, Aggregation, and Analytics.
-"""
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import selectinload
-from typing import Optional, List
 from datetime import date, timedelta
+from typing import Optional, List
 from uuid import UUID
 import math
 
-from app.core.database import get_db
-from app.api.deps import get_current_user
+from fastapi import HTTPException, status
+from sqlalchemy import select, func, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.api.deps import get_owned_or_404
 from app.models.user import User
 from app.models.nutrition import NutritionGoal, NutritionLog, HealthMetric
 from app.models.meal_plan import Meal, MealPlan
 from app.models.restaurant import RestaurantMeal
-from app.models.recipe import Recipe, RecipeNutrition
+from app.models.recipe import Recipe
 from app.services.ai_service import ai_service
 from app.schemas.nutrition import (
-    # Goal schemas
     NutritionGoalCreate,
     NutritionGoalUpdate,
     NutritionGoalResponse,
-    # Log schemas
     NutritionLogCreate,
     NutritionLogUpdate,
     NutritionLogResponse,
     NutritionLogListResponse,
-    # Health metric schemas
     HealthMetricCreate,
-    HealthMetricUpdate,
     HealthMetricResponse,
     HealthMetricListResponse,
-    # Aggregation schemas
     NutritionEntry,
     NutritionSource,
     DailyNutritionSummary,
     DailyNutritionWithGoals,
     WeeklyNutritionSummary,
     NutritionAnalytics,
-    # Calculation schemas
     CalculateRecipeNutritionRequest,
     CalculateFoodNutritionRequest,
     NutritionEstimate,
-    GoalType,
 )
-
-router = APIRouter()
 
 
 # ============ Nutrition Goals ============
 
-@router.get("/goals", response_model=List[NutritionGoalResponse])
 async def list_nutrition_goals(
-    active_only: bool = Query(True, description="Only return active goals"),
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    active_only: bool = True,
+    profile_id: Optional[UUID] = None,
+) -> List[NutritionGoalResponse]:
     """List user's nutrition goals."""
     query = select(NutritionGoal).where(NutritionGoal.user_id == current_user.id)
 
@@ -77,12 +71,11 @@ async def list_nutrition_goals(
     return [NutritionGoalResponse.model_validate(g) for g in goals]
 
 
-@router.get("/goals/active", response_model=Optional[NutritionGoalResponse])
 async def get_active_goal(
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    profile_id: Optional[UUID] = None,
+) -> Optional[NutritionGoalResponse]:
     """Get the user's currently active nutrition goal."""
     query = select(NutritionGoal).where(
         and_(
@@ -106,12 +99,11 @@ async def get_active_goal(
     return NutritionGoalResponse.model_validate(goal)
 
 
-@router.post("/goals", response_model=NutritionGoalResponse, status_code=status.HTTP_201_CREATED)
 async def create_nutrition_goal(
+    db: AsyncSession,
+    current_user: User,
     request: NutritionGoalCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> NutritionGoalResponse:
     """Create a new nutrition goal. Deactivates any existing active goals for the same profile."""
     # Deactivate existing active goals for the same profile only
     deactivate_conditions = [
@@ -152,26 +144,17 @@ async def create_nutrition_goal(
     return NutritionGoalResponse.model_validate(goal)
 
 
-@router.put("/goals/{goal_id}", response_model=NutritionGoalResponse)
 async def update_nutrition_goal(
+    db: AsyncSession,
+    current_user: User,
     goal_id: UUID,
     request: NutritionGoalUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> NutritionGoalResponse:
     """Update a nutrition goal."""
-    result = await db.execute(
-        select(NutritionGoal).where(
-            and_(NutritionGoal.id == goal_id, NutritionGoal.user_id == current_user.id)
-        )
+    goal = await get_owned_or_404(
+        db, NutritionGoal, goal_id, current_user,
+        detail="Nutrition goal not found",
     )
-    goal = result.scalar_one_or_none()
-
-    if not goal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition goal not found"
-        )
 
     # If activating this goal, deactivate other goals for the same profile
     if request.is_active is True and not goal.is_active:
@@ -204,25 +187,16 @@ async def update_nutrition_goal(
     return NutritionGoalResponse.model_validate(goal)
 
 
-@router.delete("/goals/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_nutrition_goal(
+    db: AsyncSession,
+    current_user: User,
     goal_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a nutrition goal."""
-    result = await db.execute(
-        select(NutritionGoal).where(
-            and_(NutritionGoal.id == goal_id, NutritionGoal.user_id == current_user.id)
-        )
+    goal = await get_owned_or_404(
+        db, NutritionGoal, goal_id, current_user,
+        detail="Nutrition goal not found",
     )
-    goal = result.scalar_one_or_none()
-
-    if not goal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition goal not found"
-        )
 
     await db.delete(goal)
     await db.commit()
@@ -230,18 +204,17 @@ async def delete_nutrition_goal(
 
 # ============ Custom Nutrition Logs ============
 
-@router.get("/logs", response_model=NutritionLogListResponse)
 async def list_nutrition_logs(
-    date_from: Optional[date] = Query(None),
-    date_to: Optional[date] = Query(None),
-    meal_type: Optional[str] = Query(None),
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
-    is_archived: bool = Query(False),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    meal_type: Optional[str] = None,
+    profile_id: Optional[UUID] = None,
+    is_archived: bool = False,
+    page: int = 1,
+    per_page: int = 50,
+) -> NutritionLogListResponse:
     """List custom nutrition log entries."""
     query = select(NutritionLog).where(
         and_(
@@ -284,12 +257,11 @@ async def list_nutrition_logs(
     )
 
 
-@router.post("/logs", response_model=NutritionLogResponse, status_code=status.HTTP_201_CREATED)
 async def create_nutrition_log(
+    db: AsyncSession,
+    current_user: User,
     request: NutritionLogCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> NutritionLogResponse:
     """Create a custom nutrition log entry."""
     log = NutritionLog(
         user_id=current_user.id,
@@ -316,26 +288,17 @@ async def create_nutrition_log(
     return NutritionLogResponse.model_validate(log)
 
 
-@router.put("/logs/{log_id}", response_model=NutritionLogResponse)
 async def update_nutrition_log(
+    db: AsyncSession,
+    current_user: User,
     log_id: UUID,
     request: NutritionLogUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> NutritionLogResponse:
     """Update a nutrition log entry."""
-    result = await db.execute(
-        select(NutritionLog).where(
-            and_(NutritionLog.id == log_id, NutritionLog.user_id == current_user.id)
-        )
+    log = await get_owned_or_404(
+        db, NutritionLog, log_id, current_user,
+        detail="Nutrition log not found",
     )
-    log = result.scalar_one_or_none()
-
-    if not log:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition log not found"
-        )
 
     update_data = request.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -350,25 +313,16 @@ async def update_nutrition_log(
     return NutritionLogResponse.model_validate(log)
 
 
-@router.delete("/logs/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_nutrition_log(
+    db: AsyncSession,
+    current_user: User,
     log_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a nutrition log entry."""
-    result = await db.execute(
-        select(NutritionLog).where(
-            and_(NutritionLog.id == log_id, NutritionLog.user_id == current_user.id)
-        )
+    log = await get_owned_or_404(
+        db, NutritionLog, log_id, current_user,
+        detail="Nutrition log not found",
     )
-    log = result.scalar_one_or_none()
-
-    if not log:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nutrition log not found"
-        )
 
     await db.delete(log)
     await db.commit()
@@ -376,15 +330,14 @@ async def delete_nutrition_log(
 
 # ============ Health Metrics ============
 
-@router.get("/health-metrics", response_model=HealthMetricListResponse)
 async def list_health_metrics(
-    date_from: Optional[date] = Query(None),
-    date_to: Optional[date] = Query(None),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    page: int = 1,
+    per_page: int = 50,
+) -> HealthMetricListResponse:
     """List health metrics."""
     query = select(HealthMetric).where(HealthMetric.user_id == current_user.id)
 
@@ -417,12 +370,11 @@ async def list_health_metrics(
     )
 
 
-@router.post("/health-metrics", response_model=HealthMetricResponse, status_code=status.HTTP_201_CREATED)
 async def create_health_metric(
+    db: AsyncSession,
+    current_user: User,
     request: HealthMetricCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> HealthMetricResponse:
     """Create or update health metric for a date."""
     # Check if metric exists for this date
     existing = await db.execute(
@@ -454,25 +406,16 @@ async def create_health_metric(
     return HealthMetricResponse.model_validate(metric)
 
 
-@router.delete("/health-metrics/{metric_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_health_metric(
+    db: AsyncSession,
+    current_user: User,
     metric_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete a health metric."""
-    result = await db.execute(
-        select(HealthMetric).where(
-            and_(HealthMetric.id == metric_id, HealthMetric.user_id == current_user.id)
-        )
+    metric = await get_owned_or_404(
+        db, HealthMetric, metric_id, current_user,
+        detail="Health metric not found",
     )
-    metric = result.scalar_one_or_none()
-
-    if not metric:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Health metric not found"
-        )
 
     await db.delete(metric)
     await db.commit()
@@ -480,13 +423,12 @@ async def delete_health_metric(
 
 # ============ Aggregated Nutrition Data ============
 
-@router.get("/daily/{target_date}", response_model=DailyNutritionWithGoals)
 async def get_daily_nutrition(
+    db: AsyncSession,
+    current_user: User,
     target_date: date,
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    profile_id: Optional[UUID] = None,
+) -> DailyNutritionWithGoals:
     """Get aggregated nutrition for a specific day from all sources."""
     entries: List[NutritionEntry] = []
 
@@ -737,13 +679,12 @@ async def get_daily_nutrition(
     )
 
 
-@router.get("/weekly", response_model=WeeklyNutritionSummary)
 async def get_weekly_nutrition(
-    start_date: Optional[date] = Query(None, description="Start date (defaults to current week)"),
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    start_date: Optional[date] = None,
+    profile_id: Optional[UUID] = None,
+) -> WeeklyNutritionSummary:
     """Get weekly nutrition summary."""
     if not start_date:
         today = date.today()
@@ -762,7 +703,7 @@ async def get_weekly_nutrition(
     for i in range(7):
         day_date = start_date + timedelta(days=i)
         # Reuse daily endpoint logic (with profile filtering)
-        daily = await get_daily_nutrition(day_date, profile_id, db, current_user)
+        daily = await get_daily_nutrition(db, current_user, day_date, profile_id)
         days.append(DailyNutritionSummary(
             date=daily.date,
             total_calories=daily.total_calories,
@@ -795,13 +736,12 @@ async def get_weekly_nutrition(
     )
 
 
-@router.get("/analytics", response_model=NutritionAnalytics)
 async def get_nutrition_analytics(
-    days: int = Query(30, ge=7, le=365, description="Number of days to analyze"),
-    profile_id: Optional[UUID] = Query(None, description="Filter by profile ID"),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: AsyncSession,
+    current_user: User,
+    days: int = 30,
+    profile_id: Optional[UUID] = None,
+) -> NutritionAnalytics:
     """Get nutrition analytics for a period."""
     end_date = date.today()
     start_date = end_date - timedelta(days=days - 1)
@@ -855,7 +795,7 @@ async def get_nutrition_analytics(
 
     for i in range(days):
         day_date = start_date + timedelta(days=i)
-        daily = await get_daily_nutrition(day_date, profile_id, db, current_user)
+        daily = await get_daily_nutrition(db, current_user, day_date, profile_id)
 
         daily_data.append(DailyNutritionSummary(
             date=daily.date,
@@ -922,28 +862,18 @@ async def get_nutrition_analytics(
 
 # ============ Nutrition Calculation Endpoints ============
 
-@router.post("/calculate/recipe", response_model=NutritionEstimate)
 async def calculate_recipe_nutrition(
+    db: AsyncSession,
+    current_user: User,
     request: CalculateRecipeNutritionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> NutritionEstimate:
     """Calculate and optionally save nutrition for a recipe."""
     # Get recipe with ingredients
-    result = await db.execute(
-        select(Recipe)
-        .options(selectinload(Recipe.ingredients), selectinload(Recipe.nutrition))
-        .where(
-            and_(Recipe.id == request.recipe_id, Recipe.user_id == current_user.id)
-        )
+    recipe = await get_owned_or_404(
+        db, Recipe, request.recipe_id, current_user,
+        detail="Recipe not found",
+        options=[selectinload(Recipe.ingredients), selectinload(Recipe.nutrition)],
     )
-    recipe = result.scalar_one_or_none()
-
-    if not recipe:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Recipe not found"
-        )
 
     # Prepare ingredients for AI
     ingredients = [
@@ -1005,12 +935,11 @@ async def calculate_recipe_nutrition(
     )
 
 
-@router.post("/calculate/food", response_model=NutritionEstimate)
 async def calculate_food_nutrition(
+    db: AsyncSession,
+    current_user: User,
     request: CalculateFoodNutritionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+) -> NutritionEstimate:
     """Estimate nutrition for a food item by description."""
     nutrition = await ai_service.estimate_food_nutrition(request.description)
 

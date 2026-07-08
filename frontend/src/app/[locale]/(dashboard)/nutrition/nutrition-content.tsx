@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useModuleTabNavigation } from "@/lib/hooks/use-module-tab-navigation";
 import { format, parseISO } from "date-fns";
 import {
   Plus,
@@ -62,9 +62,6 @@ import { useUserStore } from "@/lib/store/user-store";
 export function NutritionContent() {
   const t = useTranslations("nutrition");
   const tCommon = useTranslations("common");
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { preferences } = useUserStore();
   const { uiVisibility } = preferences;
 
@@ -112,11 +109,7 @@ export function NutritionContent() {
   // Mutations
   const [deleteGoal] = useDeleteNutritionGoalMutation();
 
-  const navigateToTab = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const { navigateToTab } = useModuleTabNavigation();
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },

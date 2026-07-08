@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   UtensilsCrossed,
@@ -61,6 +60,8 @@ import {
   type RestaurantMealFilters,
 } from "@/lib/api/restaurants-api";
 import { useUserStore } from "@/lib/store/user-store";
+import { useArchivableListState } from "@/lib/hooks/use-archivable-list-state";
+import { useModuleTabNavigation } from "@/lib/hooks/use-module-tab-navigation";
 
 export function RestaurantsContent() {
   const t = useTranslations("restaurants");
@@ -68,30 +69,34 @@ export function RestaurantsContent() {
   const { preferences } = useUserStore();
   const { uiVisibility } = preferences;
 
-  // State for active items
-  const [filters, setFilters] = useState<RestaurantMealFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "meal_date",
-    sort_order: "desc",
-    is_archived: false,
+  const {
+    filters,
+    setFilters,
+    archiveFilters,
+    setArchiveFilters,
+    formOpen,
+    setFormOpen,
+    bulkFormOpen,
+    setBulkFormOpen,
+    editingItem: editingMeal,
+    historyMonths,
+    setHistoryMonths,
+    currentView,
+    setCurrentView,
+    archiveView,
+    setArchiveView,
+    handleAddClick,
+    handleEditClick,
+    handlePageChange,
+    handleArchivePageChange,
+  } = useArchivableListState<RestaurantMealFilters, RestaurantMeal>({
+    initialFilters: {
+      page: 1,
+      per_page: 20,
+      sort_by: "meal_date",
+      sort_order: "desc",
+    },
   });
-
-  // State for archived items
-  const [archiveFilters, setArchiveFilters] = useState<RestaurantMealFilters>({
-    page: 1,
-    per_page: 20,
-    sort_by: "meal_date",
-    sort_order: "desc",
-    is_archived: true,
-  });
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [bulkFormOpen, setBulkFormOpen] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<RestaurantMeal | null>(null);
-  const [historyMonths, setHistoryMonths] = useState(3);
-  const [currentView, setCurrentView] = useState<string>("table");
-  const [archiveView, setArchiveView] = useState<string>("table");
 
   // View options
   const viewOptions: ViewOption[] = [
@@ -122,14 +127,7 @@ export function RestaurantsContent() {
     useGetRestaurantMealHistoryQuery(historyMonths);
 
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const navigateToTab = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  const { navigateToTab } = useModuleTabNavigation();
 
   const allTabs = [
     { value: "overview", label: t("tabs.overview"), icon: <LayoutGrid className="h-4 w-4" /> },
@@ -140,24 +138,6 @@ export function RestaurantsContent() {
   ];
 
   const tabs = allTabs.filter(tab => !tab.visibilityKey || uiVisibility[tab.visibilityKey]);
-
-  const handleAddClick = () => {
-    setEditingMeal(null);
-    setFormOpen(true);
-  };
-
-  const handleEditClick = (meal: RestaurantMeal) => {
-    setEditingMeal(meal);
-    setFormOpen(true);
-  };
-
-  const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page });
-  };
-
-  const handleArchivePageChange = (page: number) => {
-    setArchiveFilters({ ...archiveFilters, page });
-  };
 
   // Helper to translate meal type
   const translateMealType = (type: string) => {

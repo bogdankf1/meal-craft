@@ -1,7 +1,7 @@
 """
 API Dependencies - Authentication and authorization.
 """
-from typing import Optional
+from typing import Optional, Sequence, Type, TypeVar
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,37 @@ from app.models.user import User
 
 # HTTP Bearer token security scheme
 security = HTTPBearer(auto_error=False)
+
+ModelT = TypeVar("ModelT")
+
+
+async def get_owned_or_404(
+    db: AsyncSession,
+    model: Type[ModelT],
+    obj_id,
+    user: User,
+    owner_field: str = "user_id",
+    detail: str = "Not found",
+    options: Optional[Sequence] = None,
+) -> ModelT:
+    """Fetch a row by id owned by ``user``, or raise HTTP 404.
+
+    Replicates the repeated "select by id + owner; raise 404 if missing or not
+    owned" pattern. ``options`` accepts SQLAlchemy loader options (e.g.
+    ``selectinload(...)``) for eager loading. ``detail`` is the exact message
+    used by the 404 raised when no matching row exists.
+    """
+    query = select(model).where(
+        model.id == obj_id,
+        getattr(model, owner_field) == user.id,
+    )
+    if options:
+        query = query.options(*options)
+    result = await db.execute(query)
+    obj = result.scalar_one_or_none()
+    if not obj:
+        raise HTTPException(status_code=404, detail=detail)
+    return obj
 
 
 async def get_current_user(
